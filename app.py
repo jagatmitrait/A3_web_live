@@ -108,6 +108,41 @@ db = SQLAlchemy(app) #**review
 login_manager = LoginManager(app)
 login_manager.login_view = 'index'
 mail = Mail(app)
+@app.route('/send-otp', methods=['POST'])
+def send_otp():
+    data = request.get_json() or request.form
+    email = data.get('email')
+
+    if not email:
+        return jsonify({'success': False, 'message': 'Email required'}), 400
+
+    # Generate OTP
+    otp_code = ''.join(random.choices(string.digits, k=6))
+    expires_at = datetime.utcnow() + timedelta(minutes=Config.OTP_EXPIRY_MINUTES)
+
+    # Delete old OTPs
+    OTP.query.filter_by(email=email).delete()
+
+    otp = OTP(
+        email=email,
+        otp_code=otp_code,
+        expires_at=expires_at
+    )
+
+    db.session.add(otp)
+    db.session.commit()
+
+    # Send email
+    try:
+        msg = Message(
+            subject="Your OTP Verification Code",
+            recipients=[email],
+            body=f"Your OTP is {otp_code}. It is valid for 10 minutes."
+        )
+        mail.send(msg)
+        return jsonify({'success': True, 'message': 'OTP sent successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # Create Mental Health models after db is initialized
 mental_health_models = create_mental_health_models(db)
