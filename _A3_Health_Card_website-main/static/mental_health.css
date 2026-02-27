@@ -1,0 +1,2122 @@
+/* ============================================
+   Mental Health Module Styles
+   A3 Health Card Client Dashboard
+   ============================================ */
+
+/* Mental Health Page Container */
+#mental-health-page {
+    padding: 20px;
+    display: none;
+}
+
+#mental-health-page.active {
+    display: block;
+}
+
+/* Stats Cards */
+.mh-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.mh-stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mh-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.mh-stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.mh-stat-icon.mood {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.mh-stat-icon.streak {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.mh-stat-icon.assessment {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.mh-stat-icon.mindfulness {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+}
+
+.mh-stat-content {
+    flex: 1;
+}
+
+.mh-stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+
+.mh-stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    line-height: 1.2;
+}
+
+.mh-stat-subtitle {
+    font-size: 0.75rem;
+    color: #adb5bd;
+}
+
+/* Tab Navigation */
+.mh-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 12px;
+}
+
+.mh-tab {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #6c757d;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mh-tab:hover {
+    background: white;
+    color: #333;
+}
+
+.mh-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.mh-tab i {
+    font-size: 1rem;
+}
+
+/* Tab Content Panels */
+.mh-tab-content {
+    display: none;
+}
+
+.mh-tab-content.active {
+    display: block;
+}
+
+/* Quick Mood Widget */
+.mh-quick-mood {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.mh-quick-mood h4 {
+    margin-bottom: 16px;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mh-mood-emojis {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.mh-mood-emoji {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 3px solid #e9ecef;
+    background: white;
+    font-size: 32px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mh-mood-emoji:hover {
+    transform: scale(1.1);
+    border-color: #667eea;
+}
+
+.mh-mood-emoji.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+    transform: scale(1.15);
+}
+
+.mh-mood-emoji span {
+    line-height: 1;
+}
+
+.mh-mood-label {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* Section Cards */
+.mh-section-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+}
+
+.mh-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.mh-section-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Empty State */
+.mh-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #6c757d;
+}
+
+.mh-empty-state i {
+    font-size: 48px;
+    color: #dee2e6;
+    margin-bottom: 16px;
+}
+
+.mh-empty-state h4 {
+    color: #495057;
+    margin-bottom: 8px;
+}
+
+.mh-empty-state p {
+    margin-bottom: 20px;
+}
+
+/* Buttons */
+.mh-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mh-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.mh-btn-secondary {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mh-btn-secondary:hover {
+    background: #e9ecef;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .mh-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .mh-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mh-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+
+    .mh-mood-emojis {
+        flex-wrap: wrap;
+    }
+}
+
+/* Modal Overrides for Mental Health */
+.mh-modal .modal-content {
+    border-radius: 16px;
+}
+
+.mh-modal .modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 16px 16px 0 0;
+}
+
+.mh-modal .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+/* Chart Container */
+.mh-chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+
+/* Loading State */
+.mh-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+}
+
+.mh-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: mh-spin 1s linear infinite;
+}
+
+@keyframes mh-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===========================================
+   Phase 2: Mood Tracking Styles
+   =========================================== */
+
+/* Mood Slider */
+.mh-mood-slider-container {
+    margin: 20px 0;
+}
+
+.mh-mood-slider-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.mh-mood-slider-labels span {
+    font-size: 24px;
+}
+
+.mh-mood-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(to right, #dc3545, #ffc107, #28a745);
+    outline: none;
+}
+
+.mh-mood-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: 3px solid #667eea;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.mh-mood-slider::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: 3px solid #667eea;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.mh-mood-score-display {
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #667eea;
+    margin-top: 8px;
+}
+
+/* Emotion Wheel / Grid */
+.mh-emotion-section {
+    margin: 20px 0;
+}
+
+.mh-emotion-category {
+    margin-bottom: 16px;
+}
+
+.mh-emotion-category-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mh-emotion-category-label i {
+    font-size: 1rem;
+}
+
+.mh-emotion-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.mh-emotion-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 2px solid #e9ecef;
+    background: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mh-emotion-chip:hover {
+    border-color: #667eea;
+    background: #f8f9fa;
+}
+
+.mh-emotion-chip.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.mh-emotion-chip.joy {
+    border-color: #ffc107;
+}
+
+.mh-emotion-chip.joy.selected {
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+}
+
+.mh-emotion-chip.sadness {
+    border-color: #6c757d;
+}
+
+.mh-emotion-chip.sadness.selected {
+    background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+.mh-emotion-chip.anger {
+    border-color: #dc3545;
+}
+
+.mh-emotion-chip.anger.selected {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.mh-emotion-chip.fear {
+    border-color: #6f42c1;
+}
+
+.mh-emotion-chip.fear.selected {
+    background: linear-gradient(135deg, #6f42c1 0%, #5a2d9e 100%);
+}
+
+.mh-emotion-chip.surprise {
+    border-color: #17a2b8;
+}
+
+.mh-emotion-chip.surprise.selected {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+}
+
+.mh-emotion-chip.neutral {
+    border-color: #adb5bd;
+}
+
+.mh-emotion-chip.neutral.selected {
+    background: linear-gradient(135deg, #adb5bd 0%, #868e96 100%);
+}
+
+/* Energy Level */
+.mh-energy-container {
+    margin: 20px 0;
+}
+
+.mh-energy-icons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.mh-energy-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #e9ecef;
+    background: white;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mh-energy-btn:hover {
+    border-color: #667eea;
+    transform: scale(1.1);
+}
+
+.mh-energy-btn.selected {
+    border-color: #667eea;
+    background: #667eea;
+    color: white;
+}
+
+/* Triggers & Activities Selection */
+.mh-trigger-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.mh-trigger-item {
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    background: white;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.mh-trigger-item:hover {
+    border-color: #667eea;
+    background: #f8f9fa;
+}
+
+.mh-trigger-item.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+}
+
+.mh-trigger-item i {
+    font-size: 1.5rem;
+    margin-bottom: 6px;
+    display: block;
+    color: #667eea;
+}
+
+.mh-trigger-item span {
+    font-size: 0.8rem;
+    color: #495057;
+}
+
+/* Mood History Cards */
+.mh-mood-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.mh-mood-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mh-mood-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.mh-mood-card-emoji {
+    font-size: 2.5rem;
+}
+
+.mh-mood-card-score {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.mh-mood-card-date {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.mh-mood-card-emotions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.mh-mood-card-emotion {
+    padding: 4px 10px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: #495057;
+}
+
+.mh-mood-card-notes {
+    font-size: 0.85rem;
+    color: #6c757d;
+    border-top: 1px solid #e9ecef;
+    padding-top: 8px;
+    margin-top: 8px;
+}
+
+.mh-mood-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.mh-mood-card-actions button {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mh-mood-card-actions button:hover {
+    background: #f8f9fa;
+}
+
+.mh-mood-card-actions .btn-delete:hover {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+/* Mood Trend Chart */
+.mh-chart-wrapper {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.mh-chart-title {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 12px;
+}
+
+/* Filter Bar */
+.mh-filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.mh-filter-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    background: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.mh-filter-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.mh-filter-btn:hover:not(.active) {
+    background: #f8f9fa;
+}
+
+/* ===========================================
+   Phase 3: Assessment Styles
+   =========================================== */
+
+/* Assessment Type Selector */
+.mh-assessment-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.mh-assessment-type-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    border: 2px solid #e9ecef;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+}
+
+.mh-assessment-type-card:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
+}
+
+.mh-assessment-type-card.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+}
+
+.mh-assessment-type-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.mh-assessment-type-icon.phq9 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.mh-assessment-type-icon.gad7 {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.mh-assessment-type-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+}
+
+.mh-assessment-type-desc {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Assessment Quiz */
+.mh-assessment-quiz {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mh-quiz-header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.mh-quiz-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 8px;
+}
+
+.mh-quiz-subtitle {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.mh-quiz-progress {
+    margin-bottom: 24px;
+}
+
+.mh-quiz-progress-bar {
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mh-quiz-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.3s;
+}
+
+.mh-quiz-progress-text {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 8px;
+    text-align: center;
+}
+
+/* Question Card */
+.mh-question-card {
+    margin-bottom: 24px;
+}
+
+.mh-question-number {
+    font-size: 0.85rem;
+    color: #667eea;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.mh-question-text {
+    font-size: 1.1rem;
+    color: #1a1a2e;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.mh-answer-options {
+    display: grid;
+    gap: 10px;
+}
+
+.mh-answer-option {
+    padding: 14px 18px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mh-answer-option:hover {
+    border-color: #667eea;
+    background: #f8f9fa;
+}
+
+.mh-answer-option.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.mh-answer-radio {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid #adb5bd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.mh-answer-option.selected .mh-answer-radio {
+    border-color: white;
+    background: white;
+}
+
+.mh-answer-option.selected .mh-answer-radio::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #667eea;
+}
+
+.mh-answer-label {
+    flex: 1;
+}
+
+/* Quiz Navigation */
+.mh-quiz-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #e9ecef;
+}
+
+/* Assessment Results */
+.mh-result-card {
+    text-align: center;
+    padding: 32px;
+}
+
+.mh-result-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.mh-result-score {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.mh-result-max {
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+.mh-result-severity {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 16px 0;
+}
+
+.mh-result-severity.minimal {
+    background: #d4edda;
+    color: #155724;
+}
+
+.mh-result-severity.mild {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.mh-result-severity.moderate {
+    background: #ffe8cc;
+    color: #8a5300;
+}
+
+.mh-result-severity.moderately-severe {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.mh-result-severity.severe {
+    background: #f5c6cb;
+    color: #491217;
+}
+
+.mh-result-desc {
+    color: #6c757d;
+    margin-bottom: 24px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Assessment History Card */
+.mh-assessment-history-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.mh-assessment-history-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mh-assessment-history-info {
+    flex: 1;
+}
+
+.mh-assessment-history-type {
+    font-weight: 600;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mh-assessment-history-date {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.mh-assessment-history-score {
+    text-align: right;
+}
+
+.mh-assessment-history-score-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.mh-assessment-history-severity-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* ===========================================
+   Phase 4: Sleep Tracking Styles
+   =========================================== */
+
+/* Sleep Stats Cards */
+.mh-sleep-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.mh-sleep-stat-card {
+    background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid #e9ecef;
+}
+
+.mh-sleep-stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.mh-sleep-stat-label {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+/* Sleep Log Modal/Form */
+.mh-sleep-form {
+    display: grid;
+    gap: 20px;
+}
+
+.mh-sleep-form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.mh-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mh-form-label {
+    font-weight: 600;
+    color: #1a1a2e;
+    font-size: 0.9rem;
+}
+
+.mh-form-input,
+.mh-form-select,
+.mh-form-textarea {
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.mh-form-input:focus,
+.mh-form-select:focus,
+.mh-form-textarea:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.mh-form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Quality Rating Slider */
+.mh-quality-rating {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mh-quality-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 8px;
+    background: linear-gradient(90deg, #dc3545 0%, #ffc107 50%, #28a745 100%);
+    border-radius: 4px;
+    outline: none;
+}
+
+.mh-quality-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.mh-quality-value {
+    min-width: 40px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #667eea;
+}
+
+/* Sleep History Entry */
+.mh-sleep-entry {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.2s;
+}
+
+.mh-sleep-entry:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mh-sleep-entry-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #5e35b1 0%, #3949ab 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.mh-sleep-entry-info {
+    flex: 1;
+}
+
+.mh-sleep-entry-date {
+    font-weight: 600;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+}
+
+.mh-sleep-entry-times {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.mh-sleep-entry-times i {
+    margin-right: 4px;
+}
+
+.mh-sleep-entry-stats {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.mh-sleep-entry-hours {
+    text-align: center;
+}
+
+.mh-sleep-entry-hours-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #5e35b1;
+}
+
+.mh-sleep-entry-hours-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.mh-sleep-entry-quality {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.mh-sleep-quality-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.mh-sleep-quality-dot.excellent {
+    background: #28a745;
+}
+
+.mh-sleep-quality-dot.good {
+    background: #8bc34a;
+}
+
+.mh-sleep-quality-dot.fair {
+    background: #ffc107;
+}
+
+.mh-sleep-quality-dot.poor {
+    background: #fd7e14;
+}
+
+.mh-sleep-quality-dot.bad {
+    background: #dc3545;
+}
+
+.mh-sleep-entry-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Sleep Insight Card */
+.mh-sleep-insight {
+    background: linear-gradient(135deg, #5e35b1 0%, #3949ab 100%);
+    border-radius: 16px;
+    padding: 20px;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.mh-sleep-insight-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.mh-sleep-insight-text {
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+/* Correlation Chart Container */
+.mh-correlation-chart {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.mh-correlation-chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.mh-correlation-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 0.85rem;
+}
+
+.mh-correlation-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mh-correlation-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.mh-correlation-legend-dot.sleep {
+    background: #5e35b1;
+}
+
+.mh-correlation-legend-dot.mood {
+    background: #f093fb;
+}
+
+/* ===========================================
+   Phase 5: Journaling Styles
+   =========================================== */
+
+/* Journal Type Selector */
+.mh-journal-types {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.mh-journal-type-btn {
+    padding: 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.mh-journal-type-btn:hover {
+    border-color: #667eea;
+    background: #f8f9fa;
+}
+
+.mh-journal-type-btn.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.mh-journal-type-btn i {
+    font-size: 24px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.mh-journal-type-btn span {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Journal Entry Card */
+.mh-journal-entry {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+}
+
+.mh-journal-entry:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.mh-journal-entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.mh-journal-entry-info {
+    flex: 1;
+}
+
+.mh-journal-entry-title {
+    font-weight: 600;
+    color: #1a1a2e;
+    font-size: 1.1rem;
+}
+
+.mh-journal-entry-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+.mh-journal-entry-type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.mh-journal-entry-type.free {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.mh-journal-entry-type.gratitude {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.mh-journal-entry-type.cbt {
+    background: #ede7f6;
+    color: #5e35b1;
+}
+
+.mh-journal-entry-preview {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Gratitude Items */
+.mh-gratitude-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.mh-gratitude-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: #fce4ec;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: #c2185b;
+}
+
+.mh-gratitude-item i {
+    color: #e91e63;
+}
+
+/* CBT Summary */
+.mh-cbt-summary {
+    background: #f5f0ff;
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 12px;
+}
+
+.mh-cbt-summary-item {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.mh-cbt-summary-item:last-child {
+    margin-bottom: 0;
+}
+
+.mh-cbt-summary-label {
+    font-weight: 600;
+    color: #5e35b1;
+    min-width: 100px;
+}
+
+/* Journal Form */
+.mh-journal-form {
+    display: grid;
+    gap: 16px;
+}
+
+.mh-journal-textarea {
+    min-height: 150px;
+    resize: vertical;
+}
+
+/* Gratitude Input List */
+.mh-gratitude-input-list {
+    display: grid;
+    gap: 10px;
+}
+
+.mh-gratitude-input-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.mh-gratitude-input-item input {
+    flex: 1;
+}
+
+.mh-gratitude-input-item span {
+    font-size: 20px;
+}
+
+/* Journal Search */
+.mh-journal-search {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.mh-journal-search-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.mh-journal-search-input:focus {
+    border-color: #667eea;
+    outline: none;
+}
+
+.mh-journal-filter-select {
+    padding: 12px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    min-width: 140px;
+}
+
+/* Journal Stats */
+.mh-journal-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.mh-journal-stat {
+    background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid #e9ecef;
+}
+
+.mh-journal-stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.mh-journal-stat-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* ===========================================
+   Phase 6: Mindfulness Styles
+   =========================================== */
+
+/* Exercise Type Tabs */
+.mh-mindfulness-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.mh-mindfulness-tab {
+    padding: 10px 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 20px;
+    background: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.mh-mindfulness-tab:hover {
+    border-color: #667eea;
+}
+
+.mh-mindfulness-tab.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+/* Exercise Cards */
+.mh-exercise-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.mh-exercise-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    border: 2px solid #e9ecef;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mh-exercise-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+    transform: translateY(-2px);
+}
+
+.mh-exercise-card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    margin-bottom: 12px;
+}
+
+.mh-exercise-card-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #1a1a2e;
+    margin-bottom: 6px;
+}
+
+.mh-exercise-card-desc {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Breathing Animation */
+.mh-breathing-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.mh-breathing-circle {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    font-weight: 600;
+    transition: transform 4s ease-in-out;
+    box-shadow: 0 0 40px rgba(102, 126, 234, 0.4);
+}
+
+.mh-breathing-circle.inhale {
+    transform: scale(1.3);
+}
+
+.mh-breathing-circle.exhale {
+    transform: scale(0.8);
+}
+
+.mh-breathing-circle.hold {
+    transform: scale(1);
+}
+
+.mh-breathing-instruction {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-top: 24px;
+    min-height: 50px;
+}
+
+.mh-breathing-timer {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #667eea;
+    margin: 16px 0;
+}
+
+.mh-breathing-progress {
+    font-size: 1rem;
+    color: #6c757d;
+    margin-bottom: 24px;
+}
+
+/* Grounding Exercise */
+.mh-grounding-container {
+    padding: 20px;
+}
+
+.mh-grounding-step {
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    align-items: center;
+    transition: all 0.3s;
+}
+
+.mh-grounding-step.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    transform: scale(1.02);
+}
+
+.mh-grounding-step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    color: #667eea;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.mh-grounding-step.active .mh-grounding-step-number {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.mh-grounding-step-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Meditation Timer */
+.mh-timer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.mh-timer-display {
+    font-size: 5rem;
+    font-weight: 700;
+    color: #667eea;
+    font-variant-numeric: tabular-nums;
+    margin-bottom: 24px;
+}
+
+.mh-timer-duration-select {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.mh-timer-duration-btn {
+    padding: 10px 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 20px;
+    background: white;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.mh-timer-duration-btn:hover {
+    border-color: #667eea;
+}
+
+.mh-timer-duration-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+/* Session History */
+.mh-mindfulness-session {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+.mh-mindfulness-session-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: white;
+}
+
+.mh-mindfulness-session-icon.breathing {
+    background: #4caf50;
+}
+
+.mh-mindfulness-session-icon.grounding {
+    background: #ff9800;
+}
+
+.mh-mindfulness-session-icon.meditation {
+    background: #9c27b0;
+}
+
+.mh-mindfulness-session-info {
+    flex: 1;
+}
+
+.mh-mindfulness-session-name {
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.mh-mindfulness-session-meta {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.mh-mindfulness-session-mood {
+    text-align: center;
+}
+
+.mh-mindfulness-session-mood-change {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.mh-mindfulness-session-mood-change.positive {
+    color: #28a745;
+}
+
+.mh-mindfulness-session-mood-change.negative {
+    color: #dc3545;
+}
+
+.mh-mindfulness-session-mood-change.neutral {
+    color: #6c757d;
+}
+
+/* ===========================================
+   Phase 7: AI Insights Styles
+   =========================================== */
+
+/* Insight Cards */
+.mh-insights-list {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.mh-insight-card {
+    display: flex;
+    gap: 16px;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 4px solid;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.mh-insight-card.positive {
+    border-left-color: #28a745;
+    background: linear-gradient(135deg, #d4edda 0%, #fff 30%);
+}
+
+.mh-insight-card.warning {
+    border-left-color: #ffc107;
+    background: linear-gradient(135deg, #fff3cd 0%, #fff 30%);
+}
+
+.mh-insight-card.info {
+    border-left-color: #17a2b8;
+    background: linear-gradient(135deg, #d1ecf1 0%, #fff 30%);
+}
+
+.mh-insight-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.mh-insight-card.positive .mh-insight-icon {
+    background: #28a745;
+}
+
+.mh-insight-card.warning .mh-insight-icon {
+    background: #ffc107;
+    color: #1a1a2e;
+}
+
+.mh-insight-card.info .mh-insight-icon {
+    background: #17a2b8;
+}
+
+.mh-insight-content {
+    flex: 1;
+}
+
+.mh-insight-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+}
+
+.mh-insight-message {
+    color: #6c757d;
+    line-height: 1.5;
+}
+
+/* Summary Stats Grid */
+.mh-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.mh-summary-card {
+    background: linear-gradient(135deg, #667eea08 0%, #764ba208 100%);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid #e9ecef;
+}
+
+.mh-summary-card-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.mh-summary-card-label {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+/* Trend Chart Container */
+.mh-trend-chart {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.mh-trend-chart-legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.mh-trend-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+}
+
+.mh-trend-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.mh-trend-legend-dot.mood {
+    background: #667eea;
+}
+
+.mh-trend-legend-dot.sleep {
+    background: #5e35b1;
+}
+
+.mh-trend-legend-dot.energy {
+    background: #f093fb;
+}
+
+/* Trend Row */
+.mh-trend-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.mh-trend-row:last-child {
+    border-bottom: none;
+}
+
+.mh-trend-date {
+    min-width: 80px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.mh-trend-bars {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mh-trend-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mh-trend-bar-label {
+    min-width: 50px;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.mh-trend-bar-container {
+    flex: 1;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mh-trend-bar {
+    height: 100%;
+    border-radius: 4px;
+}
+
+.mh-trend-bar.mood {
+    background: #667eea;
+}
+
+.mh-trend-bar.sleep {
+    background: #5e35b1;
+}
+
+.mh-trend-bar.energy {
+    background: #f093fb;
+}
+
+.mh-trend-bar-value {
+    min-width: 35px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: right;
+}
+
+/* Export Button */
+.mh-export-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mh-export-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+}
+
+/* Period Selector */
+.mh-period-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.mh-period-btn {
+    padding: 8px 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 20px;
+    background: white;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.mh-period-btn:hover {
+    border-color: #667eea;
+}
+
+.mh-period-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}

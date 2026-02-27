@@ -1,0 +1,37 @@
+<!-- Health Worker Sidebar Component -->
+<!-- Usage: set active_page variable before including this file -->
+
+<aside class="sidebar">
+    <a href="{{ url_for('health_worker_dashboard') }}" class="brand-logo"><i class="fas fa-heartbeat"></i> Health Worker</a>
+    
+    <div class="sidebar-nav-wrapper">
+        <nav class="nav flex-column">
+            <a class="nav-link {{ 'active' if active_page == 'dashboard' else '' }}" href="{{ url_for('health_worker_dashboard') }}"><i class="fas fa-home"></i> Dashboard</a>
+            <a class="nav-link {{ 'active' if active_page == 'daily_tasks' else '' }}" href="{{ url_for('health_worker_daily_tasks_page') }}"><i class="fas fa-tasks"></i> Daily Tasks</a>
+            <a class="nav-link {{ 'active' if active_page == 'health_assessment' else '' }}" href="{{ url_for('health_worker_health_assessment') }}"><i class="fas fa-stethoscope"></i> Health Assessment</a>
+            <a class="nav-link {{ 'active' if active_page == 'patient_records' else '' }}" href="{{ url_for('health_worker_patient_records') }}"><i class="fas fa-file-medical-alt"></i> Patient Records</a>
+            <a class="nav-link {{ 'active' if active_page == 'screenings' else '' }}" href="{{ url_for('health_worker_screening') }}"><i class="fas fa-vials"></i> Screenings & Testing</a>
+            <a class="nav-link {{ 'active' if active_page == 'immunization' else '' }}" href="{{ url_for('health_worker_immunization') }}"><i class="fas fa-syringe"></i> Immunization</a>
+            <a class="nav-link {{ 'active' if active_page == 'pregnancy' else '' }}" href="{{ url_for('health_worker_pregnancy') }}"><i class="fas fa-baby"></i> Pregnancy & Maternal</a>
+            <a class="nav-link {{ 'active' if active_page == 'referral' else '' }}" href="{{ url_for('health_worker_referral') }}"><i class="fas fa-ambulance"></i> Referral & Emergency</a>
+            <a class="nav-link {{ 'active' if active_page == 'communication' else '' }}" href="{{ url_for('health_worker_communication') }}"><i class="fas fa-comments"></i> Communication</a>
+            <a class="nav-link {{ 'active' if active_page == 'directory' else '' }}" href="{{ url_for('health_worker_village_directory') }}"><i class="fas fa-map-marked-alt"></i> Village Directory</a>
+            <a class="nav-link {{ 'active' if active_page == 'inventory' else '' }}" href="{{ url_for('health_worker_inventory') }}"><i class="fas fa-boxes"></i> Inventory & Supply</a>
+            <a class="nav-link {{ 'active' if active_page == 'training' else '' }}" href="{{ url_for('health_worker_training') }}"><i class="fas fa-book-open"></i> Training & Guidelines</a>
+            <a class="nav-link {{ 'active' if active_page == 'performance' else '' }}" href="{{ url_for('health_worker_performance') }}"><i class="fas fa-trophy"></i> Performance & Incentive</a>
+            <a class="nav-link {{ 'active' if active_page == 'analytics' else '' }}" href="{{ url_for('health_worker_analytics') }}"><i class="fas fa-chart-line"></i> Analytics & Highlights</a>
+            <a class="nav-link {{ 'active' if active_page == 'predictive_ai' else '' }}" href="{{ url_for('health_worker_predictive_ai') }}"><i class="fas fa-brain"></i> Predictive AI</a>
+        </nav>
+    </div>
+    
+    <div class="sidebar-footer">
+        <div class="d-flex align-items-center gap-2 text-white">
+            <i class="fas fa-user-circle fa-2x"></i>
+            <div class="user-info">
+                <div class="small fw-bold text-truncate">{{ current_user.full_name }}</div>
+                <div class="small text-white-50">{{ current_user.worker_type or 'ASHA' }}</div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="text-white-50 ms-auto" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </div>
+</aside>

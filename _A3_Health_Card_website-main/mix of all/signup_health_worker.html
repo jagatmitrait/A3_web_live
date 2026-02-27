@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Health Worker Signup | A3 Health Card</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+  <!-- Theme CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}" />
+  <!-- Custom CSS -->
+  <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet" />
+  
+  <style>
+    .worker-type-card {
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 2px solid #dee2e6;
+    }
+    .worker-type-card:hover {
+      border-color: #dc3545;
+      transform: translateY(-2px);
+    }
+    .worker-type-card.selected {
+      border-color: #dc3545;
+      background-color: #fff5f5;
+    }
+    .worker-type-card input[type="radio"] {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <nav class="navbar navbar-expand-lg" role="navigation" aria-label="Main Navigation">
+    <div class="container">
+      <h2><a class="navbar-brand fw-bold" href="{{ url_for('index') }}">A3 Health Card</a></h2>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center align-items-start gap-lg-2 gap-1 mt-2 mt-lg-0">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#home">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#about">About Us</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#a3">A3 Concept</a></li>
+          <li class="nav-item">
+            <a class="btn emergency-btn" href="{{ url_for('index') }}#emergency-login" role="button">Emergency Login</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Signup Section -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="card shadow-sm">
+            <div class="card-body p-5">
+              <h2 class="card-title text-center mb-2 fw-bold"><i class="fas fa-user-nurse text-danger me-2"></i>Health Worker Registration</h2>
+              <p class="text-muted text-center mb-4">Register as ASHA, ANM, or AWW to manage community health services in your assigned area.</p>
+              
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                  {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+                      {{ message }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endwith %}
+              
+              <form method="POST" action="{{ url_for('signup', user_type='health_worker') }}" id="healthWorkerForm" enctype="multipart/form-data">
+                
+                <!-- Worker Type Selection -->
+                <fieldset class="mb-4">
+                  <legend class="h5 fw-semibold mb-3"><i class="fas fa-id-badge text-danger me-2"></i>Worker Type</legend>
+                  <div class="row g-3">
+                    <div class="col-4">
+                      <label class="worker-type-card card text-center p-3 h-100">
+                        <input type="radio" name="workerType" value="ASHA" required>
+                        <div class="h3 text-danger mb-1"><i class="fas fa-female"></i></div>
+                        <div class="fw-bold">ASHA</div>
+                        <small class="text-muted">Accredited Social Health Activist</small>
+                      </label>
+                    </div>
+                    <div class="col-4">
+                      <label class="worker-type-card card text-center p-3 h-100">
+                        <input type="radio" name="workerType" value="ANM" required>
+                        <div class="h3 text-primary mb-1"><i class="fas fa-user-nurse"></i></div>
+                        <div class="fw-bold">ANM</div>
+                        <small class="text-muted">Auxiliary Nurse Midwife</small>
+                      </label>
+                    </div>
+                    <div class="col-4">
+                      <label class="worker-type-card card text-center p-3 h-100">
+                        <input type="radio" name="workerType" value="AWW" required>
+                        <div class="h3 text-success mb-1"><i class="fas fa-child"></i></div>
+                        <div class="fw-bold">AWW</div>
+                        <small class="text-muted">Anganwadi Worker</small>
+                      </label>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <!-- Personal Information -->
+                <fieldset class="mb-4">
+                  <legend class="h5 fw-semibold mb-3"><i class="fas fa-user text-danger me-2"></i>Personal Information</legend>
+                  
+                  <div class="mb-3">
+                    <label for="fullName" class="form-label">Full Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="fullName" name="fullName" required>
+                  </div>
+
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                      <select class="form-select" id="gender" name="gender" required>
+                        <option value="" disabled selected>Select</option>
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="dob" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                      <input type="date" class="form-control" id="dob" name="dob" required>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="aadhaar" class="form-label">Aadhaar Number <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="aadhaar" name="aadhaar" pattern="[0-9]{12}" placeholder="12-digit number" required>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-0">
+                    <div class="col-md-6">
+                      <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                      <input type="email" class="form-control" id="email" name="email" required>
+                      <div class="form-text">OTP will be sent to this email for verification</div>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="mobile" class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                      <input type="tel" class="form-control" id="mobile" name="mobile" pattern="[0-9]{10}" placeholder="10-digit number" required>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <!-- Assignment Details -->
+                <fieldset class="mb-4">
+                  <legend class="h5 fw-semibold mb-3"><i class="fas fa-map-marker-alt text-danger me-2"></i>Assignment Details</legend>
+                  
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label for="state" class="form-label">State <span class="text-danger">*</span></label>
+                      <select class="form-select" id="state" name="state" required>
+                        <option value="" disabled selected>Select State</option>
+                        <option value="Rajasthan">Rajasthan</option>
+                        <option value="Gujarat">Gujarat</option>
+                        <option value="Maharashtra">Maharashtra</option>
+                        <option value="Uttar Pradesh">Uttar Pradesh</option>
+                        <option value="Madhya Pradesh">Madhya Pradesh</option>
+                        <option value="Bihar">Bihar</option>
+                        <option value="Tamil Nadu">Tamil Nadu</option>
+                        <option value="Karnataka">Karnataka</option>
+                        <option value="Andhra Pradesh">Andhra Pradesh</option>
+                        <option value="Telangana">Telangana</option>
+                        <option value="West Bengal">West Bengal</option>
+                        <option value="Punjab">Punjab</option>
+                        <option value="Haryana">Haryana</option>
+                        <option value="Kerala">Kerala</option>
+                        <option value="Odisha">Odisha</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="city" class="form-label">District <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="city" name="city" required>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-0">
+                    <div class="col-md-6">
+                      <label for="jurisdiction" class="form-label">Block / Tehsil <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="jurisdiction" name="jurisdiction" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="primaryVillage" class="form-label">Primary Village <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="primaryVillage" name="primaryVillage" required>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-0">
+                    <div class="col-md-6">
+                      <label for="phcSubCenter" class="form-label">PHC / Sub-Center <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="phcSubCenter" name="phcSubCenter" placeholder="Linked health facility" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="joiningDate" class="form-label">Date of Joining <span class="text-danger">*</span></label>
+                      <input type="date" class="form-control" id="joiningDate" name="joiningDate" required>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-0">
+                    <div class="col-md-6">
+                      <label for="workerId" class="form-label">Worker ID <span class="text-muted">(if assigned)</span></label>
+                      <input type="text" class="form-control" id="workerId" name="workerId" placeholder="e.g., ASHA-RJ-001">
+                    </div>
+                    <div class="col-md-6">
+                      <label for="supervisorName" class="form-label">Supervisor Name <span class="text-muted">(optional)</span></label>
+                      <input type="text" class="form-control" id="supervisorName" name="supervisorName" placeholder="ANM / MO name">
+                    </div>
+                  </div>
+
+                  <div class="mt-3">
+                    <div class="form-check">
+                      <input type="checkbox" class="form-check-input" id="trainingCompleted" name="trainingCompleted">
+                      <label class="form-check-label" for="trainingCompleted">Basic Health Training Completed</label>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <!-- Account Security -->
+                <fieldset class="mb-4">
+                  <legend class="h5 fw-semibold mb-3"><i class="fas fa-lock text-danger me-2"></i>Account Security</legend>
+
+                  <div class="mb-3">
+                    <label for="createPassword" class="form-label">Create Password <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <input type="password" class="form-control" id="createPassword" name="createPassword" minlength="8" required>
+                      <button class="btn btn-outline-secondary" type="button" id="togglePassword">Show Password</button>
+                    </div>
+                    <div class="form-text">Password must be at least 8 characters long.</div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" minlength="8" required>
+                  </div>
+                </fieldset>
+
+                <button type="submit" class="btn btn-primary w-100 py-2" style="background-color: var(--primary-red); border: none;">
+                  <i class="fas fa-user-plus me-2"></i>Create Health Worker Account
+                </button>
+              </form>
+              <div class="text-center mt-3">
+                <span class="text-muted">Already registered?</span>
+                <a href="{{ url_for('login', user_type='health_worker') }}" class="text-decoration-none fw-semibold text-danger">Log in</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container text-center">
+      <div class="mb-2">© 2025 A3 Health Card. All rights reserved.</div>
+      <div class="footer-links">
+        <a href="#terms">Terms &amp; Privacy</a>
+        <span class="sep">•</span>
+        <a href="#help">Help</a>
+        <span class="sep">•</span>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS (with Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script>
+    (function () {
+      // Worker Type Card Selection
+      document.querySelectorAll('.worker-type-card').forEach(card => {
+        card.addEventListener('click', function() {
+          document.querySelectorAll('.worker-type-card').forEach(c => c.classList.remove('selected'));
+          this.classList.add('selected');
+          this.querySelector('input[type="radio"]').checked = true;
+        });
+      });
+
+      // Password Toggle
+      const passwordField = document.querySelector('#createPassword');
+      const toggleButton = document.querySelector('#togglePassword');
+      
+      if (toggleButton && passwordField) {
+        toggleButton.addEventListener('click', () => {
+          const isHidden = passwordField.type === 'password';
+          passwordField.type = isHidden ? 'text' : 'password';
+          toggleButton.textContent = isHidden ? 'Hide Password' : 'Show Password';
+        });
+      }
+
+      // Auto-scroll to flash messages
+      const alerts = document.querySelectorAll('.alert');
+      if (alerts.length > 0) {
+        alerts[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    })();
+  </script>
+</body>
+</html>

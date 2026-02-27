@@ -1,0 +1,732 @@
+/* ============================================
+   A3 Health Card - Insurance Dashboard CSS
+   Insurance Theme: Red & White (Consistent with other dashboards)
+   ============================================ */
+
+:root {
+    --primary-red: #d32f2f;
+    --light-red: #e57373;
+    --dark-red: #b71c1c;
+    --white: #ffffff;
+    --light-gray: #f5f5f5;
+    --gray: #9e9e9e;
+    --dark-gray: #424242;
+    --border-color: #e0e0e0;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.12);
+    --success-green: #4CAF50;
+    --warning-orange: #FF9800;
+    --info-blue: #2196F3;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: #fafafa;
+    color: var(--dark-gray);
+    overflow-x: hidden;
+}
+
+/* ============================================
+   HEADER STYLES
+   ============================================ */
+
+.insurance-header {
+    background: var(--dark-red);
+    height: 70px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-left h1 {
+    color: var(--white);
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.header-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    font-weight: 400;
+}
+
+.header-center {
+    flex: 1;
+    text-align: center;
+}
+
+.company-name {
+    color: var(--white);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.header-right {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.icon-btn {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn:hover {
+    background: rgba(255,255,255,0.25);
+    transform: translateY(-2px);
+}
+
+.notification-btn {
+    position: relative;
+}
+
+.notification-btn .badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--warning-orange);
+    color: white;
+    border-radius: 10px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 8px 15px;
+    border-radius: 25px;
+    transition: background 0.3s;
+    background: rgba(255,255,255,0.1);
+}
+
+.user-profile:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.user-profile:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.profile-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.5);
+    object-fit: cover;
+}
+
+.user-name {
+    color: var(--white);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* ============================================
+   DASHBOARD CONTAINER
+   ============================================ */
+
+.dashboard-container {
+    display: flex;
+    min-height: calc(100vh - 70px);
+    background-color: #fafafa;
+}
+
+/* ============================================
+   SIDEBAR STYLES
+   ============================================ */
+
+.sidebar {
+    width: 260px;
+    background: var(--primary-red);
+    border-right: 1px solid var(--border-color);
+    padding: 20px 0;
+    overflow-y: auto;
+}
+
+.sidebar-nav .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px 25px;
+    color: var(--white);
+    text-decoration: none;
+    transition: all 0.3s;
+    border-left: 3px solid transparent;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 2px 0;
+}
+
+.sidebar-nav .nav-item:hover {
+    background: #fff5f5;
+    border-left-color: var(--primary-red);
+    color: var(--primary-red);
+}
+
+.sidebar-nav .nav-item.active {
+    background: linear-gradient(90deg, #ffebee 0%, var(--white) 100%);
+    border-left-color: var(--primary-red);
+    color: var(--primary-red);
+    font-weight: 600;
+}
+
+.sidebar-nav .nav-item i {
+    width: 24px;
+    font-size: 18px;
+    text-align: center;
+}
+
+.sidebar-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 15px 20px;
+}
+
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
+.main-content {
+    flex: 1;
+    padding: 30px;
+    background: #fafafa;
+    overflow-y: auto;
+}
+
+.content-page {
+    display: none;
+}
+
+.content-page.active {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   PAGE HEADER
+   ============================================ */
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h2 {
+    color: var(--dark-gray);
+    font-weight: 600;
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.page-header h2 i {
+    color: var(--primary-red);
+    margin-right: 10px;
+}
+
+.page-header p {
+    color: var(--gray);
+    font-size: 14px;
+}
+
+/* ============================================
+   STAT CARDS
+   ============================================ */
+
+.stat-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--shadow);
+    transition: all 0.3s;
+    border: 1px solid var(--border-color);
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-3px);
+    border-color: var(--primary-red);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-right: 20px;
+    flex-shrink: 0;
+}
+
+.stat-primary .stat-icon {
+    background: linear-gradient(135deg, var(--primary-red), var(--dark-red));
+    color: white;
+}
+
+.stat-success .stat-icon {
+    background: linear-gradient(135deg, var(--success-green), #2E7D32);
+    color: white;
+}
+
+.stat-warning .stat-icon {
+    background: linear-gradient(135deg, var(--warning-orange), #E65100);
+    color: white;
+}
+
+.stat-danger .stat-icon {
+    background: linear-gradient(135deg, #f44336, #c62828);
+    color: white;
+}
+
+.stat-info .stat-icon {
+    background: linear-gradient(135deg, var(--info-blue), #1565C0);
+    color: white;
+}
+
+.stat-purple .stat-icon {
+    background: linear-gradient(135deg, #9C27B0, #6A1B9A);
+    color: white;
+}
+
+.stat-secondary .stat-icon {
+    background: linear-gradient(135deg, var(--gray), #616161);
+    color: white;
+}
+
+.stat-red .stat-icon {
+    background: linear-gradient(135deg, var(--light-red), var(--primary-red));
+    color: white;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    color: var(--gray);
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    color: var(--dark-gray);
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1;
+}
+
+/* ============================================
+   ALERTS LIST
+   ============================================ */
+
+.alerts-list .alert {
+    border-left: 4px solid;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    padding: 15px 20px;
+}
+
+.alerts-list .alert-warning {
+    border-left-color: var(--warning-orange);
+    background-color: #fff3e0;
+}
+
+.alerts-list .alert-danger {
+    border-left-color: var(--primary-red);
+    background-color: #ffebee;
+}
+
+.alerts-list .alert-info {
+    border-left-color: var(--info-blue);
+    background-color: #e3f2fd;
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+
+.card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.card-header {
+    border-bottom: 1px solid var(--border-color);
+    padding: 20px 25px;
+    background: var(--white);
+    font-weight: 600;
+    color: var(--dark-gray);
+}
+
+/* ============================================
+   TABLES
+   ============================================ */
+
+.table {
+    font-size: 14px;
+}
+
+.table thead th {
+    font-weight: 600;
+    color: var(--dark-gray);
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+    padding: 15px;
+    background: var(--light-gray);
+}
+
+.table tbody tr {
+    transition: background 0.2s;
+}
+
+.table tbody tr:hover {
+    background: rgba(211, 47, 47, 0.03);
+}
+
+.table tbody td {
+    padding: 12px 15px;
+    vertical-align: middle;
+}
+
+/* ============================================
+   STATUS BADGES
+   ============================================ */
+.badge {
+    padding: 0.4rem 0.8rem;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+.status-active {
+    background: #E8F5E9;
+    color: #2E7D32;
+}
+
+.status-pending {
+    background: #FFF3E0;
+    color: #E65100;
+}
+
+.status-approved {
+    background: #E3F2FD;
+    color: #1565C0;
+}
+
+.status-rejected {
+    background: #FFEBEE;
+    color: #C62828;
+}
+
+.status-expired {
+    background: #F5F5F5;
+    color: #616161;
+}
+
+/* SLA Indicators */
+.sla-good {
+    color: var(--insurance-success);
+    font-weight: 600;
+}
+
+.sla-warning {
+    color: var(--insurance-warning);
+    font-weight: 600;
+}
+
+.sla-critical {
+    color: var(--insurance-danger);
+    font-weight: 600;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Fraud Risk Indicators */
+.fraud-low {
+    color: var(--insurance-success);
+}
+
+.fraud-medium {
+    color: var(--insurance-warning);
+}
+
+.fraud-high {
+    color: var(--insurance-danger);
+    font-weight: 600;
+}
+
+.fraud-critical {
+    color: var(--insurance-danger);
+    font-weight: 700;
+    background: rgba(244, 67, 54, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: var(--primary-red);
+    border: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--dark-red);
+    box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background: var(--success-green);
+    border: none;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #2E7D32;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-warning {
+    background: var(--warning-orange);
+    border: none;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #E65100;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-warning:hover {
+    background: #E65100;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+.btn-danger {
+    background: var(--insurance-danger);
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #C62828;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+/* Forms */
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 0.6rem 1rem;
+    transition: all 0.3s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--insurance-primary);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+}
+
+.form-label {
+    font-weight: 500;
+    color: var(--insurance-dark);
+    margin-bottom: 0.5rem;
+}
+
+/* Modals */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+}
+
+.modal-header {
+    border-bottom: none;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+/* Loading States */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(33, 150, 243, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--insurance-primary);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        height: 100vh;
+        z-index: 1050;
+        transition: left 0.3s;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .main-content {
+        margin-left: 0;
+    }
+    
+    .company-name {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .insurance-header {
+        padding: 1rem;
+    }
+    
+    .header-center {
+        display: none;
+    }
+    
+    .main-content {
+        padding: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .sidebar, .insurance-header, .btn, .modal {
+        display: none !important;
+    }
+    
+    .main-content {
+        padding: 0;
+        background: white;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd;
+    }
+}
+
+/* Accessibility */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Focus Styles for Keyboard Navigation */
+a:focus, button:focus, input:focus, select:focus {
+    outline: 2px solid var(--insurance-primary);
+    outline-offset: 2px;
+}
+
+/* Custom Scrollbar */
+.sidebar::-webkit-scrollbar,
+.main-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track,
+.main-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover,
+.main-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}

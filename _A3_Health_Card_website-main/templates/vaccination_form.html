@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == 'edit' %}Edit Vaccination{% else %}Add Vaccination{% endif %} | A3 Health Card{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div class="form-card-header compact">
+    <div>
+      <div class="kicker">Vaccination History</div>
+      <h2>{% if mode == 'edit' %}Edit Vaccination{% else %}Add New Vaccination{% endif %}</h2>
+      <p class="muted">Keep your immunization data synced with clinics and emergency teams.</p>
+    </div>
+    {% if mode == 'edit' and vaccination %}
+    <span class="status-pill status-{{ vaccination.status.lower() }}">{{ vaccination.status }}</span>
+    {% endif %}
+  </div>
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('vaccination_add') if mode == 'add' else url_for('vaccination_edit', vaccination_id=vaccination.id) }}">
+    <div class="form-grid two-column">
+      <!-- Basic Vaccine Details -->
+      <div class="form-group">
+        <label for="vaccine_name">Vaccine Name <span class="text-danger">*</span></label>
+        <input id="vaccine_name" name="vaccine_name" type="text" class="form-control" required
+               value="{{ vaccination.vaccine_name if vaccination else '' }}" placeholder="e.g., COVID-19, MMR, Flu Shot" />
+      </div>
+      <div class="form-group">
+        <label for="category">Category <span class="text-danger">*</span></label>
+        <select id="category" name="category" class="form-control" required>
+          <option value="">Select category</option>
+          {% for c in categories %}
+          <option value="{{ c }}" {% if vaccination and vaccination.category == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="dose_number">Dose Number <span class="text-danger">*</span></label>
+        <select id="dose_number" name="dose_number" class="form-control" required>
+          <option value="">Select dose</option>
+          {% for d in dose_numbers %}
+          <option value="{{ d }}" {% if vaccination and vaccination.dose_number == d %}selected{% endif %}>{{ d }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="vaccination_date">Vaccination Date <span class="text-danger">*</span></label>
+        <input type="date" id="vaccination_date" name="vaccination_date" class="form-control" required
+               value="{{ vaccination.vaccination_date.strftime('%Y-%m-%d') if vaccination and vaccination.vaccination_date else '' }}" />
+      </div>
+      <div class="form-group">
+        <label for="next_due_date">Next Due Date</label>
+        <input type="date" id="next_due_date" name="next_due_date" class="form-control"
+               value="{{ vaccination.next_due_date.strftime('%Y-%m-%d') if vaccination and vaccination.next_due_date else '' }}" />
+        <small class="form-text">Leave blank if not applicable</small>
+      </div>
+      <div class="form-group">
+        <label>Status <span class="text-danger">*</span></label>
+        <div class="radio-row">
+          {% for s in statuses %}
+          <label class="radio-pill">
+            <input type="radio" name="status" value="{{ s }}" {% if vaccination and vaccination.status == s %}checked{% endif %}
+                   {% if not vaccination and loop.first %}checked{% endif %} required />
+            <span>{{ s }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Medical Details -->
+      <div class="form-group">
+        <label for="manufacturer">Manufacturer</label>
+        <input type="text" id="manufacturer" name="manufacturer" class="form-control"
+               value="{{ vaccination.manufacturer if vaccination else '' }}" placeholder="e.g., Pfizer, Moderna, Serum Institute" />
+      </div>
+      <div class="form-group">
+        <label for="batch_lot_number">Batch / Lot Number</label>
+        <input type="text" id="batch_lot_number" name="batch_lot_number" class="form-control"
+               value="{{ vaccination.batch_lot_number if vaccination else '' }}" placeholder="e.g., ABC123456" />
+      </div>
+      <div class="form-group">
+        <label for="hospital_clinic_name">Hospital/Clinic Name</label>
+        <input type="text" id="hospital_clinic_name" name="hospital_clinic_name" class="form-control"
+               value="{{ vaccination.hospital_clinic_name if vaccination else '' }}" placeholder="e.g., City General Hospital" />
+      </div>
+      <div class="form-group">
+        <label for="doctor_nurse_name">Doctor/Nurse Name</label>
+        <input type="text" id="doctor_nurse_name" name="doctor_nurse_name" class="form-control"
+               value="{{ vaccination.doctor_nurse_name if vaccination else '' }}" placeholder="e.g., Dr. John Smith" />
+      </div>
+      <div class="form-group full-width">
+        <label for="side_effects">Side Effects</label>
+        <textarea id="side_effects" name="side_effects" rows="3" class="form-control"
+                  placeholder="List any side effects experienced, separated by commas (e.g., Mild fever, Sore arm, Fatigue)">{{ vaccination.side_effects if vaccination and vaccination.side_effects else '' }}</textarea>
+        <small class="form-text">Enter side effects as a comma-separated list or JSON array</small>
+      </div>
+      <div class="form-group full-width">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="3" class="form-control"
+                  placeholder="Add any additional notes or observations">{{ vaccination.notes if vaccination and vaccination.notes else '' }}</textarea>
+      </div>
+
+      <!-- Certificate Upload -->
+      <div class="form-group full-width">
+        <label for="certificate">Upload Certificate <small>(PDF, JPG, PNG - Max 5 MB)</small></label>
+        <input type="file" id="certificate" name="certificate" class="form-control" accept=".pdf,.jpg,.jpeg,.png" />
+        <small class="form-text">Upload vaccination certificate or proof of vaccination</small>
+        <div id="certificatePreview" class="file-preview-grid mt-2"></div>
+        {% if existing_cert %}
+        <div class="existing-documents mt-2">
+          <p><strong>Current certificate:</strong></p>
+          <ul class="document-list">
+            <li>
+              <i class="fas fa-file-alt"></i>
+              <span>{{ existing_cert.original_name }}</span>
+              <small>({{ (existing_cert.size / 1024)|round(1) }} KB)</small>
+              <label class="checkbox-pill" style="margin-left:8px;">
+                <input type="checkbox" name="remove_certificate" value="yes" />
+                <span>Remove</span>
+              </label>
+            </li>
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">
+        {% if mode == 'edit' %}<i class="fas fa-save"></i> Save Changes{% else %}<i class="fas fa-plus"></i> Add Vaccination{% endif %}
+      </button>
+      <a href="{{ url_for('vaccination_dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+

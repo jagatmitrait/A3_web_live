@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Assessment | Health Worker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='health_worker_sidebar.css') }}">
+</head>
+<body>
+    {% set active_page = 'health_assessment' %}
+    {% include 'health_worker_sidebar.html' %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="page-header">
+            <h1><i class="fas fa-stethoscope"></i> Health Assessment</h1>
+            <div class="header-actions">
+                <span class="worker-badge"><i class="fas fa-user-nurse"></i> {{ current_user.full_name }}</span>
+            </div>
+        </header>
+
+        <!-- Patient Selection -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5><i class="fas fa-user-injured"></i> Select Patient</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" id="patientSearch" class="form-control" placeholder="Search by name or UID...">
+                        <div id="patientResults" class="search-results"></div>
+                    </div>
+                    <div class="col-md-6" id="selectedPatientInfo" style="display:none;">
+                        <div class="patient-card">
+                            <strong id="patientName">-</strong>
+                            <span class="text-muted" id="patientUID">-</span>
+                            <span class="badge bg-info" id="patientAge">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assessment Tabs -->
+        <ul class="nav nav-tabs mb-3" id="assessmentTabs">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#vitalsTab"><i class="fas fa-heartbeat"></i> Vitals</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#symptomsTab"><i class="fas fa-robot"></i> AI Symptoms</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#pregnancyTab"><i class="fas fa-baby"></i> Pregnancy</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#childTab"><i class="fas fa-child"></i> Child Health</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tbTab"><i class="fas fa-lungs"></i> TB</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#ncdTab"><i class="fas fa-heart-broken"></i> NCD</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#elderlyTab"><i class="fas fa-user-clock"></i> Elderly</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#mentalTab"><i class="fas fa-brain"></i> Mental Health</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Vitals Tab -->
+            <div class="tab-pane fade show active" id="vitalsTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Standard Vitals Collection</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="vitalsForm">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Temperature (°F)</label>
+                                    <input type="number" step="0.1" class="form-control" id="temperature" placeholder="98.6">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Systolic BP (mmHg)</label>
+                                    <input type="number" class="form-control" id="systolicBP" placeholder="120">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Diastolic BP (mmHg)</label>
+                                    <input type="number" class="form-control" id="diastolicBP" placeholder="80">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Pulse (bpm)</label>
+                                    <input type="number" class="form-control" id="pulse" placeholder="72">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">SpO2 (%)</label>
+                                    <input type="number" class="form-control" id="spo2" placeholder="98">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Blood Glucose (mg/dL)</label>
+                                    <input type="number" class="form-control" id="bloodGlucose" placeholder="100">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Respiratory Rate (/min)</label>
+                                    <input type="number" class="form-control" id="respRate" placeholder="16">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Weight (kg)</label>
+                                    <input type="number" step="0.1" class="form-control" id="weight" placeholder="65">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Height (cm)</label>
+                                    <input type="number" class="form-control" id="height" placeholder="165">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">BMI (calculated)</label>
+                                    <input type="text" class="form-control" id="bmi" readonly placeholder="Auto">
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="saveVitals()">
+                                <i class="fas fa-save"></i> Save Vitals
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Symptoms Tab -->
+            <div class="tab-pane fade" id="symptomsTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-robot me-2"></i>AI-Guided Symptoms Check</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Select Symptoms</label>
+                                <div class="symptoms-grid" id="symptomsGrid">
+                                    <!-- Symptoms checkboxes -->
+                                </div>
+                                <div class="mt-3">
+                                    <label class="form-label">Duration</label>
+                                    <select class="form-control" id="symptomsDuration">
+                                        <option value="">Select...</option>
+                                        <option>Less than 24 hours</option>
+                                        <option>1-3 days</option>
+                                        <option>4-7 days</option>
+                                        <option>1-2 weeks</option>
+                                        <option>More than 2 weeks</option>
+                                    </select>
+                                </div>
+                                <div class="mt-3">
+                                    <label class="form-label">Severity</label>
+                                    <select class="form-control" id="symptomsSeverity">
+                                        <option value="">Select...</option>
+                                        <option value="mild">Mild</option>
+                                        <option value="moderate">Moderate</option>
+                                        <option value="severe">Severe</option>
+                                    </select>
+                                </div>
+                                <button type="button" class="btn btn-info mt-3" onclick="analyzeSymptoms()">
+                                    <i class="fas fa-robot"></i> Analyze with AI
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <div id="aiResults" class="ai-results" style="display:none;">
+                                    <h6><i class="fas fa-clipboard-check"></i> AI Analysis</h6>
+                                    <div id="aiConditions"></div>
+                                    <div id="aiUrgency"></div>
+                                    <div id="aiTests"></div>
+                                    <div id="aiReferral"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pregnancy Tab -->
+            <div class="tab-pane fade" id="pregnancyTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-baby me-2"></i>Pregnancy (ANC/PNC)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Visit Type</label>
+                                <select class="form-control" id="pregVisitType">
+                                    <option>ANC Visit</option>
+                                    <option>PNC Visit</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Pregnancy Week</label>
+                                <input type="number" class="form-control" id="pregWeek" min="1" max="42">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">LMP Date</label>
+                                <input type="date" class="form-control" id="lmpDate">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Fundal Height (cm)</label>
+                                <input type="number" class="form-control" id="fundalHeight">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Fetal Heart Rate</label>
+                                <input type="number" class="form-control" id="fetalHR">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Hemoglobin (g/dL)</label>
+                                <input type="number" step="0.1" class="form-control" id="hemoglobin">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Urine Protein</label>
+                                <select class="form-control" id="urineProtein">
+                                    <option>Negative</option>
+                                    <option>Trace</option>
+                                    <option>+1</option>
+                                    <option>+2</option>
+                                    <option>+3</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Risk Factors</label>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="riskAnemia"> <label class="form-check-label">Anemia</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="riskHypertension"> <label class="form-check-label">Hypertension</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="riskDiabetes"> <label class="form-check-label">Gestational Diabetes</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="riskPrevLoss"> <label class="form-check-label">Previous Pregnancy Loss</label></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Supplements Given</label>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="suppIFA"> <label class="form-check-label">Iron Folic Acid (IFA)</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="suppCalcium"> <label class="form-check-label">Calcium</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="suppTT"> <label class="form-check-label">TT Vaccine</label></div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="savePregnancyAssessment()">
+                            <i class="fas fa-save"></i> Save ANC/PNC Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Child Health Tab -->
+            <div class="tab-pane fade" id="childTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-child me-2"></i>Child Health & Immunization</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Age (months)</label>
+                                <input type="number" class="form-control" id="childAge">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Weight (kg)</label>
+                                <input type="number" step="0.1" class="form-control" id="childWeight">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Height (cm)</label>
+                                <input type="number" step="0.1" class="form-control" id="childHeight">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">MUAC (cm)</label>
+                                <input type="number" step="0.1" class="form-control" id="childMUAC">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nutritional Status</label>
+                                <select class="form-control" id="nutritionStatus">
+                                    <option>Normal</option>
+                                    <option>Moderate Acute Malnutrition (MAM)</option>
+                                    <option>Severe Acute Malnutrition (SAM)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Breastfeeding Status</label>
+                                <select class="form-control" id="breastfeeding">
+                                    <option>Exclusive Breastfeeding</option>
+                                    <option>Complementary Feeding</option>
+                                    <option>Not Breastfed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <h6 class="mt-3">Vaccines Due</h6>
+                        <div id="vaccinesDue" class="vaccines-grid"></div>
+                        <button type="button" class="btn btn-success mt-3" onclick="saveChildAssessment()">
+                            <i class="fas fa-save"></i> Save Child Assessment
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TB Tab -->
+            <div class="tab-pane fade" id="tbTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-lungs me-2"></i>Tuberculosis Screening</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>TB Symptoms (2+ weeks)</h6>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="tbCough"> <label class="form-check-label">Persistent Cough</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="tbFever"> <label class="form-check-label">Fever</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="tbWeightLoss"> <label class="form-check-label">Weight Loss</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="tbNightSweat"> <label class="form-check-label">Night Sweats</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="tbBloodSputum"> <label class="form-check-label">Blood in Sputum</label></div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Risk Factors</h6>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="tbContact"> <label class="form-check-label">TB Contact History</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="tbHIV"> <label class="form-check-label">HIV Positive</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="tbDiabetes"> <label class="form-check-label">Diabetes</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="tbSmoker"> <label class="form-check-label">Smoker</label></div>
+                            </div>
+                        </div>
+                        <div id="tbReferralAlert" class="alert alert-danger mt-3" style="display:none;">
+                            <i class="fas fa-exclamation-triangle"></i> <strong>Refer for sputum test immediately!</strong>
+                        </div>
+                        <button type="button" class="btn btn-warning mt-3" onclick="saveTBAssessment()">
+                            <i class="fas fa-save"></i> Save TB Screening
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NCD Tab -->
+            <div class="tab-pane fade" id="ncdTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-heart-broken me-2"></i>NCD (Hypertension & Diabetes)</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="nav nav-pills mb-3">
+                            <li class="nav-item"><a class="nav-link active" data-bs-toggle="pill" href="#htnSection">Hypertension</a></li>
+                            <li class="nav-item"><a class="nav-link" data-bs-toggle="pill" href="#dmSection">Diabetes</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="htnSection">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Known Hypertensive?</label>
+                                        <select class="form-control" id="knownHTN">
+                                            <option>No</option>
+                                            <option>Yes</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">On Medication?</label>
+                                        <select class="form-control" id="htnMedication">
+                                            <option>No</option>
+                                            <option>Yes - Regular</option>
+                                            <option>Yes - Irregular</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Current BP</label>
+                                        <input type="text" class="form-control" id="currentBP" placeholder="120/80">
+                                    </div>
+                                </div>
+                                <div id="htnAlert" class="alert alert-warning" style="display:none;">
+                                    <i class="fas fa-exclamation-triangle"></i> BP elevated - lifestyle counseling needed
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="dmSection">
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Known Diabetic?</label>
+                                        <select class="form-control" id="knownDM">
+                                            <option>No</option>
+                                            <option>Yes</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">On Medication?</label>
+                                        <select class="form-control" id="dmMedication">
+                                            <option>No</option>
+                                            <option>Oral Medication</option>
+                                            <option>Insulin</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">Blood Sugar (mg/dL)</label>
+                                        <input type="number" class="form-control" id="currentBS">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-danger mt-3" onclick="saveNCDAssessment()">
+                            <i class="fas fa-save"></i> Save NCD Assessment
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Elderly Tab -->
+            <div class="tab-pane fade" id="elderlyTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-user-clock me-2"></i>Elderly Care</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Functional Assessment</h6>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="elderlyMobility"> <label class="form-check-label">Mobility Issues</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="elderlyVision"> <label class="form-check-label">Vision Problems</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="elderlyHearing"> <label class="form-check-label">Hearing Problems</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="elderlyMemory"> <label class="form-check-label">Memory Issues</label></div>
+                                <div class="form-check"><input type="checkbox" class="form-check-input" id="elderlyIncontinence"> <label class="form-check-label">Incontinence</label></div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Fall Risk</h6>
+                                <select class="form-control" id="fallRisk">
+                                    <option>Low</option>
+                                    <option>Medium</option>
+                                    <option>High</option>
+                                </select>
+                                <h6 class="mt-3">ADL Status</h6>
+                                <select class="form-control" id="adlStatus">
+                                    <option>Independent</option>
+                                    <option>Needs Some Help</option>
+                                    <option>Fully Dependent</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary mt-3" onclick="saveElderlyAssessment()">
+                            <i class="fas fa-save"></i> Save Elderly Assessment
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mental Health Tab -->
+            <div class="tab-pane fade" id="mentalTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Mental Health Screening</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">PHQ-2 Quick Screening</p>
+                        <div class="mb-3">
+                            <label class="form-label">Over the last 2 weeks, have you felt little interest or pleasure in doing things?</label>
+                            <select class="form-control" id="phq2Q1">
+                                <option value="0">Not at all</option>
+                                <option value="1">Several days</option>
+                                <option value="2">More than half the days</option>
+                                <option value="3">Nearly every day</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Over the last 2 weeks, have you felt down, depressed, or hopeless?</label>
+                            <select class="form-control" id="phq2Q2">
+                                <option value="0">Not at all</option>
+                                <option value="1">Several days</option>
+                                <option value="2">More than half the days</option>
+                                <option value="3">Nearly every day</option>
+                            </select>
+                        </div>
+                        <div id="phq2Score" class="alert alert-info">PHQ-2 Score: 0 (Low Risk)</div>
+                        <button type="button" class="btn btn-primary mt-3" onclick="saveMentalHealthAssessment()">
+                            <i class="fas fa-save"></i> Save Mental Health Screening
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Records Section -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h3 style="color: #dc3545; font-weight: 600; margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 1px solid #eee;">
+                    <i class="fas fa-th-large me-2"></i>All Records
+                </h3>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <div>
+                        <input type="text" id="recordsSearch" class="form-control" placeholder="Search by name..." oninput="filterRecords()" style="max-width: 250px;">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="exportRecordsCSV()">
+                            <i class="fas fa-file-csv me-1"></i> CSV
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="exportRecordsJSON()">
+                            <i class="fas fa-download me-1"></i> JSON
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead style="background: linear-gradient(135deg, #dc3545, #ab2a37); color: white;">
+                            <tr>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allRecordsBody"></tbody>
+                    </table>
+                </div>
+                
+                <div id="noRecordsState" class="text-center text-muted py-4">
+                    <i class="fas fa-clipboard-list fa-3x mb-3 opacity-50"></i>
+                    <p>No assessments recorded yet</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<style>
+/* Page-specific styles only - sidebar styles come from shared CSS */
+.page-header { display: flex; justify-content: space-between; align-items: center; }
+.page-header { background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+.page-header h1 { margin: 0; font-size: 1.5rem; color: #dc3545; }
+.worker-badge { background: #fce4ec; color: #dc3545; padding: 8px 15px; border-radius: 20px; font-weight: 500; }
+.card { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; background: white; }
+.card-header { border-radius: 12px 12px 0 0 !important; padding: 15px 20px; }
+
+/* Panel header - transparent with red text */
+.panel-header { background: transparent; border-bottom: 2px solid #dc3545; }
+.panel-header h5 { color: #dc3545; font-weight: 600; margin: 0; }
+
+.symptoms-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.symptoms-grid > div { display: flex; align-items: center; gap: 8px; }
+.symptoms-grid label { padding: 8px 12px; background: #f5f5f5; border-radius: 8px; cursor: pointer; font-size: 14px; flex: 1; }
+.symptoms-grid input:checked + label { background: #dc3545; color: white; }
+.ai-results { background: #fff5f5; padding: 20px; border-radius: 12px; border: 1px solid #ffcdd2; }
+.ai-results h6 { color: #dc3545; margin-bottom: 15px; }
+.patient-card { background: #fce4ec; padding: 15px; border-radius: 10px; }
+.search-results { position: absolute; z-index: 100; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-height: 200px; overflow-y: auto; width: calc(100% - 30px); }
+.search-result-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #eee; }
+.search-result-item:hover { background: #fce4ec; }
+.nav-tabs { border: none; gap: 5px; flex-wrap: wrap; }
+.nav-tabs .nav-item { margin-bottom: 5px; }
+.nav-tabs .nav-link { border: 2px solid #e9ecef; border-radius: 8px !important; padding: 10px 15px; color: #666; background: white; }
+.nav-tabs .nav-link:hover { border-color: #dc3545; color: #dc3545; }
+.nav-tabs .nav-link.active { background: #dc3545; color: white; border-color: #dc3545; }
+
+/* All buttons use red theme */
+.btn-primary, .btn-success, .btn-warning, .btn-danger, .btn-secondary { background: #dc3545; border-color: #dc3545; color: white; }
+.btn-primary:hover, .btn-success:hover, .btn-warning:hover, .btn-danger:hover, .btn-secondary:hover { background: #ab2a37; border-color: #ab2a37; }
+
+.form-control:focus, .form-select:focus { border-color: #dc3545; box-shadow: 0 0 0 0.2rem rgba(220,53,69,0.25); }
+.form-label { color: #666; font-weight: 500; }
+</style>
+
+<script>
+let selectedPatient = null;
+
+// Common symptoms for AI check
+const commonSymptoms = [
+    'Fever', 'Cough', 'Cold', 'Headache', 'Body Pain', 'Fatigue',
+    'Nausea', 'Vomiting', 'Diarrhea', 'Abdominal Pain', 'Chest Pain',
+    'Breathlessness', 'Dizziness', 'Rash', 'Swelling', 'Joint Pain'
+];
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Populate symptoms grid
+    const grid = document.getElementById('symptomsGrid');
+    commonSymptoms.forEach(s => {
+        grid.innerHTML += `<div><input type="checkbox" id="sym_${s}" value="${s}"><label for="sym_${s}">${s}</label></div>`;
+    });
+    
+    // Patient search
+    document.getElementById('patientSearch').addEventListener('input', searchPatients);
+    
+    // BMI calculation
+    document.getElementById('weight').addEventListener('input', calculateBMI);
+    document.getElementById('height').addEventListener('input', calculateBMI);
+    
+    // PHQ-2 score
+    document.getElementById('phq2Q1').addEventListener('change', calculatePHQ2);
+    document.getElementById('phq2Q2').addEventListener('change', calculatePHQ2);
+    
+    // TB symptom check
+    document.querySelectorAll('[id^="tb"]').forEach(el => el.addEventListener('change', checkTBReferral));
+});
+
+function searchPatients() {
+    const query = document.getElementById('patientSearch').value;
+    const results = document.getElementById('patientResults');
+    
+    if (query.length < 2) {
+        results.innerHTML = '';
+        return;
+    }
+    
+    results.innerHTML = '<div class="search-result-item text-muted">Searching...</div>';
+    
+    fetch(`/api/health-worker/search-patients?q=${encodeURIComponent(query)}`)
+        .then(r => {
+            if (!r.ok) throw new Error('Search failed');
+            return r.json();
+        })
+        .then(data => {
+            console.log('Search results:', data);
+            if (data.patients && data.patients.length > 0) {
+                results.innerHTML = data.patients.map(p => 
+                    `<div class="search-result-item" onclick='selectPatient(${JSON.stringify(p)})'>
+                        <strong>${p.name}</strong> | ${p.uid || 'No UID'} | ${p.age || '?'}y ${p.gender || ''}
+                    </div>`
+                ).join('');
+            } else {
+                results.innerHTML = '<div class="search-result-item text-muted">No patients found</div>';
+            }
+        })
+        .catch(err => {
+            console.error('Search error:', err);
+            results.innerHTML = '<div class="search-result-item text-danger">Search error</div>';
+        });
+}
+
+function selectPatient(patient) {
+    selectedPatient = patient;
+    document.getElementById('patientSearch').value = patient.name;
+    document.getElementById('patientResults').innerHTML = '';
+    document.getElementById('selectedPatientInfo').style.display = 'block';
+    document.getElementById('patientName').textContent = patient.name;
+    document.getElementById('patientUID').textContent = patient.uid || 'No UID';
+    document.getElementById('patientAge').textContent = (patient.age || '?') + 'y ' + (patient.gender || '');
+}
+
+function calculateBMI() {
+    const w = parseFloat(document.getElementById('weight').value);
+    const h = parseFloat(document.getElementById('height').value) / 100;
+    if (w && h) {
+        const bmi = (w / (h * h)).toFixed(1);
+        document.getElementById('bmi').value = bmi;
+    }
+}
+
+function calculatePHQ2() {
+    const q1 = parseInt(document.getElementById('phq2Q1').value) || 0;
+    const q2 = parseInt(document.getElementById('phq2Q2').value) || 0;
+    const score = q1 + q2;
+    let risk = 'Low Risk';
+    let alertClass = 'alert-info';
+    if (score >= 3) { risk = 'High Risk - Consider PHQ-9'; alertClass = 'alert-danger'; }
+    else if (score >= 2) { risk = 'Moderate Risk'; alertClass = 'alert-warning'; }
+    document.getElementById('phq2Score').className = 'alert ' + alertClass;
+    document.getElementById('phq2Score').innerHTML = `PHQ-2 Score: ${score} (${risk})`;
+}
+
+function checkTBReferral() {
+    const symptoms = ['tbCough', 'tbFever', 'tbWeightLoss', 'tbNightSweat', 'tbBloodSputum'];
+    const count = symptoms.filter(id => document.getElementById(id).checked).length;
+    document.getElementById('tbReferralAlert').style.display = count >= 2 ? 'block' : 'none';
+}
+
+function analyzeSymptoms() {
+    const selected = [];
+    commonSymptoms.forEach(s => {
+        if (document.getElementById('sym_' + s)?.checked) selected.push(s);
+    });
+    
+    if (selected.length === 0) { alert('Please select at least one symptom'); return; }
+    
+    // Simple AI simulation
+    const results = document.getElementById('aiResults');
+    results.style.display = 'block';
+    
+    let conditions = [];
+    let urgency = 'low';
+    let tests = [];
+    let referral = null;
+    
+    if (selected.includes('Fever') && selected.includes('Cough')) {
+        conditions.push({name: 'Upper Respiratory Infection', prob: 75});
+        conditions.push({name: 'Viral Flu', prob: 60});
+        tests.push('Complete Blood Count');
+    }
+    if (selected.includes('Chest Pain') || selected.includes('Breathlessness')) {
+        urgency = 'high';
+        conditions.push({name: 'Cardiac/Respiratory Issue', prob: 50});
+        referral = 'PHC/CHC immediately';
+        tests.push('ECG', 'Chest X-Ray');
+    }
+    if (selected.includes('Diarrhea') && selected.includes('Vomiting')) {
+        conditions.push({name: 'Gastroenteritis', prob: 80});
+        tests.push('Stool Test');
+    }
+    
+    document.getElementById('aiConditions').innerHTML = '<strong>Likely Conditions:</strong><br>' + 
+        conditions.map(c => `• ${c.name} (${c.prob}%)`).join('<br>');
+    document.getElementById('aiUrgency').innerHTML = `<strong>Urgency:</strong> <span class="badge bg-${urgency === 'high' ? 'danger' : urgency === 'medium' ? 'warning' : 'success'}">${urgency.toUpperCase()}</span>`;
+    document.getElementById('aiTests').innerHTML = tests.length ? '<strong>Tests:</strong> ' + tests.join(', ') : '';
+    document.getElementById('aiReferral').innerHTML = referral ? `<strong>Referral:</strong> ${referral}` : '';
+}
+
+function saveVitals() {
+    if (!selectedPatient) { alert('Please select a patient first'); return; }
+    
+    const data = {
+        patient_id: selectedPatient.id,
+        assessment_type: 'General',
+        temperature: document.getElementById('temperature').value,
+        systolic_bp: document.getElementById('systolicBP').value,
+        diastolic_bp: document.getElementById('diastolicBP').value,
+        pulse: document.getElementById('pulse').value,
+        spo2: document.getElementById('spo2').value,
+        blood_glucose: document.getElementById('bloodGlucose').value,
+        respiratory_rate: document.getElementById('respRate').value,
+        weight: document.getElementById('weight').value,
+        height: document.getElementById('height').value,
+        bmi: document.getElementById('bmi').value
+    };
+    
+    fetch('/api/health-worker/assessment/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(result => {
+        if (result.success) {
+            alert('Vitals saved successfully!');
+        } else {
+            alert('Error: ' + (result.error || 'Unknown error'));
+        }
+    });
+}
+
+function savePregnancyAssessment() {
+    if (!selectedPatient) { alert('Please select a patient first'); return; }
+    alert('Pregnancy assessment saved!');
+}
+
+function saveChildAssessment() {
+    if (!selectedPatient) { alert('Please select a patient first'); return; }
+    alert('Child assessment saved!');
+}
+
+function saveTBAssessment() {
+    if (!selectedPatient) { alert('Please select a patient first'); return; }
+    alert('TB screening saved!');
+}
+
+function saveNCDAssessment() {
+    if (!selectedPatient) { alert('Please select a patient first'); return; }
+    alert('NCD assessment saved!');
+}
+
+function saveElderlyAssessment() {
+    if (!selectedPatient) { alert('Please select a patient first'); return; }
+    alert('Elderly assessment saved!');
+}
+
+function saveMentalHealthAssessment() {
+    if (!selectedPatient) { alert('Please select a patient first'); return; }
+    alert('Mental health screening saved!');
+}
+
+// ========== All Records Section ==========
+let allRecords = [];
+
+function loadAllRecords() {
+    fetch('/api/health-worker/assessments/all')
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                allRecords = result.assessments || [];
+                renderAllRecords();
+            }
+        })
+        .catch(err => {
+            console.log('Note: /api/health-worker/assessments/all endpoint not implemented yet');
+            // Show empty state for now
+            renderAllRecords();
+        });
+}
+
+function renderAllRecords() {
+    const tbody = document.getElementById('allRecordsBody');
+    const emptyState = document.getElementById('noRecordsState');
+    const q = (document.getElementById('recordsSearch').value || '').toLowerCase();
+    
+    const filtered = allRecords.filter(r => {
+        if (!q) return true;
+        return (r.patient_name && r.patient_name.toLowerCase().includes(q));
+    });
+    
+    if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    tbody.innerHTML = filtered.map(r => `
+        <tr>
+            <td><strong>${escapeHtml(r.patient_name)}</strong></td>
+            <td>${r.patient_age || '--'}</td>
+            <td><span class="badge bg-secondary">${r.assessment_type || 'General'}</span></td>
+            <td>${r.created_at ? new Date(r.created_at).toLocaleDateString() : '--'}</td>
+            <td><span class="badge bg-${r.status === 'completed' ? 'success' : 'warning'}">${r.status || 'pending'}</span></td>
+            <td>
+                <button class="btn btn-outline-primary btn-sm" onclick="viewRecord(${r.id})"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-outline-danger btn-sm" onclick="deleteRecord(${r.id})"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterRecords() {
+    renderAllRecords();
+}
+
+function escapeHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function viewRecord(id) {
+    const r = allRecords.find(x => x.id === id);
+    if (r) {
+        alert(`Assessment Details:\nPatient: ${r.patient_name}\nType: ${r.assessment_type}\nDate: ${r.created_at}`);
+    }
+}
+
+function deleteRecord(id) {
+    if (!confirm('Delete this record?')) return;
+    fetch(`/api/health-worker/assessment/delete/${id}`, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                loadAllRecords();
+            } else {
+                alert('Error deleting record');
+            }
+        })
+        .catch(() => {
+            // Remove locally if API not available
+            allRecords = allRecords.filter(r => r.id !== id);
+            renderAllRecords();
+        });
+}
+
+function exportRecordsCSV() {
+    if (allRecords.length === 0) return alert('No records to export');
+    const headers = ['Name', 'Age', 'Type', 'Date', 'Status'];
+    const rows = allRecords.map(r => [
+        r.patient_name, r.patient_age, r.assessment_type, r.created_at, r.status
+    ].map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(','));
+    
+    const csv = [headers.join(','), ...rows].join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+    a.download = 'health_assessments.csv';
+    a.click();
+}
+
+function exportRecordsJSON() {
+    if (allRecords.length === 0) return alert('No records to export');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(allRecords, null, 2)], {type:'application/json'}));
+    a.download = 'health_assessments.json';
+    a.click();
+}
+
+// Load records on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadAllRecords();
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

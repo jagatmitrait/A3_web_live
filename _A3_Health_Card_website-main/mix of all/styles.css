@@ -1,0 +1,306 @@
+/* Theme */
+:root {
+  --primary-red: #d32f2f;
+  /* Red for highlights/buttons/borders */
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  color: #212529;
+  background-color: #ffffff;
+}
+
+/* Navbar */
+.navbar {
+  background-color: var(--primary-red);
+  /* Red background */
+  border-bottom: none;
+}
+
+.navbar-brand {
+  color: #ffffff !important;
+  /* White logo text */
+  font-weight: 800;
+}
+
+.nav-link {
+  color: #ffffff !important;
+  /* White nav links */
+  font-weight: 600;
+}
+
+.nav-link:hover,
+.navbar .navbar-brand:hover {
+  color: rgba(255, 255, 255, 0.8) !important;
+  /* Slightly transparent white on hover */
+}
+
+.navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.emergency-btn {
+  background-color: #ffffff;
+  color: var(--primary-red);
+  border-radius: 9999px;
+  /* Rounded corners */
+  padding: 0.5rem 1rem;
+  font-weight: 700;
+  border: none;
+}
+
+.emergency-btn:hover {
+  filter: brightness(0.95);
+  color: var(--primary-red);
+}
+
+/* Hero (legacy single background) */
+.hero-section {
+  min-height: 80vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.hero-content {
+  color: #fff;
+  max-width: 900px;
+  padding: 1rem;
+}
+
+.hero-title {
+  font-weight: 800;
+}
+
+/* Hero Carousel */
+.hero-carousel,
+.hero-carousel .carousel,
+.hero-carousel .carousel-inner,
+.hero-carousel .carousel-item {
+  height: 80vh;
+  /* 75–80% viewport height */
+}
+
+.hero-carousel .carousel-item {
+  position: relative;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  background: center/cover no-repeat;
+}
+
+.hero-slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45));
+}
+
+.hero-caption {
+  position: relative;
+  z-index: 1;
+  color: #fff;
+  height: 80vh;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.hero-carousel .carousel-indicators [data-bs-target] {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.hero-carousel .carousel-indicators .active {
+  background-color: #fff;
+}
+
+.btn-get-started {
+  background-color: var(--primary-red);
+  color: #fff;
+  /* White text */
+  border: none;
+  border-radius: 9999px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(211, 47, 47, 0.25);
+  transition: color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+
+.btn-get-started:hover {
+  color: #000;
+  /* On hover, text turns black */
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(211, 47, 47, 0.35);
+}
+
+/* A3 Cards */
+.a3-card {
+  background: #fff;
+  /* White background */
+  border: 2px solid var(--primary-red);
+  /* Red border */
+  border-radius: 14px;
+  /* Rounded corners */
+  padding: 2rem 1.25rem;
+  text-align: center;
+  /* Text centered */
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.a3-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  /* Slight scale-up */
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+  /* Subtle shadow */
+}
+
+.a3-card h3 {
+  font-weight: 800;
+}
+
+.a3-card p {
+  color: #444;
+}
+
+/* Elevated Navbar sizing */
+.navbar {
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}
+
+.navbar-brand {
+  font-size: 1.75rem;
+  font-weight: 900;
+}
+
+.navbar h2 {
+  margin: 0;
+}
+
+.nav-link {
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.emergency-btn {
+  font-size: 1.05rem;
+  padding: 0.65rem 1.25rem;
+}
+
+/* Team Section */
+.team-wrapper {
+  overflow: hidden;
+  /* Hide scrollbars for marquee */
+  padding: 8px 0;
+}
+
+.team-track {
+  display: flex;
+  /* Horizontal layout */
+  gap: 1.25rem;
+  width: max-content;
+  /* Allow content to extend for marquee */
+}
+
+/* Continuous right-to-left movement when .marquee is present */
+.team-track.marquee {
+  animation: team-marquee 35s linear infinite;
+}
+
+@keyframes team-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+
+  /* Half width because content is duplicated */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .team-track.marquee {
+    animation: none;
+  }
+}
+
+.team-member {
+  min-width: 140px;
+}
+
+.team-photo {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  /* Circular images */
+  border: 3px solid var(--primary-red);
+  /* Red border */
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.team-photo:hover {
+  transform: scale(1.06);
+  /* Hover scale-up */
+  box-shadow: 0 12px 30px rgba(227, 38, 54, 0.35);
+  /* Subtle glow */
+}
+
+
+/* Footer */
+.site-footer {
+  background-color: var(--primary-red);
+  /* Red background */
+  color: #fff;
+  /* White text */
+  padding: 2rem 0;
+}
+
+.site-footer .footer-links a {
+  color: #fff;
+  text-decoration: none;
+  margin: 0 0.75rem;
+}
+
+.site-footer .footer-links a:hover {
+  color: #000;
+}
+
+/* Links turn black on hover */
+
+/* Utilities */
+.sep {
+  opacity: .5;
+  margin: 0 .25rem;
+}
+
+/* Dropdown Menu Styling */
+.dropdown-menu {
+  border: 2px solid var(--primary-red);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+  color: var(--primary-red);
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+}
+
+.dropdown-item:hover {
+  background-color: var(--primary-red);
+  color: #fff;
+}

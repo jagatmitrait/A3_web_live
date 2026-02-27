@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Bank Dashboard | A3 Health Card</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" >
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" >
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../static/dashboard_theme.css">
+    <link rel="stylesheet" href="../static/blood_bank_dashboard.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="header-left">
+            <h1 class="brand-logo">A3 Health Card</h1>
+        </div>
+        <div class="header-right">
+            <button class="icon-btn" id="refreshBtn" title="Refresh">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name={{ current_user.facility_name }}&background=d32f2f&color=fff" alt="Profile" class="profile-img">
+                <span class="fw-bold d-none d-md-block">{{ current_user.facility_name }}</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="dashboard-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="overview">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard Overview</span>
+                </a>
+                <a href="#" class="nav-item" data-page="inventory">
+                    <i class="fas fa-boxes"></i>
+                    <span>Blood Inventory</span>
+                </a>
+                <a href="#" class="nav-item" data-page="requests">
+                    <i class="fas fa-notes-medical"></i>
+                    <span>Blood Requests</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-item logout-item">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="mainContent">
+            
+            <!-- Flash Messages -->
+            <div class="container-fluid px-0 mb-3">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+            </div>
+
+            <!-- Overview Page -->
+            <div class="content-page active" id="overview-page">
+                <!-- Welcome Card -->
+                <div class="welcome-card">
+                    <div class="welcome-content">
+                        <img src="https://ui-avatars.com/api/?name={{ current_user.facility_name }}&background=gradient&size=80" alt="Profile" class="welcome-profile">
+                        <div class="welcome-text">
+                            <h2>Hello, {{ current_user.facility_name }}</h2>
+                            <p class="welcome-subtitle">Blood Bank Dashboard</p>
+                            <div class="welcome-info">
+                                <span class="info-item">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span id="currentDate">{{ today.strftime('%B %d, %Y') }}</span>
+                                </span>
+                            </div>
+                            <div class="uid-badge">
+                                <strong>UID:</strong> {{ current_user.uid }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #FF6B6B 0%, #EE5253 100%);">
+                            <i class="fas fa-tint"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Total Units</p>
+                            <h3 class="stat-value">{{ total_units }}</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #FF9F43 0%, #EE5A24 100%);">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Low Stock Groups</p>
+                            <h3 class="stat-value" style="font-size: 1.2rem;">
+                                {% if low_stock_groups %}
+                                    {{ low_stock_groups|join(', ') }}
+                                {% else %}
+                                    <span class="text-success">All Stocked</span>
+                                {% endif %}
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #54a0ff 0%, #2e86de 100%);">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="stat-content">
+                            <p class="stat-label">Pending Requests</p>
+                            <h3 class="stat-value">{{ pending_requests_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Page -->
+            <div class="content-page" id="inventory-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-boxes"></i> Blood Inventory</h2>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUnitModal">
+                        <i class="fas fa-plus-circle me-2"></i>Add Blood Unit
+                    </button>
+                </div>
+                
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Blood Group</th>
+                                    <th>Rh Factor</th>
+                                    <th>Expiry Date</th>
+                                    <th>Status</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for unit in units %}
+                                <tr>
+                                    <td><span class="badge bg-danger fs-6">{{ unit.blood_group }}</span></td>
+                                    <td><span class="fw-bold">{{ unit.rh_factor }}</span></td>
+                                    <td>
+                                        {% if unit.expiry_date < today %}
+                                            <span class="text-danger fw-bold">{{ unit.expiry_date.strftime('%Y-%m-%d') }} (Expired)</span>
+                                        {% else %}
+                                            {{ unit.expiry_date.strftime('%Y-%m-%d') }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if unit.status == 'Available' %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% elif unit.status == 'Reserved' %}
+                                            <span class="badge bg-warning text-dark">Reserved</span>
+                                        {% elif unit.status == 'Used' %}
+                                            <span class="badge bg-secondary">Used</span>
+                                        {% else %}
+                                            <span class="badge bg-dark">Expired</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ unit.notes or '-' }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No blood units found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Requests Page -->
+            <div class="content-page" id="requests-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-notes-medical"></i> Blood Requests</h2>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Patient Name</th>
+                                    <th>Patient UID</th>
+                                    <th>Blood Group</th>
+                                    <th>Units</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for req in requests %}
+                                <tr>
+                                    <td class="fw-bold">{{ req.patient_name }}</td>
+                                    <td><code>{{ req.patient_uid or 'N/A' }}</code></td>
+                                    <td><span class="badge bg-danger">{{ req.blood_group }}</span></td>
+                                    <td>{{ req.units_required }}</td>
+                                    <td>
+                                        {% if req.priority == 'Emergency' %}
+                                            <span class="badge bg-danger">Emergency</span>
+                                        {% else %}
+                                            <span class="badge bg-info text-dark">Normal</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'Pending' %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% elif req.status == 'Approved' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if req.status == 'Pending' %}
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-success" onclick="processRequest('{{ req.id }}', 'approve')">Approve</button>
+                                            <button class="btn btn-danger" onclick="processRequest('{{ req.id }}', 'reject')">Reject</button>
+                                        </div>
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">No requests found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Add Blood Unit Modal -->
+    <div class="modal fade" id="addUnitModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Blood Unit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUnitForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Blood Group</label>
+                                <select class="form-select" name="blood_group" required>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="AB">AB</option>
+                                    <option value="O">O</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Rh Factor</label>
+                                <select class="form-select" name="rh_factor" required>
+                                    <option value="+">Positive (+)</option>
+                                    <option value="-">Negative (-)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" class="form-control" name="expiry_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" name="notes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitAddUnit()">Add Unit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='blood_bank_dashboard.js') }}"></script>
+</body>
+</html>

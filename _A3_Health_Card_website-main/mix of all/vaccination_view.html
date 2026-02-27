@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}View Vaccination | A3 Health Card{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div class="form-card-header">
+    <div>
+      <div class="kicker">{{ vaccination.category }}</div>
+      <h2>{{ vaccination.vaccine_name }}</h2>
+      <p class="muted">
+        {{ vaccination.dose_number }} • {{ vaccination.vaccination_date.strftime('%Y-%m-%d') if vaccination.vaccination_date else 'N/A' }}
+        {% if vaccination.next_due_date %}
+        • Next due: {{ vaccination.next_due_date.strftime('%Y-%m-%d') }}
+        {% endif %}
+      </p>
+    </div>
+    <span class="status-pill status-{{ vaccination.status.lower() }}">{{ vaccination.status }}</span>
+  </div>
+
+  <dl class="detail-list">
+    <div class="detail-row">
+      <dt>Vaccine Name</dt>
+      <dd>{{ vaccination.vaccine_name }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Category</dt>
+      <dd>{{ vaccination.category }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Dose Number</dt>
+      <dd>{{ vaccination.dose_number }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Vaccination Date</dt>
+      <dd>{{ vaccination.vaccination_date.strftime('%Y-%m-%d') if vaccination.vaccination_date else 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Next Due Date</dt>
+      <dd>{{ vaccination.next_due_date.strftime('%Y-%m-%d') if vaccination.next_due_date else 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Status</dt>
+      <dd><span class="status-pill status-{{ vaccination.status.lower() }}">{{ vaccination.status }}</span></dd>
+    </div>
+    <div class="detail-row">
+      <dt>Manufacturer</dt>
+      <dd>{{ vaccination.manufacturer or 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Batch / Lot Number</dt>
+      <dd>{{ vaccination.batch_lot_number or 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Hospital/Clinic</dt>
+      <dd>{{ vaccination.hospital_clinic_name or 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Doctor/Nurse</dt>
+      <dd>{{ vaccination.doctor_nurse_name or 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Side Effects</dt>
+      <dd>
+        {% if side_effects %}
+          <div class="reactions-grid">
+            {% for se in side_effects %}
+            <span class="reaction-chip">{{ se }}</span>
+            {% endfor %}
+          </div>
+        {% else %}
+          <span class="muted">No side effects recorded.</span>
+        {% endif %}
+      </dd>
+    </div>
+    <div class="detail-row">
+      <dt>Notes</dt>
+      <dd>{{ vaccination.notes or 'No notes added.' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Certificate</dt>
+      <dd>
+        {% if certificate %}
+        <ul class="document-list">
+          <li>
+            <i class="fas fa-file-alt"></i>
+            <span>{{ certificate.original_name }}</span>
+            <small>({{ (certificate.size / 1024)|round(1) }} KB)</small>
+            <a href="{{ url_for('vaccination_certificate', vaccination_id=vaccination.id, stored_name=certificate.stored_name) }}" class="btn btn-sm btn-outline" style="margin-left:8px;">
+              <i class="fas fa-download"></i> Download
+            </a>
+          </li>
+        </ul>
+        {% else %}
+        <span class="muted">No certificate attached.</span>
+        {% endif %}
+      </dd>
+    </div>
+    <div class="detail-row">
+      <dt>Last updated</dt>
+      <dd>{{ vaccination.updated_at.strftime('%Y-%m-%d %H:%M') if vaccination.updated_at else vaccination.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+    </div>
+  </dl>
+
+  <div class="form-actions">
+    <a href="{{ url_for('vaccination_edit', vaccination_id=vaccination.id) }}" class="btn btn-primary"><i class="fas fa-edit"></i> Edit</a>
+    <form method="post" action="{{ url_for('vaccination_delete', vaccination_id=vaccination.id) }}" style="display:inline-block" onsubmit="return confirm('Delete this vaccination record permanently?');">
+      <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</button>
+    </form>
+    <a href="{{ url_for('vaccination_pdf', vaccination_id=vaccination.id) }}" class="btn btn-secondary"><i class="fas fa-file-pdf"></i> Download PDF Summary</a>
+    <a href="{{ url_for('vaccination_dashboard') }}" class="btn btn-secondary ghost">Back to Vaccination History</a>
+  </div>
+
+</div>
+{% endblock %}
+

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == 'edit' %}Edit Surgery{% else %}Add Surgery{% endif %} | A3 Health Card{% endblock %}
+
+{% block content %}
+<div class="form-card surgery-form">
+  <div class="form-card-header compact">
+    <div>
+      <div class="kicker">Surgery History</div>
+      <h2>{% if mode == 'edit' %}Edit Surgery{% else %}Add New Surgery{% endif %}</h2>
+      <p class="muted">Capture every detail so your care team can reference it instantly.</p>
+    </div>
+    {% if mode == 'edit' and surgery %}
+    <span class="status-pill surgery-type-pill {{ (surgery.surgery_type or '')|lower }}">{{ surgery.surgery_type or 'Type N/A' }}</span>
+    {% endif %}
+  </div>
+  <form id="surgeryForm" method="post" enctype="multipart/form-data" action="{{ url_for('surgery_add') if mode == 'add' else url_for('surgery_edit', surgery_id=surgery.id) }}">
+    <div class="form-grid two-column">
+      <!-- Surgery Information -->
+      <div class="form-group">
+        <label for="surgery_name">Surgery Name <span class="text-danger">*</span></label>
+        <input type="text" id="surgery_name" name="surgery_name" class="form-control" required
+               value="{{ surgery.surgery_name if surgery else '' }}" placeholder="e.g., Laparoscopic Appendectomy" />
+      </div>
+      <div class="form-group">
+        <label for="surgery_date">Surgery Date <span class="text-danger">*</span></label>
+        <input type="date" id="surgery_date" name="surgery_date" class="form-control" required
+               value="{{ surgery.surgery_date.strftime('%Y-%m-%d') if surgery and surgery.surgery_date else '' }}" />
+      </div>
+      <div class="form-group">
+        <label for="surgery_type">Surgery Type <span class="text-danger">*</span></label>
+        <select id="surgery_type" name="surgery_type" class="form-control" required>
+          <option value="">Select type</option>
+          {% for t in surgery_types %}
+          <option value="{{ t }}" {% if surgery and surgery.surgery_type == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="surgery_category">Surgery Category</label>
+        <select id="surgery_category" name="surgery_category" class="form-control">
+          <option value="">Select category</option>
+          {% for c in surgery_categories %}
+          <option value="{{ c }}" {% if surgery and surgery.category == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="surgeon_name">Surgeon Name</label>
+        <input type="text" id="surgeon_name" name="surgeon_name" class="form-control"
+               value="{{ surgery.surgeon_name if surgery else '' }}" placeholder="e.g., Dr. A. Kumar" />
+      </div>
+      <div class="form-group">
+        <label for="surgeon_registration_number">Surgeon Registration Number</label>
+        <input type="text" id="surgeon_registration_number" name="surgeon_registration_number" class="form-control"
+               value="{{ surgery.surgeon_registration_number if surgery else '' }}" placeholder="e.g., MCI/XXXX/2020" />
+      </div>
+      <div class="form-group">
+        <label for="hospital_name">Hospital / Clinic Name</label>
+        <input type="text" id="hospital_name" name="hospital_name" class="form-control"
+               value="{{ surgery.hospital if surgery else '' }}" placeholder="e.g., A3 City Hospital" />
+      </div>
+
+      <!-- Clinical Details -->
+      <div class="form-group full-width">
+        <label for="reason">Reason for surgery</label>
+        <textarea id="reason" name="reason" rows="2" class="form-control" style="resize:vertical;">
+{{ surgery.reason if surgery and surgery.reason else '' }}</textarea>
+      </div>
+      <div class="form-group full-width">
+        <label for="symptoms_before">Symptoms before surgery</label>
+        <textarea id="symptoms_before" name="symptoms_before" rows="2" class="form-control" style="resize:vertical;"
+                  placeholder="Key symptoms, duration, progression, failed medical management, etc.">{{ surgery.symptoms_before if surgery and surgery.symptoms_before else '' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label for="pre_op_condition">Pre-op Condition</label>
+        <select id="pre_op_condition" name="pre_op_condition" class="form-control">
+          <option value="">Select condition</option>
+          {% for c in pre_op_conditions %}
+          <option value="{{ c }}" {% if surgery and surgery.pre_op_condition == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="outcome">Surgery Outcome</label>
+        <select id="outcome" name="outcome" class="form-control">
+          <option value="">Select outcome</option>
+          {% for o in surgery_outcomes %}
+          <option value="{{ o }}" {% if surgery and surgery.outcome == o %}selected{% endif %}>{{ o }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group full-width">
+        <label for="post_op_notes">Post-op Notes</label>
+        <textarea id="post_op_notes" name="post_op_notes" rows="3" class="form-control" style="resize:vertical;"
+                  placeholder="Complications, ICU stay, recovery course, discharge advice, etc.">{{ surgery.post_op_notes if surgery and surgery.post_op_notes else '' }}</textarea>
+      </div>
+      <div class="form-group">
+        <label for="follow_up_date">Follow-up Date</label>
+        <input type="date" id="follow_up_date" name="follow_up_date" class="form-control"
+               value="{{ surgery.follow_up_date.strftime('%Y-%m-%d') if surgery and surgery.follow_up_date else '' }}" />
+      </div>
+      <div class="form-group">
+        <label for="implants_used">Implants Used</label>
+        <input type="text" id="implants_used" name="implants_used" class="form-control"
+               value="{{ surgery.implants_used if surgery and surgery.implants_used else '' }}" placeholder="e.g., Left hip prosthesis, 3.5 mm locking plate" />
+      </div>
+
+      <!-- File Uploads -->
+      <div class="form-group full-width">
+        <label class="label">Upload Documents (max 3 files, 10 MB each)</label>
+        <p class="muted" style="margin-top:0;margin-bottom:8px;font-size:13px;">Allowed types: PDF, JPG, PNG, DICOM.</p>
+        <div id="surgeryUploadArea" class="upload-dropzone" style="border:1px dashed #fecdd3;border-radius:12px;padding:18px;display:flex;align-items:center;gap:12px;cursor:pointer;background:#fff8f9;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#fee2e2;display:flex;align-items:center;justify-content:center;color:#b91c1c;">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <div>
+            <strong>Drag &amp; drop files here</strong>
+            <p style="margin:2px 0 0;font-size:13px;color:#6b7280;">or click to browse from device</p>
+          </div>
+          <input type="file" id="surgeryDocuments" name="documents" multiple
+                 accept=".pdf,.jpg,.jpeg,.png,.dcm,.dicom" style="display:none;" />
+        </div>
+        <div id="surgeryFileError" class="muted" style="display:none;color:#b91c1c;margin-top:6px;font-size:13px;"></div>
+        <div id="surgeryFilePreview" class="file-preview-grid" style="margin-top:8px;"></div>
+
+        {% if existing_docs %}
+        <div class="existing-documents" style="margin-top:12px;">
+          <p style="margin:0 0 4px;font-weight:600;">Existing documents</p>
+          <ul class="document-list">
+            {% for doc in existing_docs %}
+            <li>
+              <i class="fas fa-file-medical"></i>
+              <span>{{ doc.original_name }}</span>
+              <small>({{ (doc.size / 1024)|round(1) }} KB)</small>
+              <label class="checkbox-pill" style="margin-left:8px;">
+                <input type="checkbox" name="remove_documents" value="{{ doc.stored_name }}" />
+                <span>Remove</span>
+              </label>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">
+        {% if mode == 'edit' %}<i class="fas fa-save"></i> Save Changes{% else %}<i class="fas fa-plus"></i> Save Surgery{% endif %}
+      </button>
+      <a href="{{ url_for('surgery_dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='surgery.js') }}"></script>
+{% endblock %}

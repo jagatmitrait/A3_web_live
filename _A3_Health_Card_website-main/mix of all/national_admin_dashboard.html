@@ -1,0 +1,3063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>National Admin Dashboard - A3 Health Card</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        :root {
+            --primary-red: #c62828;
+            --primary-dark: #8e0000;
+            --primary-light: #ff5f52;
+            --bg-light: #f8f9fa;
+            --sidebar-width: 260px;
+        }
+        
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-light);
+            margin: 0; padding: 0;
+            display: flex; min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(180deg, var(--primary-red) 0%, var(--primary-dark) 100%);
+            height: 100vh;
+            position: fixed;
+            left: 0; top: 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            overflow: hidden;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        
+        .brand-logo {
+            color: white;
+            text-decoration: none;
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .brand-logo i { font-size: 1.5rem; }
+        
+        .nav-menu {
+            flex: 1;
+            padding: 1rem 0;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: white;
+        }
+        
+        .nav-link i { width: 20px; text-align: center; }
+        
+        .user-info {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        
+        .user-avatar {
+            width: 40px; height: 40px;
+            background: white;
+            color: var(--primary-red);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 1.5rem;
+        }
+        
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        /* Pages */
+        .content-page { display: none; }
+        .content-page.active { display: block; }
+        
+        /* KPI Cards */
+        .kpi-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        
+        .kpi-card:hover { transform: translateY(-2px); }
+        
+        .kpi-icon {
+            width: 50px; height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: white;
+        }
+        
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .kpi-label {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        /* Cards */
+        .card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-radius: 12px; }
+        
+        /* Charts */
+        .chart-container { min-height: 300px; }
+        
+        /* Tables */
+        .table th { font-weight: 600; color: #666; font-size: 0.875rem; }
+        
+        /* Badges */
+        .badge { font-weight: 500; padding: 0.4em 0.8em; }
+        
+        /* Welcome Banner */
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-dark));
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .welcome-banner h2 { margin: 0; font-size: 1.75rem; }
+        .welcome-banner p { margin: 0.5rem 0 0; opacity: 0.9; }
+        
+        /* Coming Soon */
+        .coming-soon {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #888;
+        }
+        
+        .coming-soon i { font-size: 4rem; color: #ddd; margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="brand-logo"><i class="fas fa-flag"></i> National Admin</a>
+        </div>
+        <div class="nav-menu py-3" style="overflow-y: auto; flex: 1;">
+            <a href="#" class="nav-link active" onclick="showPage('dashboard')"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="#" class="nav-link" onclick="showPage('states')"><i class="fas fa-map"></i> States</a>
+            <a href="#" class="nav-link" onclick="showPage('stateAdmins')"><i class="fas fa-user-tie"></i> State Admins</a>
+            <a href="#" class="nav-link" onclick="showPage('allUsers')"><i class="fas fa-users"></i> All Users</a>
+            <a href="#" class="nav-link" onclick="showPage('programs')"><i class="fas fa-project-diagram"></i> Health Programs</a>
+            <a href="#" class="nav-link" onclick="showPage('emergencies')"><i class="fas fa-ambulance"></i> Emergency Center</a>
+            <a href="#" class="nav-link" onclick="showPage('surveillance')"><i class="fas fa-virus"></i> Disease Surveillance</a>
+            <a href="#" class="nav-link" onclick="showPage('predictions')"><i class="fas fa-brain"></i> AI Predictions</a>
+            <a href="#" class="nav-link" onclick="showPage('resources')"><i class="fas fa-coins"></i> Resources</a>
+            <a href="#" class="nav-link" onclick="showPage('reports')"><i class="fas fa-file-alt"></i> Reports</a>
+            <a href="#" class="nav-link" onclick="showPage('alerts')"><i class="fas fa-bell"></i> Alerts</a>
+            <a href="#" class="nav-link" onclick="showPage('adminTeam')"><i class="fas fa-users-cog"></i> Admin Team</a>
+            <a href="#" class="nav-link" onclick="showPage('securityCenter')"><i class="fas fa-shield-alt"></i> Security Center</a>
+            <a href="#" class="nav-link" onclick="showPage('settings')"><i class="fas fa-cog"></i> Settings</a>
+        </div>
+        <div class="user-info">
+            <div class="d-flex align-items-center gap-3">
+                <div class="user-avatar">{{ current_user.full_name[0] if current_user.full_name else 'N' }}</div>
+                <div class="text-white">
+                    <div class="fw-semibold">{{ current_user.full_name or 'National Admin' }}</div>
+                    <small class="opacity-75">{{ current_user.country or 'India' }}</small>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm w-100 mt-3">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <h4 class="mb-0 fw-bold" id="pageTitle"><i class="fas fa-th-large me-2"></i>Dashboard</h4>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted" id="currentDate"></span>
+                <button class="btn btn-outline-secondary btn-sm" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Dashboard Page -->
+        <div id="dashboardPage" class="content-page active">
+            <div class="welcome-banner">
+                <h2><i class="fas fa-flag me-2"></i>Welcome, {{ current_user.full_name or 'National Admin' }}!</h2>
+                <p>National Health Management System - {{ current_user.country or 'India' }}</p>
+            </div>
+            
+            <!-- KPI Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="kpi-value" id="totalStates">-</div>
+                                <div class="kpi-label">Total States</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #4CAF50, #2E7D32);"><i class="fas fa-map"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="kpi-value" id="totalDistricts">-</div>
+                                <div class="kpi-label">Total Districts</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #2196F3, #1565C0);"><i class="fas fa-city"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="kpi-value" id="totalBlocks">-</div>
+                                <div class="kpi-label">Total Blocks</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #9C27B0, #6A1B9A);"><i class="fas fa-cubes"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="kpi-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="kpi-value" id="totalFacilities">-</div>
+                                <div class="kpi-label">Health Facilities</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #FF9800, #E65100);"><i class="fas fa-hospital"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-4 mb-4">
+                <div class="col-md-2">
+                    <div class="kpi-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="kpi-value" id="totalWorkers">-</div>
+                                <div class="kpi-label">Health Workers</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #00BCD4, #00838F);"><i class="fas fa-user-nurse"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="kpi-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="kpi-value" id="totalPopulation">-</div>
+                                <div class="kpi-label">Population Covered</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #607D8B, #37474F);"><i class="fas fa-users"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="kpi-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="kpi-value text-danger" id="activeEmergencies">-</div>
+                                <div class="kpi-label">Active Emergencies</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #f44336, #b71c1c);"><i class="fas fa-ambulance"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="kpi-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="kpi-value text-success" id="todayScreenings">-</div>
+                                <div class="kpi-label">Today's Screenings</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #4CAF50, #2E7D32);"><i class="fas fa-stethoscope"></i></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="kpi-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="kpi-value" id="totalClients" style="color: #9c27b0;">-</div>
+                                <div class="kpi-label">Registered Clients</div>
+                            </div>
+                            <div class="kpi-icon" style="background: linear-gradient(135deg, #9c27b0, #7b1fa2);"><i class="fas fa-id-card"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- State Performance & Charts Row -->
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-trophy me-2 text-warning"></i>State Performance Ranking</h6>
+                            <span class="badge bg-secondary" id="stateCount">0 states</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Rank</th>
+                                            <th>State</th>
+                                            <th>Districts</th>
+                                            <th>Blocks</th>
+                                            <th>Workers</th>
+                                            <th>Admin</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="stateRankingTable">
+                                        <tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-chart-pie me-2 text-info"></i>Facility Distribution</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="facilityChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- States Management Page -->
+        <div id="statesPage" class="content-page">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <input type="text" class="form-control" id="stateSearchInput" placeholder="Search states..." style="width: 250px;" onkeyup="filterStatesTable()">
+                </div>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#addStateModal">
+                    <i class="fas fa-plus me-2"></i>Add State
+                </button>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-map me-2"></i>States List <span class="badge bg-secondary ms-2" id="statesCount">0</span></h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>State Name</th>
+                                    <th>Districts</th>
+                                    <th>Blocks</th>
+                                    <th>Facilities</th>
+                                    <th>Workers</th>
+                                    <th>Admin</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statesTableBody">
+                                <tr><td colspan="8" class="text-center py-4 text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- State Admins Management Page -->
+        <div id="stateAdminsPage" class="content-page">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <input type="text" class="form-control" id="stateAdminSearchInput" placeholder="Search admins..." style="width: 250px;" onkeyup="filterStateAdminsTable()">
+                </div>
+                <button class="btn btn-danger" onclick="openAddStateAdmin()">
+                    <i class="fas fa-plus me-2"></i>Add State Admin
+                </button>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-user-tie me-2"></i>State Admins <span class="badge bg-secondary ms-2" id="stateAdminsCount">0</span></h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Admin</th>
+                                    <th>Email / Mobile</th>
+                                    <th>Assigned State</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stateAdminsTableBody">
+                                <tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- All Users Management Page -->
+        <div id="allUsersPage" class="content-page">
+            <!-- Filter Row -->
+            <div class="card mb-4">
+                <div class="card-body py-3">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" id="allUsersSearch" placeholder="Search by name, email, UID..." onkeyup="debounceLoadAllUsers()">
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="allUsersTypeFilter" onchange="loadAllUsers()">
+                                <option value="">All Types</option>
+                                <option value="state_admin">State Admin</option>
+                                <option value="district_admin">District Admin</option>
+                                <option value="block_admin">Block Admin</option>
+                                <option value="facility_admin">Facility Admin</option>
+                                <option value="health_worker">Health Worker</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="allUsersStateFilter" onchange="loadAllUsers()">
+                                <option value="">All States</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex gap-2" id="userTypeBadges">
+                                <!-- Type counts will be populated here -->
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <span class="text-muted" id="allUsersTotal">0 users</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-users me-2"></i>All Users</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Location</th>
+                                    <th>Contact</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody id="allUsersTableBody">
+                                <tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted" id="allUsersPaginationInfo">Page 1 of 1</small>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary me-2" id="allUsersPrevBtn" onclick="loadAllUsers(currentAllUsersPage - 1)" disabled>&laquo; Prev</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="allUsersNextBtn" onclick="loadAllUsers(currentAllUsersPage + 1)" disabled>Next &raquo;</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Health Programs Management Page -->
+        <div id="programsPage" class="content-page">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <input type="text" class="form-control" id="programsSearchInput" placeholder="Search programs..." style="width: 250px;" onkeyup="filterProgramsTable()">
+                </div>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#addProgramModal">
+                    <i class="fas fa-plus me-2"></i>Add Program
+                </button>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-project-diagram me-2"></i>Health Programs <span class="badge bg-secondary ms-2" id="programsCount">0</span></h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Program Name</th>
+                                    <th>Category</th>
+                                    <th>Duration</th>
+                                    <th>Budget</th>
+                                    <th>States</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="programsTableBody">
+                                <tr><td colspan="7" class="text-center py-4 text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Emergency Center Page -->
+        <div id="emergenciesPage" class="content-page">
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 bg-danger text-white">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1" id="emergActive">0</h2>
+                            <small>Active Emergencies</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-warning">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1" id="emergResponding">0</h2>
+                            <small>Responding</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-success text-white">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1" id="emergResolved">0</h2>
+                            <small>Resolved Today</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-dark text-white">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1" id="emergCritical">0</h2>
+                            <small>Critical Cases</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-3">
+                <select class="form-select w-auto" id="emergStatusFilter" onchange="loadEmergencies()">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="responding">Responding</option>
+                    <option value="resolved">Resolved</option>
+                </select>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#reportEmergencyModal">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Report Emergency
+                </button>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-ambulance me-2"></i>Emergency Log</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Emergency</th>
+                                    <th>Type</th>
+                                    <th>Severity</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th>Reported</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="emergenciesTableBody">
+                                <tr><td colspan="7" class="text-center py-4 text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Disease Surveillance Page -->
+        <div id="surveillancePage" class="content-page">
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1" id="diseaseWeekly">0</h2>
+                            <small>Cases This Week</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-info text-white">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1" id="diseaseMonthly">0</h2>
+                            <small>Cases This Month</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-warning">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1" id="diseaseActive">0</h2>
+                            <small>Active Diseases</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-danger text-white">
+                        <div class="card-body text-center">
+                            <h2 class="mb-1" id="diseaseAlerts">0</h2>
+                            <small>Outbreak Alerts</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-white py-2"><h6 class="mb-0 fw-bold"><i class="fas fa-chart-bar me-2"></i>Top Diseases</h6></div>
+                        <div class="card-body p-2" id="topDiseasesContainer">
+                            <small class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-white py-2"><h6 class="mb-0 fw-bold"><i class="fas fa-map-marker-alt me-2"></i>State Distribution</h6></div>
+                        <div class="card-body p-2" id="stateDistContainer">
+                            <small class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-between mb-3">
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" id="diseaseFilter" onchange="loadDiseaseReports()" style="width:180px">
+                        <option value="">All Diseases</option>
+                    </select>
+                    <select class="form-select form-select-sm" id="diseaseStateFilter" onchange="loadDiseaseReports()" style="width:150px">
+                        <option value="">All States</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h6 class="mb-0 fw-bold"><i class="fas fa-virus me-2"></i>Disease Reports <span class="badge bg-secondary ms-2" id="diseaseReportsCount">0</span></h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Disease</th>
+                                    <th>Severity</th>
+                                    <th>Patient</th>
+                                    <th>Location</th>
+                                    <th>Reported</th>
+                                </tr>
+                            </thead>
+                            <tbody id="diseaseReportsTableBody">
+                                <tr><td colspan="5" class="text-center py-4 text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- AI Predictions Page -->
+        <div id="predictionsPage" class="content-page">
+            <!-- Main Prediction Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white py-2">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-chart-line me-2"></i>Case Forecast</h6>
+                        </div>
+                        <div class="card-body text-center">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h3 id="aiCurrentWeek">-</h3>
+                                    <small class="text-muted">This Week</small>
+                                </div>
+                                <div class="col-6">
+                                    <h3 id="aiNextWeek">-</h3>
+                                    <small class="text-muted">Predicted Next</small>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="badge" id="aiForecastBadge">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-danger text-white py-2">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-shield-alt me-2"></i>Health Risk Score</h6>
+                        </div>
+                        <div class="card-body text-center">
+                            <h1 class="display-4 mb-0" id="aiRiskScore">-</h1>
+                            <span class="badge fs-6" id="aiRiskLevel">-</span>
+                            <p class="text-muted small mt-2" id="aiRiskFactors">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white py-2">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-hospital me-2"></i>Resources</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Facilities</span><strong id="aiFacilities">-</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Health Workers</span><strong id="aiWorkers">-</strong>
+                            </div>
+                            <span class="badge" id="aiResourceBadge">-</span>
+                            <p class="text-muted small mt-2" id="aiResourceAction">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-white py-2"><h6 class="mb-0 fw-bold"><i class="fas fa-trending-up me-2"></i>Trending Conditions</h6></div>
+                        <div class="card-body p-2" id="aiTrendingContainer">
+                            <small class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-white py-2"><h6 class="mb-0 fw-bold"><i class="fas fa-map-marked-alt me-2"></i>Regional Risk Alerts</h6></div>
+                        <div class="card-body p-2" id="aiRegionalContainer">
+                            <small class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-warning py-2"><h6 class="mb-0 fw-bold"><i class="fas fa-lightbulb me-2"></i>AI Recommendations</h6></div>
+                <div class="card-body" id="aiRecommendationsContainer">
+                    <small class="text-muted">Loading...</small>
+                </div>
+            </div>
+        </div>
+        <!-- Resource Management Page -->
+        <div id="resourcesPage" class="content-page">
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h2 class="mb-0" id="resFacilities">-</h2>
+                            <small>Health Facilities</small>
+                            <div class="mt-1"><small id="resFacilitiesActive">-</small></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-success text-white">
+                        <div class="card-body text-center">
+                            <h2 class="mb-0" id="resWorkers">-</h2>
+                            <small>Health Workers</small>
+                            <div class="mt-1"><small id="resWorkersVerified">-</small></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-warning">
+                        <div class="card-body text-center">
+                            <h2 class="mb-0" id="resBudget">-</h2>
+                            <small>Total Budget</small>
+                            <div class="mt-1"><small id="resBudgetPrograms">-</small></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 bg-info text-white">
+                        <div class="card-body text-center">
+                            <h2 class="mb-0" id="resUtilization">-</h2>
+                            <small>Utilization Rate</small>
+                            <div class="mt-1"><small>Screenings/Facility</small></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-7">
+                    <div class="card h-100">
+                        <div class="card-header bg-white py-2"><h6 class="mb-0 fw-bold"><i class="fas fa-map-marker-alt me-2"></i>State Resources</h6></div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr><th>State</th><th>Facilities</th><th>Workers</th><th>Coverage</th></tr>
+                                    </thead>
+                                    <tbody id="stateResourcesTableBody">
+                                        <tr><td colspan="4" class="text-center text-muted py-3">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="card h-100">
+                        <div class="card-header bg-white py-2"><h6 class="mb-0 fw-bold"><i class="fas fa-chart-pie me-2"></i>Budget Allocation</h6></div>
+                        <div class="card-body p-2" id="budgetAllocationContainer">
+                            <small class="text-muted">Loading...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-white py-2"><h6 class="mb-0 fw-bold"><i class="fas fa-project-diagram me-2"></i>Top Programs by Budget</h6></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr><th>Program</th><th>Budget</th><th>Status</th><th>States</th></tr>
+                            </thead>
+                            <tbody id="topProgramsTableBody">
+                                <tr><td colspan="4" class="text-center text-muted py-3">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Reports Page -->
+        <div id="reportsPage" class="content-page">
+            <!-- Overview Cards -->
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="card border-0 bg-primary text-white text-center py-2">
+                        <h4 class="mb-0" id="rptUsers">-</h4><small>Users</small>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-0 bg-success text-white text-center py-2">
+                        <h4 class="mb-0" id="rptScreenings">-</h4><small>Screenings</small>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-0 bg-danger text-white text-center py-2">
+                        <h4 class="mb-0" id="rptEmergencies">-</h4><small>Emergencies</small>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-0 bg-info text-white text-center py-2">
+                        <h4 class="mb-0" id="rptPrograms">-</h4><small>Programs</small>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-0 bg-warning text-center py-2">
+                        <h4 class="mb-0" id="rptFacilities">-</h4><small>Facilities</small>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card border-0 bg-secondary text-white text-center py-2">
+                        <h4 class="mb-0" id="rptStates">-</h4><small>States</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-8">
+                    <div class="card h-100">
+                        <div class="card-header bg-white py-2"><h6 class="mb-0 fw-bold"><i class="fas fa-file-export me-2"></i>Available Reports</h6></div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr><th>Report</th><th>Description</th><th>Records</th><th>Action</th></tr>
+                                    </thead>
+                                    <tbody id="availableReportsTableBody">
+                                        <tr><td colspan="4" class="text-center py-3 text-muted">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white py-2"><h6 class="mb-0 fw-bold"><i class="fas fa-chart-line me-2"></i>30-Day Activity</h6></div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3"><span>Screenings</span><strong id="rptRecentScreenings">-</strong></div>
+                            <div class="d-flex justify-content-between mb-3"><span>Emergencies</span><strong id="rptRecentEmergencies">-</strong></div>
+                            <div class="d-flex justify-content-between"><span>New Users</span><strong id="rptRecentUsers">-</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-white py-2"><h6 class="mb-0 fw-bold"><i class="fas fa-history me-2"></i>Generated Reports</h6></div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr><th>Report Name</th><th>Type</th><th>Date</th><th>Size</th><th>Action</th></tr>
+                            </thead>
+                            <tbody id="generatedReportsTableBody">
+                                <tr><td colspan="5" class="text-center py-3 text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- National Alerts Page -->
+        <div id="alertsPage" class="content-page">
+            <div class="d-flex justify-content-between mb-3">
+                <h5 class="fw-bold"><i class="fas fa-bell me-2"></i>National Alerts <span class="badge bg-primary" id="alertsCount">0</span></h5>
+                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#broadcastAlertModal"><i class="fas fa-bullhorn me-2"></i>Broadcast Alert</button>
+            </div>
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr><th>Type</th><th>Title</th><th>Message</th><th>Severity</th><th>Target</th><th>Date</th></tr>
+                            </thead>
+                            <tbody id="alertsTableBody">
+                                <tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Page -->
+        <div id="settingsPage" class="content-page">
+            <h5 class="fw-bold mb-4"><i class="fas fa-cog me-2"></i>System Settings</h5>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white py-2"><h6 class="mb-0 fw-bold">General</h6></div>
+                        <div class="card-body">
+                            <div class="mb-3"><label class="form-label small">System Name</label><input type="text" class="form-control" id="settSystemName" readonly></div>
+                            <div class="mb-3"><label class="form-label small">Contact Email</label><input type="email" class="form-control" id="settContactEmail"></div>
+                            <div class="mb-0"><label class="form-label small">Support Phone</label><input type="text" class="form-control" id="settSupportPhone"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white py-2"><h6 class="mb-0 fw-bold">Notifications</h6></div>
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="settEmailAlerts"><label class="form-check-label">Email Alerts</label></div>
+                            <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="settSmsAlerts"><label class="form-check-label">SMS Alerts</label></div>
+                            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="settEmergencyNotify"><label class="form-check-label">Emergency Auto-Notify</label></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning py-2"><h6 class="mb-0 fw-bold">Security</h6></div>
+                        <div class="card-body">
+                            <div class="mb-3"><label class="form-label small">Session Timeout (min)</label><input type="number" class="form-control" id="settSessionTimeout"></div>
+                            <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="settTwoFactor"><label class="form-check-label">Two-Factor Auth</label></div>
+                            <div class="mb-0"><label class="form-label small">Password Expiry (days)</label><input type="number" class="form-control" id="settPasswordExpiry"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white py-2"><h6 class="mb-0 fw-bold">Data & Backup</h6></div>
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3"><input class="form-check-input" type="checkbox" id="settAutoBackup"><label class="form-check-label">Auto Backup</label></div>
+                            <div class="mb-3"><label class="form-label small">Backup Frequency</label>
+                                <select class="form-select" id="settBackupFreq"><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select>
+                            </div>
+                            <div class="mb-0"><label class="form-label small">Data Retention (days)</label><input type="number" class="form-control" id="settDataRetention"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveSettings()"><i class="fas fa-save me-2"></i>Save Settings</button>
+        </div>
+
+        <!-- Admin Team Page (Phase 15) -->
+        <div id="adminTeamPage" class="content-page">
+            <div class="row g-4 mb-4">
+                <div class="col-md-3"><div class="kpi-card"><div class="d-flex justify-content-between align-items-start"><div><div class="kpi-value" id="natTeamTotal">0</div><div class="kpi-label">Total Admins</div></div><div class="kpi-icon" style="background: linear-gradient(135deg, #c62828, #8e0000);"><i class="fas fa-users"></i></div></div></div></div>
+                <div class="col-md-3"><div class="kpi-card"><div class="d-flex justify-content-between align-items-start"><div><div class="kpi-value" id="natTeamActive">0</div><div class="kpi-label">Active</div></div><div class="kpi-icon" style="background: linear-gradient(135deg, #4CAF50, #2E7D32);"><i class="fas fa-check-circle"></i></div></div></div></div>
+                <div class="col-md-3"><div class="kpi-card"><div class="d-flex justify-content-between align-items-start"><div><div class="kpi-value" id="natTeamPrimary">0</div><div class="kpi-label">Primary</div></div><div class="kpi-icon" style="background: linear-gradient(135deg, #ff9800, #e65100);"><i class="fas fa-crown"></i></div></div></div></div>
+                <div class="col-md-3"><div class="kpi-card"><div class="d-flex justify-content-between align-items-start"><div><div class="kpi-value" id="natTeamRoles">0</div><div class="kpi-label">Roles</div></div><div class="kpi-icon" style="background: linear-gradient(135deg, #9C27B0, #6A1B9A);"><i class="fas fa-id-badge"></i></div></div></div></div>
+            </div>
+            <div class="card mb-4"><div class="card-header bg-white py-3"><h6 class="mb-0 fw-bold"><i class="fas fa-flag me-2"></i>National Administration</h6></div>
+                <div class="card-body"><div class="row">
+                    <div class="col-md-4"><strong>Country:</strong> <span id="nationalCountryDisplay">{{ current_user.country or 'India' }}</span></div>
+                    <div class="col-md-4"><strong>Admin:</strong> {{ current_user.full_name or 'National Admin' }}</div>
+                    <div class="col-md-4"><strong>Your Role:</strong> <span class="badge bg-danger">Primary Admin</span></div>
+                </div></div>
+            </div>
+            <div class="card"><div class="card-header bg-white py-3 d-flex justify-content-between"><h6 class="mb-0 fw-bold"><i class="fas fa-users me-2"></i>National Admins</h6>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#addNationalAdminModal"><i class="fas fa-user-plus me-1"></i>Add Admin</button></div>
+                <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0">
+                    <thead class="table-light"><tr><th>Admin</th><th>Email</th><th>Role</th><th>Status</th><th>Assigned</th><th class="text-end">Actions</th></tr></thead>
+                    <tbody id="nationalAdminTeamTable"><tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+                </table></div></div>
+            </div>
+        </div>
+
+        <!-- Security Center Page -->
+        <div id="securityCenterPage" class="content-page">
+            <div class="row g-4 mb-4">
+                <div class="col-md-2"><div class="kpi-card text-center"><div class="kpi-value text-primary" id="secLogins24h">0</div><div class="kpi-label">Logins (24h)</div></div></div>
+                <div class="col-md-2"><div class="kpi-card text-center"><div class="kpi-value text-danger" id="secFailed24h">0</div><div class="kpi-label">Failed (24h)</div></div></div>
+                <div class="col-md-2"><div class="kpi-card text-center"><div class="kpi-value text-success" id="secActiveSessions">0</div><div class="kpi-label">Active Sessions</div></div></div>
+                <div class="col-md-2"><div class="kpi-card text-center"><div class="kpi-value text-warning" id="secBlockedIPs">0</div><div class="kpi-label">Blocked IPs</div></div></div>
+                <div class="col-md-2"><div class="kpi-card text-center"><div class="kpi-value text-info" id="secApiCalls1h">0</div><div class="kpi-label">API Calls (1h)</div></div></div>
+                <div class="col-md-2"><div class="kpi-card text-center"><div class="kpi-value text-secondary" id="secUniqueDevices">0</div><div class="kpi-label">Devices (7d)</div></div></div>
+            </div>
+            <div class="card mb-4"><div class="card-header bg-white py-3 d-flex justify-content-between align-items-center"><h6 class="mb-0 fw-bold"><i class="fas fa-sign-in-alt me-2"></i>Login History</h6><button class="btn btn-sm btn-outline-primary" onclick="loadSecurityCenter()"><i class="fas fa-sync-alt"></i></button></div>
+                <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0">
+                    <thead class="table-light"><tr><th>Time</th><th>User</th><th>Status</th><th>IP</th><th>Device</th><th>Reason</th></tr></thead>
+                    <tbody id="loginLogsTable"><tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+                </table></div></div>
+            </div>
+            <div class="card mb-4"><div class="card-header bg-white py-3"><h6 class="mb-0 fw-bold"><i class="fas fa-users me-2"></i>Active Sessions</h6></div>
+                <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0">
+                    <thead class="table-light"><tr><th>User</th><th>Role</th><th>Status</th><th>IP</th><th>Device</th><th>Last Activity</th><th>Action</th></tr></thead>
+                    <tbody id="activeSessionsTable"><tr><td colspan="7" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+                </table></div></div>
+            </div>
+            <div class="card"><div class="card-header bg-white py-3"><h6 class="mb-0 fw-bold"><i class="fas fa-exclamation-triangle me-2 text-danger"></i>Failed Login Attempts</h6></div>
+                <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0">
+                    <thead class="table-light"><tr><th>Time</th><th>Email</th><th>IP</th><th>Reason</th><th>Status</th><th>Blocked Until</th></tr></thead>
+                    <tbody id="failedAttemptsTable"><tr><td colspan="6" class="text-center py-4 text-muted">Loading...</td></tr></tbody>
+                </table></div></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add National Admin Modal -->
+    <div class="modal fade" id="addNationalAdminModal" tabindex="-1">
+        <div class="modal-dialog"><div class="modal-content">
+            <div class="modal-header" style="background: var(--primary-red); color: white;">
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add National Admin</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label">User ID *</label><input type="number" class="form-control" id="newNatAdminUserId" placeholder="Enter user ID" required></div>
+                <div class="mb-3"><label class="form-label">Role *</label>
+                    <select class="form-select" id="newNatAdminRole">
+                        <option value="deputy_admin">Deputy Admin</option>
+                        <option value="data_entry">Data Entry</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                </div>
+                <div class="mb-3"><label class="form-label">Notes</label><textarea class="form-control" id="newNatAdminNotes" rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="addNationalAdmin()"><i class="fas fa-user-plus me-1"></i>Add Admin</button>
+            </div>
+        </div></div>
+    </div>
+
+    <!-- Add State Modal -->
+    <div class="modal fade" id="addStateModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle me-2 text-success"></i>Add New State</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addStateForm">
+                        <div class="mb-3">
+                            <label class="form-label">State Name *</label>
+                            <input type="text" class="form-control" id="newStateName" required placeholder="e.g., Maharashtra">
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Latitude</label>
+                                <input type="number" step="any" class="form-control" id="newStateLat" placeholder="e.g., 19.7515">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Longitude</label>
+                                <input type="number" step="any" class="form-control" id="newStateLng" placeholder="e.g., 75.7139">
+                            </div>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-danger">Add State</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit State Modal -->
+    <div class="modal fade" id="editStateModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2 text-primary"></i>Edit State</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editStateForm">
+                        <input type="hidden" id="editStateId">
+                        <div class="mb-3">
+                            <label class="form-label">State Name *</label>
+                            <input type="text" class="form-control" id="editStateName" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Latitude</label>
+                                <input type="number" step="any" class="form-control" id="editStateLat">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Longitude</label>
+                                <input type="number" step="any" class="form-control" id="editStateLng">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="editStateActive" checked>
+                                <label class="form-check-label">Active</label>
+                            </div>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add State Admin Modal -->
+    <div class="modal fade" id="addStateAdminModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-user-plus me-2 text-success"></i>Add State Admin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addStateAdminForm">
+                        <div class="mb-3">
+                            <label class="form-label">Select State *</label>
+                            <select class="form-select" id="newAdminState" required>
+                                <option value="">-- Select State --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" class="form-control" id="newAdminName" required placeholder="e.g., Rajesh Kumar">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="newAdminEmail" required placeholder="e.g., admin@state.gov.in">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mobile *</label>
+                            <input type="tel" class="form-control" id="newAdminMobile" required placeholder="e.g., 9876543210">
+                        </div>
+                        <div class="alert alert-info small mb-3">
+                            <i class="fas fa-info-circle me-2"></i>Login credentials will be generated and emailed to the admin.
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-danger">Create State Admin</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit State Admin Modal -->
+    <div class="modal fade" id="editStateAdminModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-user-edit me-2 text-primary"></i>Edit State Admin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editStateAdminForm">
+                        <input type="hidden" id="editAdminId">
+                        <div class="mb-3">
+                            <label class="form-label">Assigned State</label>
+                            <select class="form-select" id="editAdminState">
+                                <option value="">-- No State --</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" class="form-control" id="editAdminName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="editAdminEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mobile</label>
+                            <input type="tel" class="form-control" id="editAdminMobile">
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Broadcast Alert Modal -->
+    <div class="modal fade" id="broadcastAlertModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0 bg-danger text-white">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-bullhorn me-2"></i>Broadcast National Alert</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="broadcastAlertForm">
+                        <div class="mb-3">
+                            <label class="form-label">Alert Title *</label>
+                            <input type="text" class="form-control" id="alertTitle" required placeholder="e.g., Health Advisory">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-control" id="alertMessage" rows="3" placeholder="Alert message..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Severity</label>
+                            <select class="form-select" id="alertSeverity">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Target</label>
+                            <select class="form-select" id="alertTarget">
+                                <option value="all">All States</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100"><i class="fas fa-bullhorn me-2"></i>Broadcast Alert</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Program Modal -->
+    <div class="modal fade" id="addProgramModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle me-2 text-success"></i>Add Health Program</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProgramForm">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Program Name *</label>
+                                <input type="text" class="form-control" id="newProgramName" required placeholder="e.g., National Immunization Program">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="newProgramCategory">
+                                    <option value="Immunization">Immunization</option>
+                                    <option value="Maternal Health">Maternal Health</option>
+                                    <option value="Child Health">Child Health</option>
+                                    <option value="Nutrition">Nutrition</option>
+                                    <option value="Disease Control">Disease Control</option>
+                                    <option value="Mental Health">Mental Health</option>
+                                    <option value="General" selected>General</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="newProgramDesc" rows="2" placeholder="Brief description..."></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="newProgramStart">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="newProgramEnd">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Budget (₹)</label>
+                                <input type="number" class="form-control" id="newProgramBudget" placeholder="e.g., 50000000">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Target Beneficiaries</label>
+                                <input type="number" class="form-control" id="newProgramTarget" placeholder="e.g., 100000">
+                            </div>
+                        </div>
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-danger">Create Program</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Program Modal -->
+    <div class="modal fade" id="editProgramModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2 text-primary"></i>Edit Program</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editProgramForm">
+                        <input type="hidden" id="editProgramId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Program Name *</label>
+                                <input type="text" class="form-control" id="editProgramName" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="editProgramCategory">
+                                    <option value="Immunization">Immunization</option>
+                                    <option value="Maternal Health">Maternal Health</option>
+                                    <option value="Child Health">Child Health</option>
+                                    <option value="Nutrition">Nutrition</option>
+                                    <option value="Disease Control">Disease Control</option>
+                                    <option value="Mental Health">Mental Health</option>
+                                    <option value="General">General</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="editProgramStatus">
+                                    <option value="draft">Draft</option>
+                                    <option value="active">Active</option>
+                                    <option value="paused">Paused</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="editProgramDesc" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="editProgramStart">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="editProgramEnd">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Budget (₹)</label>
+                                <input type="number" class="form-control" id="editProgramBudget">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Target</label>
+                                <input type="number" class="form-control" id="editProgramTarget">
+                            </div>
+                        </div>
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Emergency Modal -->
+    <div class="modal fade" id="reportEmergencyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0 bg-danger text-white">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Report Emergency</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reportEmergencyForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Emergency Type *</label>
+                                <select class="form-select" id="newEmergType" required>
+                                    <option value="medical">Medical</option>
+                                    <option value="accident">Accident</option>
+                                    <option value="fire">Fire</option>
+                                    <option value="natural_disaster">Natural Disaster</option>
+                                    <option value="disease_outbreak">Disease Outbreak</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Severity *</label>
+                                <select class="form-select" id="newEmergSeverity" required>
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-control" id="newEmergTitle" required placeholder="Brief emergency title">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="newEmergDesc" rows="2" placeholder="Details..."></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">State</label>
+                                <select class="form-select" id="newEmergState">
+                                    <option value="">-- Select State --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Location</label>
+                                <input type="text" class="form-control" id="newEmergLocation" placeholder="e.g., City Hospital, Main Road">
+                            </div>
+                        </div>
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-danger">Report Emergency</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Set current date
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-IN', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        // Page navigation
+        const pageTitles = {
+            'dashboard': '<i class="fas fa-th-large me-2"></i>Dashboard',
+            'states': '<i class="fas fa-map me-2"></i>States',
+            'stateAdmins': '<i class="fas fa-user-tie me-2"></i>State Admins',
+            'allUsers': '<i class="fas fa-users me-2"></i>All Users',
+            'programs': '<i class="fas fa-project-diagram me-2"></i>Health Programs',
+            'emergencies': '<i class="fas fa-ambulance me-2"></i>Emergency Center',
+            'surveillance': '<i class="fas fa-virus me-2"></i>Disease Surveillance',
+            'predictions': '<i class="fas fa-brain me-2"></i>AI Predictions',
+            'resources': '<i class="fas fa-coins me-2"></i>Resources',
+            'reports': '<i class="fas fa-file-alt me-2"></i>Reports',
+            'alerts': '<i class="fas fa-bell me-2"></i>Alerts',
+            'settings': '<i class="fas fa-cog me-2"></i>Settings'
+        };
+
+        function showPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.content-page').forEach(p => p.classList.remove('active'));
+            // Show selected page
+            const pageEl = document.getElementById(page + 'Page');
+            if(pageEl) pageEl.classList.add('active');
+            // Update nav links
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            event.target.closest('.nav-link').classList.add('active');
+            // Update title
+            document.getElementById('pageTitle').innerHTML = pageTitles[page] || page;
+            
+            // Load page-specific data
+            switch(page) {
+                case 'dashboard': loadDashboard(); break;
+                case 'states': loadStates(); break;
+                case 'stateAdmins': loadStateAdmins(); break;
+                case 'allUsers': loadAllUsers(); break;
+                case 'programs': loadPrograms(); break;
+                case 'emergencies': loadEmergencies(); break;
+                case 'surveillance': loadSurveillance(); break;
+                case 'predictions': loadPredictions(); break;
+                case 'resources': loadResources(); break;
+                case 'reports': loadReports(); break;
+                case 'alerts': loadAlerts(); break;
+                case 'settings': loadSettings(); break;
+                case 'adminTeam': loadNationalAdminTeam(); break;
+                case 'securityCenter': loadSecurityCenter(); break;
+            }
+        }
+        
+        // Load dashboard on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboard();
+        });
+        
+        function loadDashboard() {
+            fetch('/api/national-admin/dashboard-stats')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const s = data.stats;
+                        // Update KPIs
+                        document.getElementById('totalStates').textContent = s.total_states.toLocaleString();
+                        document.getElementById('totalDistricts').textContent = s.total_districts.toLocaleString();
+                        document.getElementById('totalBlocks').textContent = s.total_blocks.toLocaleString();
+                        document.getElementById('totalFacilities').textContent = s.total_facilities.toLocaleString();
+                        document.getElementById('totalWorkers').textContent = s.total_health_workers.toLocaleString();
+                        document.getElementById('totalPopulation').textContent = formatNumber(s.total_population);
+                        document.getElementById('activeEmergencies').textContent = s.active_emergencies.toLocaleString();
+                        document.getElementById('todayScreenings').textContent = s.todays_screenings.toLocaleString();
+                        
+                        // Display total clients
+                        const totalClientsEl = document.getElementById('totalClients');
+                        if (totalClientsEl) {
+                            totalClientsEl.textContent = (s.total_clients || 0).toLocaleString();
+                        }
+                        
+                        // Update state count badge
+                        document.getElementById('stateCount').textContent = `${s.total_states} states`;
+                        
+                        // Render state ranking table
+                        renderStateRanking(data.state_performance || []);
+                        
+                        // Render facility chart
+                        renderFacilityChart(data.facility_types || {});
+                    }
+                })
+                .catch(err => {
+                    console.error('Dashboard load error:', err);
+                    document.getElementById('stateRankingTable').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Error loading data</td></tr>';
+                });
+        }
+        
+        function formatNumber(num) {
+            if(num >= 10000000) return (num / 10000000).toFixed(1) + ' Cr';
+            if(num >= 100000) return (num / 100000).toFixed(1) + ' L';
+            if(num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toLocaleString();
+        }
+        
+        function renderStateRanking(states) {
+            const tbody = document.getElementById('stateRankingTable');
+            if(!states.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No states found</td></tr>';
+                return;
+            }
+            tbody.innerHTML = states.map(s => `
+                <tr>
+                    <td><span class="badge ${s.rank <= 3 ? 'bg-warning text-dark' : 'bg-secondary'}">#${s.rank}</span></td>
+                    <td><strong>${escapeHtml(s.name)}</strong></td>
+                    <td>${s.districts}</td>
+                    <td>${s.blocks}</td>
+                    <td>${s.workers}</td>
+                    <td>${s.has_admin ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-times-circle text-danger"></i>'}</td>
+                </tr>
+            `).join('');
+        }
+        
+        let facilityChart = null;
+        function renderFacilityChart(types) {
+            const ctx = document.getElementById('facilityChart');
+            if(!ctx) return;
+            
+            const labels = Object.keys(types);
+            const values = Object.values(types);
+            const colors = ['#c62828', '#2196F3', '#4CAF50', '#FF9800', '#9C27B0', '#00BCD4', '#607D8B'];
+            
+            if(facilityChart) facilityChart.destroy();
+            facilityChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 15 } }
+                    }
+                }
+            });
+        }
+        
+        function escapeHtml(text) {
+            if(!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // ==================== STATES PAGE ====================
+        let allStatesData = [];
+        
+        function loadStates() {
+            const tbody = document.getElementById('statesTableBody');
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</td></tr>';
+            
+            fetch('/api/national-admin/states')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        allStatesData = data.states;
+                        document.getElementById('statesCount').textContent = data.total;
+                        renderStatesTable(data.states);
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger">Error: ' + data.error + '</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger">Failed to load states</td></tr>';
+                });
+        }
+        
+        function renderStatesTable(states) {
+            const tbody = document.getElementById('statesTableBody');
+            if(!states.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-muted">No states found. Click "Add State" to create one.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = states.map(s => `
+                <tr>
+                    <td><strong>${escapeHtml(s.name)}</strong><br><small class="text-muted">${s.state_id}</small></td>
+                    <td>${s.districts}</td>
+                    <td>${s.blocks}</td>
+                    <td>${s.facilities}</td>
+                    <td>${s.workers}</td>
+                    <td>${s.has_admin ? '<span class="text-success"><i class="fas fa-check-circle"></i> ' + escapeHtml(s.admin_name || 'Assigned') + '</span>' : '<span class="text-muted">-</span>'}</td>
+                    <td><span class="badge ${s.is_active ? 'bg-success' : 'bg-secondary'}">${s.is_active ? 'Active' : 'Inactive'}</span></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditState(${s.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteState(${s.id}, '${escapeHtml(s.name)}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function filterStatesTable() {
+            const query = document.getElementById('stateSearchInput').value.toLowerCase();
+            const filtered = allStatesData.filter(s => 
+                s.name.toLowerCase().includes(query) || 
+                (s.admin_name && s.admin_name.toLowerCase().includes(query))
+            );
+            renderStatesTable(filtered);
+        }
+        
+        // Add State form handler
+        document.getElementById('addStateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+            
+            fetch('/api/national-admin/states', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('newStateName').value,
+                    latitude: parseFloat(document.getElementById('newStateLat').value) || null,
+                    longitude: parseFloat(document.getElementById('newStateLng').value) || null
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                if(data.success) {
+                    alert('State created successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('addStateModal')).hide();
+                    this.reset();
+                    loadStates();
+                    loadDashboard(); // Refresh dashboard stats
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                alert('Failed to create state');
+            });
+        });
+        
+        function openEditState(id) {
+            const state = allStatesData.find(s => s.id === id);
+            if(!state) return;
+            
+            document.getElementById('editStateId').value = state.id;
+            document.getElementById('editStateName').value = state.name;
+            document.getElementById('editStateLat').value = state.latitude || '';
+            document.getElementById('editStateLng').value = state.longitude || '';
+            document.getElementById('editStateActive').checked = state.is_active;
+            
+            new bootstrap.Modal(document.getElementById('editStateModal')).show();
+        }
+        
+        document.getElementById('editStateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editStateId').value;
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+            
+            fetch(`/api/national-admin/states/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('editStateName').value,
+                    latitude: parseFloat(document.getElementById('editStateLat').value) || null,
+                    longitude: parseFloat(document.getElementById('editStateLng').value) || null,
+                    is_active: document.getElementById('editStateActive').checked
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Changes';
+                if(data.success) {
+                    alert('State updated successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('editStateModal')).hide();
+                    loadStates();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Changes';
+                alert('Failed to update state');
+            });
+        });
+        
+        function deleteState(id, name) {
+            if(!confirm(`Are you sure you want to delete "${name}"?\n\nThis action cannot be undone.`)) return;
+            
+            fetch(`/api/national-admin/states/${id}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('State deleted successfully!');
+                        loadStates();
+                        loadDashboard();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(err => alert('Failed to delete state'));
+        }
+        
+        // ==================== STATE ADMINS PAGE ====================
+        let allStateAdminsData = [];
+        let availableStates = [];
+        
+        function loadStateAdmins() {
+            const tbody = document.getElementById('stateAdminsTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</td></tr>';
+            
+            fetch('/api/national-admin/state-admins')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        allStateAdminsData = data.admins;
+                        availableStates = data.available_states || [];
+                        document.getElementById('stateAdminsCount').textContent = data.total;
+                        renderStateAdminsTable(data.admins);
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Error: ' + data.error + '</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load state admins</td></tr>';
+                });
+        }
+        
+        function renderStateAdminsTable(admins) {
+            const tbody = document.getElementById('stateAdminsTableBody');
+            if(!admins.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No state admins found. Click "Add State Admin" to create one.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = admins.map(a => `
+                <tr>
+                    <td><strong>${escapeHtml(a.full_name)}</strong><br><small class="text-muted">UID: ${a.uid}</small></td>
+                    <td><small>${escapeHtml(a.email)}</small><br><small class="text-muted">${a.mobile || '-'}</small></td>
+                    <td>${a.state_name ? '<span class="badge bg-primary">' + escapeHtml(a.state_name) + '</span>' : '<span class="text-muted">Not assigned</span>'}</td>
+                    <td><span class="badge ${a.is_verified ? 'bg-success' : 'bg-warning'}">${a.is_verified ? 'Verified' : 'Pending'}</span></td>
+                    <td><small>${a.created_at || '-'}</small></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditStateAdmin(${a.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteStateAdmin(${a.id}, '${escapeHtml(a.full_name)}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function filterStateAdminsTable() {
+            const query = document.getElementById('stateAdminSearchInput').value.toLowerCase();
+            const filtered = allStateAdminsData.filter(a => 
+                a.full_name.toLowerCase().includes(query) || 
+                a.email.toLowerCase().includes(query) ||
+                (a.state_name && a.state_name.toLowerCase().includes(query))
+            );
+            renderStateAdminsTable(filtered);
+        }
+        
+        function openAddStateAdmin() {
+            // Populate state dropdown from available states
+            const select = document.getElementById('newAdminState');
+            select.innerHTML = '<option value="">-- Select State --</option>' + 
+                availableStates.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+            
+            if(availableStates.length === 0) {
+                alert('All states already have admins assigned. Create a new state first or remove existing admin.');
+                return;
+            }
+            
+            document.getElementById('addStateAdminForm').reset();
+            new bootstrap.Modal(document.getElementById('addStateAdminModal')).show();
+        }
+        
+        document.getElementById('addStateAdminForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+            
+            fetch('/api/national-admin/state-admins', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    state_id: parseInt(document.getElementById('newAdminState').value),
+                    full_name: document.getElementById('newAdminName').value,
+                    email: document.getElementById('newAdminEmail').value,
+                    mobile: document.getElementById('newAdminMobile').value
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                if(data.success) {
+                    let msg = 'State admin created successfully!';
+                    if(data.email_sent) {
+                        msg += '\n\nLogin credentials have been emailed.';
+                    } else {
+                        msg += '\n\nCredentials:\nUID: ' + data.credentials.uid + '\nEmail: ' + data.credentials.email + '\nPassword: ' + data.credentials.password;
+                    }
+                    alert(msg);
+                    bootstrap.Modal.getInstance(document.getElementById('addStateAdminModal')).hide();
+                    this.reset();
+                    loadStateAdmins();
+                    loadStates();
+                    loadDashboard();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                alert('Failed to create state admin');
+            });
+        });
+        
+        function openEditStateAdmin(id) {
+            const admin = allStateAdminsData.find(a => a.id === id);
+            if(!admin) return;
+            
+            // Populate state dropdown (include current state + available states)
+            const select = document.getElementById('editAdminState');
+            let options = '<option value="">-- No State --</option>';
+            
+            // Add current state if assigned
+            if(admin.state_id) {
+                options += `<option value="${admin.state_id}" selected>${escapeHtml(admin.state_name)}</option>`;
+            }
+            
+            // Add available states
+            options += availableStates.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+            select.innerHTML = options;
+            
+            document.getElementById('editAdminId').value = admin.id;
+            document.getElementById('editAdminName').value = admin.full_name;
+            document.getElementById('editAdminEmail').value = admin.email;
+            document.getElementById('editAdminMobile').value = admin.mobile || '';
+            
+            new bootstrap.Modal(document.getElementById('editStateAdminModal')).show();
+        }
+        
+        document.getElementById('editStateAdminForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editAdminId').value;
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+            
+            fetch(`/api/national-admin/state-admins/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    full_name: document.getElementById('editAdminName').value,
+                    email: document.getElementById('editAdminEmail').value,
+                    mobile: document.getElementById('editAdminMobile').value,
+                    state_id: document.getElementById('editAdminState').value ? parseInt(document.getElementById('editAdminState').value) : null
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Changes';
+                if(data.success) {
+                    alert('State admin updated successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('editStateAdminModal')).hide();
+                    loadStateAdmins();
+                    loadStates();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Changes';
+                alert('Failed to update state admin');
+            });
+        });
+        
+        function deleteStateAdmin(id, name) {
+            if(!confirm(`Are you sure you want to delete state admin "${name}"?\n\nThis will remove them from the assigned state.\nThis action cannot be undone.`)) return;
+            
+            fetch(`/api/national-admin/state-admins/${id}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('State admin deleted successfully!');
+                        loadStateAdmins();
+                        loadStates();
+                        loadDashboard();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(err => alert('Failed to delete state admin'));
+        }
+        
+        // ==================== ALL USERS PAGE ====================
+        let currentAllUsersPage = 1;
+        let allUsersDebounceTimer = null;
+        
+        const typeColors = {
+            'state_admin': 'bg-danger',
+            'district_admin': 'bg-primary',
+            'block_admin': 'bg-info',
+            'facility_admin': 'bg-warning text-dark',
+            'health_worker': 'bg-success'
+        };
+        
+        function debounceLoadAllUsers() {
+            clearTimeout(allUsersDebounceTimer);
+            allUsersDebounceTimer = setTimeout(() => loadAllUsers(1), 300);
+        }
+        
+        function loadAllUsers(page = 1) {
+            currentAllUsersPage = page;
+            const tbody = document.getElementById('allUsersTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</td></tr>';
+            
+            const params = new URLSearchParams({
+                page: page,
+                per_page: 50,
+                user_type: document.getElementById('allUsersTypeFilter').value,
+                state: document.getElementById('allUsersStateFilter').value,
+                search: document.getElementById('allUsersSearch').value
+            });
+            
+            fetch('/api/national-admin/all-users?' + params)
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        document.getElementById('allUsersTotal').textContent = `${data.total} users`;
+                        renderAllUsersTable(data.users);
+                        updateAllUsersPagination(data);
+                        populateStateFilter(data.state_options);
+                        renderTypeBadges(data.type_counts);
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Error: ' + data.error + '</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load users</td></tr>';
+                });
+        }
+        
+        function renderAllUsersTable(users) {
+            const tbody = document.getElementById('allUsersTableBody');
+            if(!users.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No users found matching filters.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = users.map(u => `
+                <tr>
+                    <td><strong>${escapeHtml(u.full_name)}</strong><br><small class="text-muted">UID: ${u.uid}</small></td>
+                    <td><span class="badge ${typeColors[u.user_type] || 'bg-secondary'}">${u.user_type_display}</span></td>
+                    <td><small>${escapeHtml(u.location)}</small></td>
+                    <td><small>${escapeHtml(u.email)}</small><br><small class="text-muted">${u.mobile || '-'}</small></td>
+                    <td><span class="badge ${u.is_verified ? 'bg-success' : 'bg-warning'}">${u.is_verified ? 'Verified' : 'Pending'}</span></td>
+                    <td><small>${u.created_at || '-'}</small></td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateAllUsersPagination(data) {
+            document.getElementById('allUsersPaginationInfo').textContent = `Page ${data.page} of ${data.total_pages}`;
+            document.getElementById('allUsersPrevBtn').disabled = data.page <= 1;
+            document.getElementById('allUsersNextBtn').disabled = data.page >= data.total_pages;
+        }
+        
+        function populateStateFilter(states) {
+            const select = document.getElementById('allUsersStateFilter');
+            const currentVal = select.value;
+            if(select.options.length <= 1) { // Only populate once
+                states.forEach(s => {
+                    select.appendChild(new Option(s.name, s.name));
+                });
+                select.value = currentVal;
+            }
+        }
+        
+        function renderTypeBadges(counts) {
+            const container = document.getElementById('userTypeBadges');
+            const typeLabels = {
+                'state_admin': 'State',
+                'district_admin': 'District',
+                'block_admin': 'Block',
+                'facility_admin': 'Facility',
+                'health_worker': 'Workers'
+            };
+            container.innerHTML = Object.keys(counts).map(t => 
+                `<span class="badge ${typeColors[t] || 'bg-secondary'}" style="font-size:0.7rem">${typeLabels[t] || t}: ${counts[t]}</span>`
+            ).join('');
+        }
+        
+        // ==================== HEALTH PROGRAMS PAGE ====================
+        let allProgramsData = [];
+        
+        const statusColors = {
+            'draft': 'bg-secondary',
+            'active': 'bg-success',
+            'paused': 'bg-warning text-dark',
+            'completed': 'bg-info'
+        };
+        
+        function loadPrograms() {
+            const tbody = document.getElementById('programsTableBody');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</td></tr>';
+            
+            fetch('/api/national-admin/programs')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        allProgramsData = data.programs;
+                        document.getElementById('programsCount').textContent = data.total;
+                        renderProgramsTable(data.programs);
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error: ' + data.error + '</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Failed to load programs</td></tr>';
+                });
+        }
+        
+        function renderProgramsTable(programs) {
+            const tbody = document.getElementById('programsTableBody');
+            if(!programs.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No programs found. Click "Add Program" to create one.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = programs.map(p => {
+                const duration = p.start_date && p.end_date ? `${p.start_date} to ${p.end_date}` : (p.start_date || '-');
+                const budget = p.budget ? '₹' + (p.budget / 10000000).toFixed(1) + ' Cr' : '-';
+                return `
+                <tr>
+                    <td><strong>${escapeHtml(p.name)}</strong><br><small class="text-muted">${escapeHtml(p.description || '').substring(0, 50)}</small></td>
+                    <td><span class="badge bg-light text-dark">${p.category || '-'}</span></td>
+                    <td><small>${duration}</small></td>
+                    <td><strong class="text-success">${budget}</strong></td>
+                    <td><span class="badge bg-primary">${p.states_assigned} states</span></td>
+                    <td><span class="badge ${statusColors[p.status] || 'bg-secondary'}">${(p.status || 'draft').toUpperCase()}</span></td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditProgram(${p.id})" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteProgram(${p.id}, '${escapeHtml(p.name)}')" title="Delete"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+        
+        function filterProgramsTable() {
+            const query = document.getElementById('programsSearchInput').value.toLowerCase();
+            const filtered = allProgramsData.filter(p => 
+                p.name.toLowerCase().includes(query) || 
+                (p.category && p.category.toLowerCase().includes(query))
+            );
+            renderProgramsTable(filtered);
+        }
+        
+        document.getElementById('addProgramForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+            
+            fetch('/api/national-admin/programs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('newProgramName').value,
+                    description: document.getElementById('newProgramDesc').value,
+                    category: document.getElementById('newProgramCategory').value,
+                    start_date: document.getElementById('newProgramStart').value || null,
+                    end_date: document.getElementById('newProgramEnd').value || null,
+                    budget: parseInt(document.getElementById('newProgramBudget').value) || null,
+                    target_beneficiaries: parseInt(document.getElementById('newProgramTarget').value) || null
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = 'Create Program';
+                if(data.success) {
+                    alert('Program created successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('addProgramModal')).hide();
+                    this.reset();
+                    loadPrograms();
+                    loadDashboard();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = 'Create Program';
+                alert('Failed to create program');
+            });
+        });
+        
+        function openEditProgram(id) {
+            const prog = allProgramsData.find(p => p.id === id);
+            if(!prog) return;
+            
+            document.getElementById('editProgramId').value = prog.id;
+            document.getElementById('editProgramName').value = prog.name;
+            document.getElementById('editProgramDesc').value = prog.description || '';
+            document.getElementById('editProgramCategory').value = prog.category || 'General';
+            document.getElementById('editProgramStatus').value = prog.status || 'draft';
+            document.getElementById('editProgramStart').value = prog.start_date || '';
+            document.getElementById('editProgramEnd').value = prog.end_date || '';
+            document.getElementById('editProgramBudget').value = prog.budget || '';
+            document.getElementById('editProgramTarget').value = prog.target_beneficiaries || '';
+            
+            new bootstrap.Modal(document.getElementById('editProgramModal')).show();
+        }
+        
+        document.getElementById('editProgramForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editProgramId').value;
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Saving...';
+            
+            fetch(`/api/national-admin/programs/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: document.getElementById('editProgramName').value,
+                    description: document.getElementById('editProgramDesc').value,
+                    category: document.getElementById('editProgramCategory').value,
+                    status: document.getElementById('editProgramStatus').value,
+                    start_date: document.getElementById('editProgramStart').value || null,
+                    end_date: document.getElementById('editProgramEnd').value || null,
+                    budget: parseInt(document.getElementById('editProgramBudget').value) || null,
+                    target_beneficiaries: parseInt(document.getElementById('editProgramTarget').value) || null
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Changes';
+                if(data.success) {
+                    alert('Program updated successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('editProgramModal')).hide();
+                    loadPrograms();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Changes';
+                alert('Failed to update program');
+            });
+        });
+        
+        function deleteProgram(id, name) {
+            if(!confirm(`Are you sure you want to delete "${name}"?\n\nThis will also remove all state assignments.\nThis action cannot be undone.`)) return;
+            
+            fetch(`/api/national-admin/programs/${id}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('Program deleted successfully!');
+                        loadPrograms();
+                        loadDashboard();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(err => alert('Failed to delete program'));
+        }
+        
+        // ==================== EMERGENCY CENTER PAGE ====================
+        const severityColors = {
+            'critical': 'bg-dark text-white',
+            'high': 'bg-danger text-white',
+            'medium': 'bg-warning',
+            'low': 'bg-info text-white'
+        };
+        
+        const emergStatusColors = {
+            'active': 'bg-danger',
+            'responding': 'bg-warning',
+            'resolved': 'bg-success'
+        };
+        
+        function loadEmergencies() {
+            const tbody = document.getElementById('emergenciesTableBody');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</td></tr>';
+            
+            const status = document.getElementById('emergStatusFilter').value;
+            
+            fetch('/api/national-admin/emergencies?status=' + status)
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        renderEmergenciesTable(data.emergencies);
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error: ' + data.error + '</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Failed to load emergencies</td></tr>';
+                });
+            
+            loadEmergencyStats();
+        }
+        
+        function loadEmergencyStats() {
+            fetch('/api/national-admin/emergency-stats')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const s = data.stats;
+                        document.getElementById('emergActive').textContent = s.active;
+                        document.getElementById('emergResponding').textContent = s.responding;
+                        document.getElementById('emergResolved').textContent = s.resolved_today;
+                        document.getElementById('emergCritical').textContent = s.by_severity.critical;
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+        
+        function renderEmergenciesTable(emergencies) {
+            const tbody = document.getElementById('emergenciesTableBody');
+            if(!emergencies.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No emergencies found.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = emergencies.map(e => `
+                <tr>
+                    <td><strong>${escapeHtml(e.title)}</strong><br><small class="text-muted">${escapeHtml(e.description || '').substring(0, 40)}</small></td>
+                    <td><span class="badge bg-light text-dark">${(e.emergency_type || 'other').replace('_', ' ')}</span></td>
+                    <td><span class="badge ${severityColors[e.severity] || 'bg-secondary'}">${(e.severity || 'medium').toUpperCase()}</span></td>
+                    <td><small>${escapeHtml(e.state || '')} ${e.location ? '- ' + escapeHtml(e.location) : ''}</small></td>
+                    <td><span class="badge ${emergStatusColors[e.status] || 'bg-secondary'}">${(e.status || 'active').toUpperCase()}</span></td>
+                    <td><small>${e.created_at || '-'}</small></td>
+                    <td class="text-end">
+                        ${e.status === 'active' ? `<button class="btn btn-sm btn-warning me-1" onclick="updateEmergencyStatus(${e.id}, 'responding')" title="Mark Responding"><i class="fas fa-truck-medical"></i></button>` : ''}
+                        ${e.status !== 'resolved' ? `<button class="btn btn-sm btn-success" onclick="updateEmergencyStatus(${e.id}, 'resolved')" title="Mark Resolved"><i class="fas fa-check"></i></button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateEmergencyStatus(id, status) {
+            fetch(`/api/national-admin/emergencies/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if(data.success) {
+                    loadEmergencies();
+                    loadDashboard();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => alert('Failed to update emergency'));
+        }
+        
+        document.getElementById('reportEmergencyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Reporting...';
+            
+            fetch('/api/national-admin/emergencies', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    emergency_type: document.getElementById('newEmergType').value,
+                    severity: document.getElementById('newEmergSeverity').value,
+                    title: document.getElementById('newEmergTitle').value,
+                    description: document.getElementById('newEmergDesc').value,
+                    state: document.getElementById('newEmergState').value,
+                    location: document.getElementById('newEmergLocation').value
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = 'Report Emergency';
+                if(data.success) {
+                    alert('Emergency reported successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('reportEmergencyModal')).hide();
+                    this.reset();
+                    loadEmergencies();
+                    loadDashboard();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = 'Report Emergency';
+                alert('Failed to report emergency');
+            });
+        });
+        
+        // Populate state dropdown for emergency form
+        function populateEmergStateDropdown() {
+            fetch('/api/national-admin/states')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const sel = document.getElementById('newEmergState');
+                        data.states.forEach(s => sel.appendChild(new Option(s.name, s.name)));
+                    }
+                })
+                .catch(err => {});
+        }
+        populateEmergStateDropdown();
+        
+        // ==================== DISEASE SURVEILLANCE PAGE ====================
+        function loadSurveillance() {
+            loadDiseaseStats();
+            loadDiseaseReports();
+        }
+        
+        function loadDiseaseStats() {
+            fetch('/api/national-admin/disease-stats')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const s = data.stats;
+                        document.getElementById('diseaseWeekly').textContent = s.weekly_cases;
+                        document.getElementById('diseaseMonthly').textContent = s.monthly_cases;
+                        document.getElementById('diseaseActive').textContent = s.active_diseases;
+                        document.getElementById('diseaseAlerts').textContent = data.alerts.length;
+                        
+                        renderTopDiseases(data.top_diseases);
+                        renderStateDistribution(data.state_distribution);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+        
+        function loadDiseaseReports() {
+            const tbody = document.getElementById('diseaseReportsTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</td></tr>';
+            
+            const params = new URLSearchParams({
+                disease: document.getElementById('diseaseFilter').value,
+                state: document.getElementById('diseaseStateFilter').value
+            });
+            
+            fetch('/api/national-admin/disease-reports?' + params)
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        document.getElementById('diseaseReportsCount').textContent = data.total;
+                        renderDiseaseReports(data.reports);
+                        populateDiseaseFilter(data.disease_options);
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Error loading</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Failed to load</td></tr>';
+                });
+        }
+        
+        function renderDiseaseReports(reports) {
+            const tbody = document.getElementById('diseaseReportsTableBody');
+            if(!reports.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">No disease reports found.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = reports.map(r => `
+                <tr>
+                    <td><strong>${escapeHtml(r.disease || 'Unknown')}</strong></td>
+                    <td><span class="badge ${severityColors[r.severity] || 'bg-secondary'}">${(r.severity || '-').toUpperCase()}</span></td>
+                    <td>${escapeHtml(r.patient)}</td>
+                    <td><small>${escapeHtml(r.state || '')} ${r.district ? '- ' + escapeHtml(r.district) : ''}</small></td>
+                    <td><small>${r.reported_at || '-'}</small></td>
+                </tr>
+            `).join('');
+        }
+        
+        function renderTopDiseases(diseases) {
+            const container = document.getElementById('topDiseasesContainer');
+            if(!diseases.length) {
+                container.innerHTML = '<small class="text-muted">No data</small>';
+                return;
+            }
+            const max = Math.max(...diseases.map(d => d.count));
+            container.innerHTML = diseases.slice(0, 5).map(d => `
+                <div class="d-flex align-items-center mb-1">
+                    <small class="text-truncate me-2" style="width:100px">${escapeHtml(d.disease)}</small>
+                    <div class="progress flex-grow-1" style="height:10px">
+                        <div class="progress-bar bg-danger" style="width:${d.count/max*100}%"></div>
+                    </div>
+                    <small class="ms-2 text-muted">${d.count}</small>
+                </div>
+            `).join('');
+        }
+        
+        function renderStateDistribution(states) {
+            const container = document.getElementById('stateDistContainer');
+            if(!states.length) {
+                container.innerHTML = '<small class="text-muted">No data</small>';
+                return;
+            }
+            const max = Math.max(...states.map(s => s.cases));
+            container.innerHTML = states.map(s => `
+                <div class="d-flex align-items-center mb-1">
+                    <small class="text-truncate me-2" style="width:100px">${escapeHtml(s.state)}</small>
+                    <div class="progress flex-grow-1" style="height:10px">
+                        <div class="progress-bar bg-primary" style="width:${s.cases/max*100}%"></div>
+                    </div>
+                    <small class="ms-2 text-muted">${s.cases}</small>
+                </div>
+            `).join('');
+        }
+        
+        function populateDiseaseFilter(options) {
+            const sel = document.getElementById('diseaseFilter');
+            if(sel.options.length <= 1) {
+                options.forEach(d => sel.appendChild(new Option(d, d)));
+            }
+            // Also populate state filter
+            const stateSel = document.getElementById('diseaseStateFilter');
+            if(stateSel.options.length <= 1) {
+                fetch('/api/national-admin/states')
+                    .then(r => r.json())
+                    .then(data => {
+                        if(data.success) data.states.forEach(s => stateSel.appendChild(new Option(s.name, s.name)));
+                    }).catch(() => {});
+            }
+        }
+        
+        // ==================== AI PREDICTIONS PAGE ====================
+        function loadPredictions() {
+            fetch('/api/national-admin/ai-predictions')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const p = data.predictions;
+                        
+                        // Forecast
+                        document.getElementById('aiCurrentWeek').textContent = p.forecast.current_week;
+                        document.getElementById('aiNextWeek').textContent = p.forecast.next_week;
+                        const forecastBadge = document.getElementById('aiForecastBadge');
+                        const changePercent = p.forecast.change_percent;
+                        forecastBadge.textContent = `${changePercent > 0 ? '+' : ''}${changePercent}%`;
+                        forecastBadge.className = `badge ${changePercent > 10 ? 'bg-danger' : (changePercent < -10 ? 'bg-success' : 'bg-warning')}`;
+                        
+                        // Risk
+                        document.getElementById('aiRiskScore').textContent = p.risk.score;
+                        const riskLevel = document.getElementById('aiRiskLevel');
+                        riskLevel.textContent = p.risk.level.toUpperCase();
+                        riskLevel.className = `badge fs-6 ${p.risk.level === 'high' ? 'bg-danger' : (p.risk.level === 'medium' ? 'bg-warning' : 'bg-success')}`;
+                        document.getElementById('aiRiskFactors').textContent = p.risk.factors;
+                        
+                        // Resources
+                        document.getElementById('aiFacilities').textContent = p.resources.facilities;
+                        document.getElementById('aiWorkers').textContent = p.resources.workers;
+                        const resBadge = document.getElementById('aiResourceBadge');
+                        resBadge.textContent = p.resources.status.replace('_', ' ').toUpperCase();
+                        resBadge.className = `badge ${p.resources.status === 'shortage_predicted' ? 'bg-danger' : (p.resources.status === 'adequate' ? 'bg-warning' : 'bg-success')}`;
+                        document.getElementById('aiResourceAction').textContent = p.resources.action;
+                        
+                        // Trending
+                        renderAiTrending(data.trending_conditions);
+                        
+                        // Regional
+                        renderAiRegional(data.regional_risks);
+                        
+                        // Recommendations
+                        renderAiRecommendations(data.recommendations);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+        
+        function renderAiTrending(conditions) {
+            const container = document.getElementById('aiTrendingContainer');
+            if(!conditions.length) {
+                container.innerHTML = '<small class="text-muted">No trending data</small>';
+                return;
+            }
+            container.innerHTML = conditions.map(c => `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                    <span><strong>${escapeHtml(c.condition)}</strong> <small class="text-muted">(${c.count} cases)</small></span>
+                    <span class="badge ${c.trend === 'up' ? 'bg-danger' : (c.trend === 'down' ? 'bg-success' : 'bg-secondary')}">
+                        <i class="fas fa-arrow-${c.trend === 'up' ? 'up' : (c.trend === 'down' ? 'down' : 'right')}"></i> ${c.change}%
+                    </span>
+                </div>
+            `).join('');
+        }
+        
+        function renderAiRegional(risks) {
+            const container = document.getElementById('aiRegionalContainer');
+            if(!risks.length) {
+                container.innerHTML = '<small class="text-muted">No regional alerts</small>';
+                return;
+            }
+            container.innerHTML = risks.map(r => `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-start border-4 ${r.risk === 'high' ? 'border-danger' : 'border-warning'} bg-light">
+                    <span><strong>${escapeHtml(r.state)}</strong></span>
+                    <span><small>${r.cases} cases, ${r.emergencies} emergencies</small></span>
+                    <span class="badge ${r.risk === 'high' ? 'bg-danger' : 'bg-warning'}">${r.risk.toUpperCase()}</span>
+                </div>
+            `).join('');
+        }
+        
+        function renderAiRecommendations(recs) {
+            const container = document.getElementById('aiRecommendationsContainer');
+            if(!recs.length) {
+                container.innerHTML = '<small class="text-muted">No recommendations</small>';
+                return;
+            }
+            const priorityColors = { 'high': 'danger', 'medium': 'warning', 'low': 'info' };
+            container.innerHTML = recs.map(r => `
+                <div class="alert alert-${priorityColors[r.priority] || 'secondary'} py-2 mb-2" role="alert">
+                    <i class="fas fa-${r.priority === 'high' ? 'exclamation-circle' : (r.priority === 'medium' ? 'exclamation-triangle' : 'info-circle')} me-2"></i>
+                    <strong>${r.priority.toUpperCase()}:</strong> ${escapeHtml(r.action)}
+                </div>
+            `).join('');
+        }
+        
+        // ==================== RESOURCE MANAGEMENT PAGE ====================
+        function loadResources() {
+            fetch('/api/national-admin/resources')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const s = data.summary;
+                        
+                        // Summary cards
+                        document.getElementById('resFacilities').textContent = s.facilities.total;
+                        document.getElementById('resFacilitiesActive').textContent = `${s.facilities.active} active`;
+                        document.getElementById('resWorkers').textContent = s.workers.total;
+                        document.getElementById('resWorkersVerified').textContent = `${s.workers.verified} verified`;
+                        document.getElementById('resBudget').textContent = formatBudget(s.budget.total);
+                        document.getElementById('resBudgetPrograms').textContent = `${s.budget.programs} programs`;
+                        document.getElementById('resUtilization').textContent = s.utilization;
+                        
+                        // State resources table
+                        renderStateResourcesTable(data.state_resources);
+                        
+                        // Budget allocation
+                        renderBudgetAllocation(data.budget_allocation);
+                        
+                        // Top programs
+                        renderTopProgramsTable(data.top_programs);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+        
+        function formatBudget(amount) {
+            if(amount >= 10000000) return '₹' + (amount / 10000000).toFixed(1) + ' Cr';
+            if(amount >= 100000) return '₹' + (amount / 100000).toFixed(1) + ' L';
+            return '₹' + amount;
+        }
+        
+        function renderStateResourcesTable(states) {
+            const tbody = document.getElementById('stateResourcesTableBody');
+            if(!states.length) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No data</td></tr>';
+                return;
+            }
+            tbody.innerHTML = states.map(s => `
+                <tr>
+                    <td>${escapeHtml(s.state)}</td>
+                    <td>${s.facilities}</td>
+                    <td>${s.workers}</td>
+                    <td><span class="badge ${s.coverage >= 5 ? 'bg-success' : (s.coverage >= 2 ? 'bg-warning' : 'bg-danger')}">${s.coverage}</span></td>
+                </tr>
+            `).join('');
+        }
+        
+        function renderBudgetAllocation(allocations) {
+            const container = document.getElementById('budgetAllocationContainer');
+            if(!allocations.length) {
+                container.innerHTML = '<small class="text-muted">No budget data</small>';
+                return;
+            }
+            const max = Math.max(...allocations.map(a => a.amount));
+            const colors = ['bg-primary', 'bg-success', 'bg-warning', 'bg-danger', 'bg-info', 'bg-secondary'];
+            container.innerHTML = allocations.map((a, i) => `
+                <div class="d-flex align-items-center mb-2">
+                    <small class="text-truncate me-2" style="width:100px">${escapeHtml(a.category)}</small>
+                    <div class="progress flex-grow-1" style="height:16px">
+                        <div class="progress-bar ${colors[i % colors.length]}" style="width:${a.amount/max*100}%"></div>
+                    </div>
+                    <small class="ms-2">${formatBudget(a.amount)}</small>
+                </div>
+            `).join('');
+        }
+        
+        function renderTopProgramsTable(programs) {
+            const tbody = document.getElementById('topProgramsTableBody');
+            if(!programs.length) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-3">No programs</td></tr>';
+                return;
+            }
+            tbody.innerHTML = programs.map(p => `
+                <tr>
+                    <td><strong>${escapeHtml(p.name)}</strong></td>
+                    <td>${formatBudget(p.budget)}</td>
+                    <td><span class="badge ${statusColors[p.status] || 'bg-secondary'}">${(p.status || 'draft').toUpperCase()}</span></td>
+                    <td><span class="badge bg-primary">${p.states} states</span></td>
+                </tr>
+            `).join('');
+        }
+        
+        // ==================== REPORTS PAGE ====================
+        function loadReports() {
+            fetch('/api/national-admin/reports')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const o = data.overview;
+                        
+                        // Overview cards
+                        document.getElementById('rptUsers').textContent = o.total_users;
+                        document.getElementById('rptScreenings').textContent = o.total_screenings;
+                        document.getElementById('rptEmergencies').textContent = o.total_emergencies;
+                        document.getElementById('rptPrograms').textContent = o.total_programs;
+                        document.getElementById('rptFacilities').textContent = o.total_facilities;
+                        document.getElementById('rptStates').textContent = o.total_states;
+                        
+                        // Activity
+                        const a = data.recent_activity;
+                        document.getElementById('rptRecentScreenings').textContent = a.screenings;
+                        document.getElementById('rptRecentEmergencies').textContent = a.emergencies;
+                        document.getElementById('rptRecentUsers').textContent = a.users;
+                        
+                        // Available reports
+                        renderAvailableReports(data.available_reports);
+                        
+                        // Generated reports
+                        renderGeneratedReports(data.generated_reports);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+        
+        function renderAvailableReports(reports) {
+            const tbody = document.getElementById('availableReportsTableBody');
+            if(!reports.length) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-muted">No reports</td></tr>';
+                return;
+            }
+            tbody.innerHTML = reports.map(r => `
+                <tr>
+                    <td><strong>${escapeHtml(r.name)}</strong></td>
+                    <td><small>${escapeHtml(r.description)}</small></td>
+                    <td><span class="badge bg-secondary">${r.records}</span></td>
+                    <td><button class="btn btn-sm btn-primary" onclick="generateReport('${r.id}')"><i class="fas fa-download"></i></button></td>
+                </tr>
+            `).join('');
+        }
+        
+        function renderGeneratedReports(reports) {
+            const tbody = document.getElementById('generatedReportsTableBody');
+            if(!reports.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-3 text-muted">No reports generated</td></tr>';
+                return;
+            }
+            tbody.innerHTML = reports.map(r => `
+                <tr>
+                    <td><strong>${escapeHtml(r.name)}</strong></td>
+                    <td><span class="badge bg-info">${r.type}</span></td>
+                    <td><small>${r.date}</small></td>
+                    <td><small>${r.size}</small></td>
+                    <td><button class="btn btn-sm btn-outline-primary"><i class="fas fa-download"></i></button></td>
+                </tr>
+            `).join('');
+        }
+        
+        function generateReport(type) {
+            alert('Report generation for "' + type + '" will be available soon.');
+        }
+        
+        // ==================== ALERTS PAGE ====================
+        function loadAlerts() {
+            fetch('/api/national-admin/alerts')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        document.getElementById('alertsCount').textContent = data.total;
+                        renderAlertsTable(data.alerts);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+        
+        function renderAlertsTable(alerts) {
+            const tbody = document.getElementById('alertsTableBody');
+            if(!alerts.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No alerts</td></tr>';
+                return;
+            }
+            const typeColors = { 'emergency': 'bg-danger', 'system': 'bg-info', 'announcement': 'bg-success' };
+            tbody.innerHTML = alerts.map(a => `
+                <tr>
+                    <td><span class="badge ${typeColors[a.type] || 'bg-secondary'}">${(a.type || 'alert').toUpperCase()}</span></td>
+                    <td><strong>${escapeHtml(a.title)}</strong></td>
+                    <td><small>${escapeHtml(a.message || '-')}</small></td>
+                    <td><span class="badge ${severityColors[a.severity] || 'bg-secondary'}">${(a.severity || '-').toUpperCase()}</span></td>
+                    <td><small>${escapeHtml(a.state || 'All')}</small></td>
+                    <td><small>${a.created_at || '-'}</small></td>
+                </tr>
+            `).join('');
+        }
+        
+        document.getElementById('broadcastAlertForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const data = {
+                title: document.getElementById('alertTitle').value,
+                message: document.getElementById('alertMessage').value,
+                severity: document.getElementById('alertSeverity').value,
+                states: document.getElementById('alertTarget').value === 'all' ? [] : [document.getElementById('alertTarget').value]
+            };
+            
+            fetch('/api/national-admin/alerts', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if(res.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('broadcastAlertModal')).hide();
+                    this.reset();
+                    loadAlerts();
+                    alert('Alert broadcasted successfully!');
+                } else {
+                    alert('Error: ' + res.error);
+                }
+            })
+            .catch(err => alert('Error broadcasting alert'));
+        });
+        
+        // ==================== SETTINGS PAGE ====================
+        function loadSettings() {
+            fetch('/api/national-admin/settings')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const s = data.settings;
+                        // General
+                        document.getElementById('settSystemName').value = s.general.system_name;
+                        document.getElementById('settContactEmail').value = s.general.contact_email;
+                        document.getElementById('settSupportPhone').value = s.general.support_phone;
+                        // Notifications
+                        document.getElementById('settEmailAlerts').checked = s.notifications.email_alerts;
+                        document.getElementById('settSmsAlerts').checked = s.notifications.sms_alerts;
+                        document.getElementById('settEmergencyNotify').checked = s.notifications.emergency_auto_notify;
+                        // Security
+                        document.getElementById('settSessionTimeout').value = s.security.session_timeout;
+                        document.getElementById('settTwoFactor').checked = s.security.two_factor_auth;
+                        document.getElementById('settPasswordExpiry').value = s.security.password_expiry_days;
+                        // Data
+                        document.getElementById('settAutoBackup').checked = s.data.auto_backup;
+                        document.getElementById('settBackupFreq').value = s.data.backup_frequency;
+                        document.getElementById('settDataRetention').value = s.data.data_retention_days;
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+        
+        function saveSettings() {
+            const settings = {
+                general: {
+                    contact_email: document.getElementById('settContactEmail').value,
+                    support_phone: document.getElementById('settSupportPhone').value
+                },
+                notifications: {
+                    email_alerts: document.getElementById('settEmailAlerts').checked,
+                    sms_alerts: document.getElementById('settSmsAlerts').checked,
+                    emergency_auto_notify: document.getElementById('settEmergencyNotify').checked
+                },
+                security: {
+                    session_timeout: parseInt(document.getElementById('settSessionTimeout').value),
+                    two_factor_auth: document.getElementById('settTwoFactor').checked,
+                    password_expiry_days: parseInt(document.getElementById('settPasswordExpiry').value)
+                },
+                data: {
+                    auto_backup: document.getElementById('settAutoBackup').checked,
+                    backup_frequency: document.getElementById('settBackupFreq').value,
+                    data_retention_days: parseInt(document.getElementById('settDataRetention').value)
+                }
+            };
+            
+            fetch('/api/national-admin/settings', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(settings)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if(res.success) {
+                    alert('Settings saved successfully!');
+                } else {
+                    alert('Error: ' + res.error);
+                }
+            })
+            .catch(err => alert('Error saving settings'));
+        }
+
+        // ==================== PHASE 12: INVENTORY & ASSETS ====================
+        async function loadInventorySummary() {
+            try {
+                const res = await fetch('/api/admin/inventory-summary');
+                const data = await res.json();
+                if (data.success) console.log('National Inventory Summary:', data);
+            } catch (e) { console.error('Inventory error:', e); }
+        }
+        loadInventorySummary();
+
+        // ==================== ADMIN TEAM MANAGEMENT (Phase 15) ====================
+        async function loadNationalAdminTeam() {
+            const country = document.getElementById('nationalCountryDisplay')?.textContent || 'India';
+            document.getElementById('nationalAdminTeamTable').innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+            try {
+                const response = await fetch(`/api/admin/entity-admins/national/${encodeURIComponent(country)}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('natTeamTotal').textContent = data.count || 0;
+                    document.getElementById('natTeamActive').textContent = data.count || 0;
+                    document.getElementById('natTeamPrimary').textContent = data.admins?.filter(a => a.is_primary).length || 0;
+                    const rolesRes = await fetch('/api/admin/roles'); const rolesData = await rolesRes.json();
+                    document.getElementById('natTeamRoles').textContent = rolesData.roles?.length || 0;
+                    if (data.admins?.length) {
+                        document.getElementById('nationalAdminTeamTable').innerHTML = data.admins.map(a => `
+                            <tr><td><strong>${a.name || 'Unknown'}</strong></td><td>${a.email || 'N/A'}</td>
+                            <td>${a.is_primary ? '<span class="badge bg-danger">Primary</span>' : `<span class="badge bg-secondary">${a.role_name || 'Admin'}</span>`}</td>
+                            <td><span class="badge bg-success">Active</span></td><td>${a.assigned_at || 'N/A'}</td>
+                            <td class="text-end">${!a.is_primary ? `<button class="btn btn-sm btn-outline-danger" onclick="removeNationalAdmin(${a.id})"><i class="fas fa-trash"></i></button>` : '<span class="badge bg-light text-muted">Protected</span>'}</td></tr>
+                        `).join('');
+                    } else {
+                        document.getElementById('nationalAdminTeamTable').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No admins assigned.</td></tr>';
+                    }
+                }
+            } catch (e) { console.error(e); document.getElementById('nationalAdminTeamTable').innerHTML = '<tr><td colspan="6" class="text-center text-danger">Error</td></tr>'; }
+        }
+        async function addNationalAdmin() {
+            const userId = document.getElementById('newNatAdminUserId')?.value;
+            const role = document.getElementById('newNatAdminRole')?.value;
+            const notes = document.getElementById('newNatAdminNotes')?.value;
+            const country = document.getElementById('nationalCountryDisplay')?.textContent || 'India';
+            if (!userId) { alert('Please enter a user ID'); return; }
+            try {
+                const res = await fetch('/api/admin/assignments', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: parseInt(userId), entity_type: 'national', entity_id: country, entity_name: country, role_name: role, notes: notes, is_primary: false }) });
+                const data = await res.json();
+                if (data.success) { alert('Admin added!'); bootstrap.Modal.getInstance(document.getElementById('addNationalAdminModal'))?.hide(); loadNationalAdminTeam(); }
+                else alert('Error: ' + (data.error || 'Unknown'));
+            } catch (e) { alert('Error'); }
+        }
+        async function removeNationalAdmin(assignmentId) {
+            if (!confirm('Remove this admin?')) return;
+            try { const res = await fetch(`/api/admin/assignments/${assignmentId}`, { method: 'DELETE' }); const data = await res.json();
+                if (data.success) { alert('Removed'); loadNationalAdminTeam(); } else alert('Error: ' + data.error);
+            } catch (e) { alert('Error'); }
+        }
+        
+        // Security Center
+        async function loadSecurityCenter() {
+            try {
+                const [summaryRes, logsRes, sessionsRes, failedRes] = await Promise.all([
+                    fetch('/api/admin/security/summary'),
+                    fetch('/api/admin/security/login-logs?days=7&per_page=20'),
+                    fetch('/api/admin/security/sessions?status=active&per_page=15'),
+                    fetch('/api/admin/security/failed-attempts?days=7&per_page=15')
+                ]);
+                const summary = await summaryRes.json();
+                if (summary.success) {
+                    const s = summary.summary;
+                    document.getElementById('secLogins24h').textContent = s.logins_24h || 0;
+                    document.getElementById('secFailed24h').textContent = s.failed_24h || 0;
+                    document.getElementById('secActiveSessions').textContent = s.active_sessions || 0;
+                    document.getElementById('secBlockedIPs').textContent = s.blocked_ips || 0;
+                    document.getElementById('secApiCalls1h').textContent = s.api_calls_1h || 0;
+                    document.getElementById('secUniqueDevices').textContent = s.unique_devices_7d || 0;
+                }
+                const logs = await logsRes.json();
+                document.getElementById('loginLogsTable').innerHTML = logs.success && logs.logs.length ? logs.logs.map(l => `
+                    <tr><td class="small">${l.created_at ? new Date(l.created_at).toLocaleString() : '-'}</td><td>${l.user_name || l.email || '-'}</td>
+                    <td><span class="badge ${l.status === 'success' ? 'bg-success' : 'bg-danger'}">${l.status}</span></td>
+                    <td><small>${l.ip_address || '-'}</small></td><td>${l.browser || '-'}</td><td>${l.failure_reason || '-'}</td></tr>
+                `).join('') : '<tr><td colspan="6" class="text-center text-muted py-4">No login logs found</td></tr>';
+                const sessions = await sessionsRes.json();
+                document.getElementById('activeSessionsTable').innerHTML = sessions.success && sessions.sessions.length ? sessions.sessions.map(s => `
+                    <tr><td>${s.user_name || 'Unknown'}</td><td><span class="badge bg-secondary">${s.user_type || '-'}</span></td>
+                    <td><span class="badge bg-success">${s.status}</span></td><td><small>${s.ip_address || '-'}</small></td><td>${s.browser || '-'}</td>
+                    <td class="small">${s.last_activity ? new Date(s.last_activity).toLocaleString() : '-'}</td>
+                    <td><button class="btn btn-sm btn-outline-danger" onclick="terminateSession('${s.session_id}')"><i class="fas fa-times"></i></button></td></tr>
+                `).join('') : '<tr><td colspan="7" class="text-center text-muted py-4">No active sessions found</td></tr>';
+                const failed = await failedRes.json();
+                document.getElementById('failedAttemptsTable').innerHTML = failed.success && failed.attempts.length ? failed.attempts.map(a => `
+                    <tr class="${a.is_blocked ? 'table-danger' : ''}"><td class="small">${a.created_at ? new Date(a.created_at).toLocaleString() : '-'}</td>
+                    <td>${a.email || '-'}</td><td><small>${a.ip_address || '-'}</small></td><td>${a.failure_reason || '-'}</td>
+                    <td>${a.is_blocked ? '<span class="badge bg-danger">Blocked</span>' : '<span class="badge bg-warning">Warning</span>'}</td>
+                    <td class="small">${a.blocked_until ? new Date(a.blocked_until).toLocaleString() : '-'}</td></tr>
+                `).join('') : '<tr><td colspan="6" class="text-center text-muted py-4">No failed attempts found</td></tr>';
+            } catch (e) { console.error('Error loading security center:', e); }
+        }
+        async function terminateSession(sessionId) {
+            if (!confirm('Terminate this session?')) return;
+            try {
+                const res = await fetch(`/api/admin/security/sessions/${sessionId}/terminate`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                const data = await res.json();
+                if (data.success) { alert('Session terminated'); loadSecurityCenter(); } else alert('Error: ' + (data.error || 'Unknown'));
+            } catch (e) { console.error(e); alert('Error terminating session'); }
+        }
+    </script>
+</body>
+</html>

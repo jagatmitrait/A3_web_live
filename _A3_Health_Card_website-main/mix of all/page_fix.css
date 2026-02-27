@@ -1,0 +1,40 @@
+/* Fix for vaccination, allergy, surgery, and implants pages not showing content */
+
+.content-page {
+    display: none;
+    min-height: 100vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.content-page.active {
+    display: block !important;
+}
+
+/* Ensure the dashboard inline containers are visible */
+.allergy-dashboard-inline,
+.vaccination-dashboard-inline,
+.surgery-dashboard-inline,
+.implant-dashboard-inline {
+    display: block !important;
+    width: 100%;
+    min-height: 400px;
+}
+
+/* Make sure card containers are visible and support grid layout */
+#vaccinationCardContainer,
+#allergyCardContainer,
+#surgeryCardsContainer,
+#implantCardsContainer {
+    display: flex !important;
+    flex-wrap: wrap;
+    width: 100%;
+    min-height: 100px;
+}
+
+/* Empty state should be visible when needed */
+.empty-state {
+    display: block;
+    text-align: center;
+    padding: 40px 20px;
+}

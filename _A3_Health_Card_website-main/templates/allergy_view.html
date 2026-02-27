@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}View Allergy | A3 Health Card{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div class="form-card-header">
+    <div>
+      <div class="kicker">{{ allergy.category }}</div>
+      <h2>{{ allergy.allergen }}</h2>
+      <p class="muted">First reaction: {{ allergy.first_reaction_date.strftime('%Y-%m-%d') if allergy.first_reaction_date else 'N/A' }}</p>
+    </div>
+    {% set sev_key = (allergy.severity or '').lower() %}
+    {% set color = severity_colors.get(sev_key, '#9B0000') %}
+    <span class="severity-pill {{ sev_key }}" style="background: {{ color }}">{{ allergy.severity }}</span>
+  </div>
+
+  <dl class="detail-list">
+    <div class="detail-row">
+      <dt>Status</dt>
+      <dd><span class="status-pill {{ 'active' if allergy.active else 'archived' }}">{{ 'Active' if allergy.active else 'Archived' }}</span></dd>
+    </div>
+    <div class="detail-row">
+      <dt>Category</dt>
+      <dd>{{ allergy.category }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Allergen</dt>
+      <dd>{{ allergy.allergen }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Reactions</dt>
+      <dd>
+        {% if reactions %}
+          <div class="reactions-grid">
+            {% for r in reactions %}
+            <span class="reaction-chip">{{ r }}</span>
+            {% endfor %}
+          </div>
+        {% else %}
+          <span class="muted">No reactions recorded.</span>
+        {% endif %}
+      </dd>
+    </div>
+    <div class="detail-row">
+      <dt>Notes</dt>
+      <dd>{{ allergy.notes or 'No notes added.' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Documents</dt>
+      <dd>
+        {% if documents %}
+        <ul class="document-list">
+          {% for doc in documents %}
+          <li>
+            <i class="fas fa-file-alt"></i>
+            <span>{{ doc.original_name }}</span>
+            <small>({{ (doc.size / 1024)|round(1) }} KB)</small>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <span class="muted">No documents attached.</span>
+        {% endif %}
+      </dd>
+    </div>
+    <div class="detail-row">
+      <dt>Last updated</dt>
+      <dd>{{ allergy.updated_at.strftime('%Y-%m-%d %H:%M') if allergy.updated_at else allergy.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+    </div>
+  </dl>
+
+  <div class="form-actions">
+    <a href="{{ url_for('allergy_edit', allergy_id=allergy.id) }}" class="btn btn-primary js-edit-allergy" data-url="{{ url_for('allergy_edit', allergy_id=allergy.id) }}"><i class="fas fa-edit"></i> Edit</a>
+    <form method="post" action="{{ url_for('allergy_delete', allergy_id=allergy.id) }}" style="display:inline-block" onsubmit="return confirm('Delete this allergy permanently?');">
+      <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</button>
+    </form>
+    <a href="{{ url_for('allergy_pdf', allergy_id=allergy.id) }}" class="btn btn-secondary"><i class="fas fa-file-pdf"></i> Download PDF summary</a>
+  </div>
+</div>
+{% endblock %}

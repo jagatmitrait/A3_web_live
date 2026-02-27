@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Tasks | Health Worker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='health_worker_sidebar.css') }}">
+    <style>
+        /* Page-specific styles only - sidebar styles come from shared CSS */
+        
+        /* Category Tabs */
+        .category-tabs { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .category-tab { padding: 10px 20px; border-radius: 20px; border: 2px solid #e9ecef; background: white; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+        .category-tab:hover { border-color: var(--primary-red); color: var(--primary-red); }
+        .category-tab.active { background: var(--primary-red); color: white; border-color: var(--primary-red); }
+        .category-tab .badge { margin-left: 8px; }
+        
+        /* Task Cards */
+        .task-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border-left: 4px solid #28a745; transition: all 0.2s; }
+        .task-card:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .task-card.priority-high { border-left-color: #dc3545; }
+        .task-card.priority-medium { border-left-color: #fd7e14; }
+        .task-card.priority-routine { border-left-color: #28a745; }
+        .task-card.completed { opacity: 0.7; border-left-color: #6c757d; background: #f8f9fa; }
+        
+        .patient-info { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .patient-name { font-size: 1.1rem; font-weight: 600; color: #333; margin-bottom: 5px; }
+        .uid-badge { font-size: 0.75rem; color: #6c757d; font-family: monospace; }
+        .condition-badge { display: inline-block; padding: 4px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: 500; background: #e3f2fd; color: #1976d2; }
+        
+        .task-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .detail-item { display: flex; flex-direction: column; }
+        .detail-label { font-size: 0.7rem; color: #6c757d; text-transform: uppercase; }
+        .detail-value { font-weight: 500; font-size: 0.9rem; }
+        
+        .priority-badge { padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .priority-high { background: #f8d7da; color: #721c24; }
+        .priority-medium { background: #fff3cd; color: #856404; }
+        .priority-routine { background: #d4edda; color: #155724; }
+        
+        .start-visit-btn { background: linear-gradient(135deg, #28a745, #20c997); color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .start-visit-btn:hover { transform: scale(1.02); box-shadow: 0 3px 10px rgba(40,167,69,0.3); }
+        .start-visit-btn:disabled { background: #6c757d; cursor: not-allowed; transform: none; }
+        
+        /* Visit Workflow Modal */
+        .workflow-step { padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #e9ecef; }
+        .workflow-step.active { border-color: var(--primary-red); background: #fff5f5; }
+        .workflow-step.completed { border-color: #28a745; background: #f0fff4; }
+        .step-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .step-number { width: 30px; height: 30px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; }
+        .workflow-step.active .step-number { background: var(--primary-red); color: white; }
+        .workflow-step.completed .step-number { background: #28a745; color: white; }
+        
+        .vitals-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .vitals-form input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        
+        .ai-assessment { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 15px; border-radius: 10px; }
+        .risk-score { font-size: 2rem; font-weight: 700; }
+        
+        .loading-spinner { display: flex; justify-content: center; padding: 40px; }
+        
+        /* Patient List for Scheduling */
+        .patient-list-container { max-height: 350px; overflow-y: auto; border: 1px solid #e9ecef; border-radius: 8px; }
+        .patient-item { padding: 12px 15px; border-bottom: 1px solid #e9ecef; cursor: pointer; transition: all 0.2s; }
+        .patient-item:last-child { border-bottom: none; }
+        .patient-item:hover { background: #f8f9fa; }
+        .patient-item.selected { background: #fff5f5; border-left: 3px solid var(--primary-red); }
+        .patient-item.scheduled { opacity: 0.6; }
+        
+        @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
+    </style>
+</head>
+<body>
+    {% set active_page = 'daily_tasks' %}
+    {% include 'health_worker_sidebar.html' %}
+    
+    <main class="main-content">
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h4 class="mb-1"><i class="fas fa-tasks text-danger me-2"></i>Daily Tasks</h4>
+                <small class="text-muted" id="currentDate"></small>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+                <span class="badge bg-success" id="completedBadge">0 Completed</span>
+                <span class="badge bg-primary" id="pendingBadge">0 Pending</span>
+                <button class="btn btn-danger btn-sm" onclick="openScheduleModal()">
+                    <i class="fas fa-plus me-1"></i>Schedule Visit
+                </button>
+            </div>
+        </div>
+        
+        <!-- Category Tabs -->
+        <div class="category-tabs" id="categoryTabs">
+            <button class="category-tab active" data-category="all">
+                <i class="fas fa-list"></i> All Tasks <span class="badge bg-secondary" id="count-all">0</span>
+            </button>
+            <button class="category-tab" data-category="immunization">
+                <i class="fas fa-syringe"></i> Immunization <span class="badge bg-info" id="count-immunization">0</span>
+            </button>
+            <button class="category-tab" data-category="anc_pnc">
+                <i class="fas fa-baby"></i> ANC/PNC <span class="badge bg-pink" id="count-anc_pnc">0</span>
+            </button>
+            <button class="category-tab" data-category="ncd_followup">
+                <i class="fas fa-heartbeat"></i> NCD Follow-up <span class="badge bg-warning" id="count-ncd_followup">0</span>
+            </button>
+            <button class="category-tab" data-category="new_registration">
+                <i class="fas fa-user-plus"></i> Registration <span class="badge bg-success" id="count-new_registration">0</span>
+            </button>
+            <button class="category-tab" data-category="health_campaign">
+                <i class="fas fa-bullhorn"></i> Campaigns <span class="badge bg-secondary" id="count-health_campaign">0</span>
+            </button>
+            <button class="category-tab" data-category="ai_priority">
+                <i class="fas fa-robot"></i> AI Priority <span class="badge bg-danger" id="count-ai_priority">0</span>
+            </button>
+        </div>
+        
+        <!-- Tasks Container -->
+        <div id="tasksContainer">
+            <div class="loading-spinner">
+                <div class="spinner-border text-danger"></div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Visit Workflow Modal -->
+    <div class="modal fade" id="visitWorkflowModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-clipboard-check me-2"></i>Visit Workflow</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="workflowContent">
+                    <!-- Step 1: Navigate -->
+                    <div class="workflow-step active" id="step1">
+                        <div class="step-header">
+                            <span class="step-number">1</span>
+                            <strong>Navigate to Patient</strong>
+                        </div>
+                        <div class="step-content">
+                            <p class="text-muted mb-2">Location: <span id="patientLocation">-</span></p>
+                            <a href="#" id="navigateBtn" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-directions me-2"></i>Open in Maps
+                            </a>
+                            <button class="btn btn-success ms-2" onclick="nextStep(2)">I've Arrived <i class="fas fa-arrow-right ms-1"></i></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Verify Patient -->
+                    <div class="workflow-step" id="step2">
+                        <div class="step-header">
+                            <span class="step-number">2</span>
+                            <strong>Verify Patient</strong>
+                        </div>
+                        <div class="step-content" style="display: none;">
+                            <p class="text-muted">Patient: <strong id="patientNameVerify">-</strong></p>
+                            <div class="d-flex gap-2 mb-3">
+                                <input type="text" id="uidInput" class="form-control" placeholder="Enter UID or scan QR">
+                                <button class="btn btn-outline-secondary"><i class="fas fa-qrcode"></i></button>
+                            </div>
+                            <button class="btn btn-success" onclick="nextStep(3)">Patient Verified <i class="fas fa-check ms-1"></i></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3: Health Checks -->
+                    <div class="workflow-step" id="step3">
+                        <div class="step-header">
+                            <span class="step-number">3</span>
+                            <strong>Health Checks</strong>
+                        </div>
+                        <div class="step-content" style="display: none;">
+                            <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="check1"><label class="form-check-label" for="check1">General appearance assessed</label></div>
+                            <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="check2"><label class="form-check-label" for="check2">Previous complaints reviewed</label></div>
+                            <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="check3"><label class="form-check-label" for="check3">Medication adherence checked</label></div>
+                            <button class="btn btn-success mt-2" onclick="nextStep(4)">Continue <i class="fas fa-arrow-right ms-1"></i></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 4: Record Vitals -->
+                    <div class="workflow-step" id="step4">
+                        <div class="step-header">
+                            <span class="step-number">4</span>
+                            <strong>Record Vitals</strong>
+                        </div>
+                        <div class="step-content" style="display: none;">
+                            <div class="vitals-form">
+                                <div>
+                                    <label class="form-label small">Systolic BP (mmHg)</label>
+                                    <input type="number" id="vitalSystolic" placeholder="120">
+                                </div>
+                                <div>
+                                    <label class="form-label small">Diastolic BP (mmHg)</label>
+                                    <input type="number" id="vitalDiastolic" placeholder="80">
+                                </div>
+                                <div>
+                                    <label class="form-label small">Temperature (°F)</label>
+                                    <input type="text" id="vitalTemp" placeholder="98.6">
+                                </div>
+                                <div>
+                                    <label class="form-label small">Weight (kg)</label>
+                                    <input type="number" id="vitalWeight" placeholder="55">
+                                </div>
+                                <div>
+                                    <label class="form-label small">SpO2 (%)</label>
+                                    <input type="number" id="vitalSpO2" placeholder="98">
+                                </div>
+                                <div>
+                                    <label class="form-label small">Pulse (bpm)</label>
+                                    <input type="number" id="vitalPulse" placeholder="72">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary mt-3" onclick="saveVitals()">Save Vitals</button>
+                            <button class="btn btn-success ms-2" onclick="nextStep(5)">Continue <i class="fas fa-arrow-right ms-1"></i></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 5: Condition Form -->
+                    <div class="workflow-step" id="step5">
+                        <div class="step-header">
+                            <span class="step-number">5</span>
+                            <strong>Condition-Specific Form</strong>
+                        </div>
+                        <div class="step-content" style="display: none;">
+                            <div id="conditionForm">
+                                <p class="text-muted" id="conditionType">Loading form...</p>
+                                <textarea class="form-control mb-2" id="conditionNotes" rows="3" placeholder="Additional observations..."></textarea>
+                            </div>
+                            <button class="btn btn-success mt-2" onclick="nextStep(6)">Continue <i class="fas fa-arrow-right ms-1"></i></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 6: AI Assessment -->
+                    <div class="workflow-step" id="step6">
+                        <div class="step-header">
+                            <span class="step-number">6</span>
+                            <strong>AI Assessment</strong>
+                        </div>
+                        <div class="step-content" style="display: none;">
+                            <div class="ai-assessment">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="small opacity-75">Risk Score</div>
+                                        <div class="risk-score" id="aiRiskScore">-</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="small opacity-75">Recommendation</div>
+                                        <div id="aiRecommendation">Analyzing...</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button class="btn btn-success mt-3" onclick="nextStep(7)">Continue <i class="fas fa-arrow-right ms-1"></i></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 7: Referral -->
+                    <div class="workflow-step" id="step7">
+                        <div class="step-header">
+                            <span class="step-number">7</span>
+                            <strong>Referral (Optional)</strong>
+                        </div>
+                        <div class="step-content" style="display: none;">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="needsReferral">
+                                <label class="form-check-label" for="needsReferral">Patient needs referral to PHC/CHC</label>
+                            </div>
+                            <div id="referralDetails" style="display: none;">
+                                <select class="form-select mb-2" id="referralUrgency">
+                                    <option value="routine">Routine</option>
+                                    <option value="urgent">Urgent</option>
+                                    <option value="emergency">Emergency</option>
+                                </select>
+                                <input type="text" class="form-control mb-2" id="referralReason" placeholder="Reason for referral">
+                                <select class="form-select" id="referredTo">
+                                    <option value="PHC">Primary Health Center</option>
+                                    <option value="CHC">Community Health Center</option>
+                                    <option value="District Hospital">District Hospital</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-success mt-3" onclick="nextStep(8)">Continue <i class="fas fa-arrow-right ms-1"></i></button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 8: Complete -->
+                    <div class="workflow-step" id="step8">
+                        <div class="step-header">
+                            <span class="step-number">8</span>
+                            <strong>Complete Visit</strong>
+                        </div>
+                        <div class="step-content" style="display: none;">
+                            <textarea class="form-control mb-3" id="finalNotes" rows="2" placeholder="Final notes (optional)"></textarea>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="text-muted small"><i class="fas fa-cloud-upload-alt me-1"></i> Data will sync when online</div>
+                                <button class="btn btn-success btn-lg" onclick="completeVisit()">
+                                    <i class="fas fa-check-circle me-2"></i>Complete Visit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Schedule Visit Modal -->
+    <div class="modal fade" id="scheduleVisitModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-calendar-plus me-2"></i>Schedule Visit</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="mb-3">
+                                <label class="form-label">Search Patient</label>
+                                <input type="text" id="patientSearchInput" class="form-control" 
+                                       placeholder="Search by name, UID, or village..."
+                                       oninput="renderPatientList(this.value)">
+                            </div>
+                            <div class="patient-list-container" id="patientListContainer">
+                                <div class="text-muted text-center py-3">Loading patients...</div>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label class="form-label">Visit Date</label>
+                                <input type="date" id="visitDate" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Time</label>
+                                <select id="visitTime" class="form-select">
+                                    <option value="08:00">08:00 AM</option>
+                                    <option value="09:00" selected>09:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="12:00">12:00 PM</option>
+                                    <option value="14:00">02:00 PM</option>
+                                    <option value="15:00">03:00 PM</option>
+                                    <option value="16:00">04:00 PM</option>
+                                    <option value="17:00">05:00 PM</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Visit Type</label>
+                                <select id="visitType" class="form-select">
+                                    <option value="Routine">Routine</option>
+                                    <option value="ANC">ANC (Antenatal)</option>
+                                    <option value="PNC">PNC (Postnatal)</option>
+                                    <option value="Immunization">Immunization</option>
+                                    <option value="NCD Check">NCD Check</option>
+                                    <option value="Follow-up">Follow-up</option>
+                                    <option value="Screening">Screening</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Priority</label>
+                                <select id="visitPriority" class="form-select">
+                                    <option value="high">High</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="routine">Routine</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Purpose (Optional)</label>
+                                <textarea id="visitPurpose" class="form-control" rows="2" 
+                                          placeholder="Reason for visit..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="scheduleBtn" onclick="scheduleVisit()" disabled>
+                        <i class="fas fa-calendar-check me-1"></i>Schedule Visit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reschedule Modal -->
+    <div class="modal fade" id="rescheduleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title"><i class="fas fa-calendar-alt me-2"></i>Reschedule Visit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">New Date</label>
+                        <input type="date" id="rescheduleDate" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">New Time</label>
+                        <select id="rescheduleTime" class="form-select">
+                            <option value="08:00">08:00 AM</option>
+                            <option value="09:00">09:00 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="12:00">12:00 PM</option>
+                            <option value="14:00">02:00 PM</option>
+                            <option value="15:00">03:00 PM</option>
+                            <option value="16:00">04:00 PM</option>
+                            <option value="17:00">05:00 PM</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Priority</label>
+                        <select id="reschedulePriority" class="form-select">
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="routine">Routine</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning" onclick="rescheduleVisit()">
+                        <i class="fas fa-calendar-check me-1"></i>Reschedule
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let tasksData = {};
+        let currentCategory = 'all';
+        let currentTaskId = null;
+        let currentStep = 1;
+        let userLocation = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            loadTasks();
+            getUserLocation();
+            
+            // Category tab click handlers
+            document.querySelectorAll('.category-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentCategory = this.dataset.category;
+                    renderTasks();
+                });
+            });
+            
+            // Referral checkbox toggle
+            document.getElementById('needsReferral').addEventListener('change', function() {
+                document.getElementById('referralDetails').style.display = this.checked ? 'block' : 'none';
+            });
+        });
+        
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; renderTasks(); },
+                    err => console.log('Location unavailable')
+                );
+            }
+        }
+        
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(1);
+        }
+        
+        async function loadTasks() {
+            try {
+                const response = await fetch('/api/health-worker/tasks');
+                if (!response.ok) throw new Error('Failed to fetch tasks');
+                const data = await response.json();
+                
+                tasksData = data.tasks;
+                
+                // Update counts
+                Object.keys(data.counts).forEach(key => {
+                    const el = document.getElementById('count-' + key);
+                    if (el) el.textContent = data.counts[key];
+                });
+                
+                document.getElementById('pendingBadge').textContent = data.pending + ' Pending';
+                document.getElementById('completedBadge').textContent = data.completed + ' Completed';
+                
+                renderTasks();
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                document.getElementById('tasksContainer').innerHTML = '<p class="text-danger text-center">Failed to load tasks</p>';
+            }
+        }
+        
+        function renderTasks() {
+            const container = document.getElementById('tasksContainer');
+            const tasks = tasksData[currentCategory] || [];
+            
+            if (tasks.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-clipboard-check fa-3x mb-3"></i><p>No tasks in this category</p></div>';
+                return;
+            }
+            
+            let html = '';
+            tasks.forEach(task => {
+                const distance = userLocation ? calculateDistance(userLocation.lat, userLocation.lng, task.latitude, task.longitude) : null;
+                const priorityClass = task.priority === 'high' ? 'priority-high' : (task.priority === 'medium' ? 'priority-medium' : 'priority-routine');
+                const isCompleted = task.status === 'completed';
+                
+                html += `
+                    <div class="task-card ${priorityClass} ${isCompleted ? 'completed' : ''}" id="task-${task.id}">
+                        <div class="patient-info">
+                            <div>
+                                <div class="patient-name">${task.patient_name}</div>
+                                <div class="uid-badge"><i class="fas fa-id-card me-1"></i>${task.uid}</div>
+                            </div>
+                            <span class="priority-badge ${priorityClass}">${task.priority}</span>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <span class="condition-badge"><i class="fas fa-stethoscope me-1"></i>${task.condition}</span>
+                            ${task.is_high_risk ? '<span class="badge bg-danger ms-2"><i class="fas fa-exclamation-triangle me-1"></i>High Risk</span>' : ''}
+                        </div>
+                        
+                        <div class="task-details">
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-map-marker-alt me-1"></i>Distance</span>
+                                <span class="detail-value">${distance ? distance + ' km' : 'GPS needed'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-tag me-1"></i>Visit Type</span>
+                                <span class="detail-value">${task.visit_type}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-clock me-1"></i>Est. Time</span>
+                                <span class="detail-value">${task.estimated_time} min</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label"><i class="fas fa-home me-1"></i>Location</span>
+                                <span class="detail-value">${task.village}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="text-muted small">
+                                <i class="fas fa-phone me-1"></i>${task.phone || 'N/A'}
+                            </div>
+                            <div class="d-flex gap-2 align-items-center">
+                                ${isCompleted ? 
+                                    '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Completed</span>' :
+                                    `<div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-secondary" onclick="openRescheduleModal(${task.id})" title="Reschedule">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="cancelVisit(${task.id})" title="Cancel">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    <button class="start-visit-btn" onclick="startVisit(${task.id})">
+                                        <i class="fas fa-play-circle"></i> Start Visit
+                                    </button>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function startVisit(taskId) {
+            currentTaskId = taskId;
+            currentStep = 1;
+            
+            const task = tasksData.all.find(t => t.id === taskId);
+            if (!task) return;
+            
+            // Set patient info in modal
+            document.getElementById('patientLocation').textContent = task.address + ', ' + task.village;
+            document.getElementById('patientNameVerify').textContent = task.patient_name + ' (' + task.uid + ')';
+            document.getElementById('conditionType').textContent = task.condition;
+            document.getElementById('uidInput').value = task.uid;
+            
+            // Set navigation link
+            if (task.latitude && task.longitude) {
+                document.getElementById('navigateBtn').href = `https://www.google.com/maps/dir/?api=1&destination=${task.latitude},${task.longitude}`;
+            } else {
+                document.getElementById('navigateBtn').href = '#';
+            }
+            
+            // Reset all steps
+            for (let i = 1; i <= 8; i++) {
+                const step = document.getElementById('step' + i);
+                step.classList.remove('active', 'completed');
+                step.querySelector('.step-content').style.display = 'none';
+            }
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('step1').querySelector('.step-content').style.display = 'block';
+            
+            // Mark visit as started
+            fetch('/api/health-worker/task/' + taskId + '/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ latitude: userLocation?.lat, longitude: userLocation?.lng })
+            });
+            
+            new bootstrap.Modal(document.getElementById('visitWorkflowModal')).show();
+        }
+        
+        function nextStep(stepNum) {
+            // Complete previous step
+            const prevStep = document.getElementById('step' + (stepNum - 1));
+            prevStep.classList.remove('active');
+            prevStep.classList.add('completed');
+            prevStep.querySelector('.step-content').style.display = 'none';
+            
+            // Activate current step
+            const currStep = document.getElementById('step' + stepNum);
+            currStep.classList.add('active');
+            currStep.querySelector('.step-content').style.display = 'block';
+            
+            currentStep = stepNum;
+            
+            // Generate AI assessment at step 6
+            if (stepNum === 6) {
+                generateAIAssessment();
+            }
+        }
+        
+        function generateAIAssessment() {
+            const task = tasksData.all.find(t => t.id === currentTaskId);
+            let riskScore = Math.floor(Math.random() * 30) + 20;
+            let recommendation = 'Continue routine monitoring';
+            
+            if (task && task.is_high_risk) {
+                riskScore = Math.floor(Math.random() * 30) + 60;
+                recommendation = 'Consider referral to specialist';
+            } else if (task && task.risk_level === 'high') {
+                riskScore = Math.floor(Math.random() * 20) + 50;
+                recommendation = 'Schedule follow-up within 7 days';
+            }
+            
+            document.getElementById('aiRiskScore').textContent = riskScore + '%';
+            document.getElementById('aiRecommendation').textContent = recommendation;
+        }
+        
+        async function saveVitals() {
+            const vitals = {
+                systolic: document.getElementById('vitalSystolic').value,
+                diastolic: document.getElementById('vitalDiastolic').value,
+                temperature: document.getElementById('vitalTemp').value,
+                weight: document.getElementById('vitalWeight').value,
+                spo2: document.getElementById('vitalSpO2').value,
+                pulse: document.getElementById('vitalPulse').value
+            };
+            
+            try {
+                const response = await fetch('/api/health-worker/task/' + currentTaskId + '/vitals', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(vitals)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    alert('Vitals saved successfully!');
+                }
+            } catch (error) {
+                console.error('Error saving vitals:', error);
+            }
+        }
+        
+        async function completeVisit() {
+            const needsReferral = document.getElementById('needsReferral').checked;
+            const task = tasksData.all.find(t => t.id === currentTaskId);
+            
+            const data = {
+                notes: document.getElementById('finalNotes').value + '\n' + document.getElementById('conditionNotes').value,
+                create_referral: needsReferral
+            };
+            
+            if (needsReferral) {
+                data.patient_name = task?.patient_name || 'Unknown';
+                data.urgency = document.getElementById('referralUrgency').value;
+                data.referral_reason = document.getElementById('referralReason').value;
+                data.referred_to = document.getElementById('referredTo').value;
+            }
+            
+            try {
+                const response = await fetch('/api/health-worker/task/' + currentTaskId + '/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('visitWorkflowModal')).hide();
+                    alert('Visit completed successfully!');
+                    loadTasks();
+                } else {
+                    alert('Error: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error completing visit:', error);
+                alert('Failed to complete visit');
+            }
+        }
+        
+        // ============================================
+        // MANUAL SCHEDULING FUNCTIONS
+        // ============================================
+        
+        let patientsData = [];
+        let selectedPatientId = null;
+        let rescheduleVisitId = null;
+        
+        async function loadPatients() {
+            try {
+                const response = await fetch('/api/health-worker/patients');
+                const data = await response.json();
+                if (data.success) {
+                    patientsData = data.patients;
+                    renderPatientList();
+                }
+            } catch (error) {
+                console.error('Error loading patients:', error);
+            }
+        }
+        
+        function renderPatientList(filter = '') {
+            const container = document.getElementById('patientListContainer');
+            const filtered = patientsData.filter(p => 
+                p.name.toLowerCase().includes(filter.toLowerCase()) ||
+                (p.uid && p.uid.includes(filter)) ||
+                (p.village && p.village.toLowerCase().includes(filter.toLowerCase()))
+            );
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="text-muted text-center py-3">No patients found</div>';
+                return;
+            }
+            
+            let html = '';
+            filtered.slice(0, 50).forEach(p => {
+                const conditions = [];
+                if (p.is_pregnant) conditions.push('Pregnant');
+                if (p.is_child_under_5) conditions.push('Child');
+                if (p.has_ncd) conditions.push(p.ncd_type || 'NCD');
+                if (p.is_high_risk) conditions.push('High Risk');
+                
+                html += `
+                    <div class="patient-item ${selectedPatientId === p.id ? 'selected' : ''} ${p.scheduled_today ? 'scheduled' : ''}" 
+                         onclick="selectPatient(${p.id})">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div class="fw-semibold">${p.name}</div>
+                                <div class="text-muted small">${p.uid || 'No UID'} | ${p.age || '?'}y ${p.gender || ''}</div>
+                                <div class="text-muted small">${p.village || ''}</div>
+                            </div>
+                            <div class="text-end">
+                                ${conditions.length > 0 ? `<span class="badge bg-info">${conditions.join(', ')}</span>` : ''}
+                                ${p.scheduled_today ? '<span class="badge bg-warning">Scheduled</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+        
+        function selectPatient(id) {
+            selectedPatientId = id;
+            renderPatientList(document.getElementById('patientSearchInput').value);
+            document.getElementById('scheduleBtn').disabled = false;
+        }
+        
+        function openScheduleModal() {
+            selectedPatientId = null;
+            document.getElementById('scheduleBtn').disabled = true;
+            document.getElementById('patientSearchInput').value = '';
+            document.getElementById('visitDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('visitTime').value = '09:00';
+            document.getElementById('visitType').value = 'Routine';
+            document.getElementById('visitPriority').value = 'medium';
+            document.getElementById('visitPurpose').value = '';
+            
+            loadPatients();
+            new bootstrap.Modal(document.getElementById('scheduleVisitModal')).show();
+        }
+        
+        async function scheduleVisit() {
+            if (!selectedPatientId) {
+                alert('Please select a patient');
+                return;
+            }
+            
+            const data = {
+                client_id: selectedPatientId,
+                visit_date: document.getElementById('visitDate').value,
+                scheduled_time: document.getElementById('visitTime').value,
+                visit_type: document.getElementById('visitType').value,
+                priority: document.getElementById('visitPriority').value,
+                purpose: document.getElementById('visitPurpose').value || 'Scheduled visit'
+            };
+            
+            try {
+                const response = await fetch('/api/health-worker/visit/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('scheduleVisitModal')).hide();
+                    loadTasks();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to schedule'));
+                }
+            } catch (error) {
+                console.error('Error scheduling visit:', error);
+                alert('Failed to schedule visit');
+            }
+        }
+        
+        function openRescheduleModal(visitId) {
+            rescheduleVisitId = visitId;
+            const task = tasksData.all.find(t => t.id === visitId);
+            if (!task) return;
+            
+            document.getElementById('rescheduleDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('rescheduleTime').value = task.scheduled_time || '09:00';
+            document.getElementById('reschedulePriority').value = task.priority || 'medium';
+            
+            new bootstrap.Modal(document.getElementById('rescheduleModal')).show();
+        }
+        
+        async function rescheduleVisit() {
+            if (!rescheduleVisitId) return;
+            
+            const data = {
+                visit_date: document.getElementById('rescheduleDate').value,
+                scheduled_time: document.getElementById('rescheduleTime').value,
+                priority: document.getElementById('reschedulePriority').value
+            };
+            
+            try {
+                const response = await fetch('/api/health-worker/visit/' + rescheduleVisitId + '/reschedule', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('rescheduleModal')).hide();
+                    loadTasks();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to reschedule'));
+                }
+            } catch (error) {
+                console.error('Error rescheduling visit:', error);
+                alert('Failed to reschedule visit');
+            }
+        }
+        
+        async function cancelVisit(visitId) {
+            const reason = prompt('Enter reason for cancellation (optional):');
+            if (reason === null) return; // User cancelled prompt
+            
+            try {
+                const response = await fetch('/api/health-worker/visit/' + visitId + '/cancel', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: reason || 'No reason provided' })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadTasks();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to cancel'));
+                }
+            } catch (error) {
+                console.error('Error cancelling visit:', error);
+                alert('Failed to cancel visit');
+            }
+        }
+    </script>
+</body>
+</html>

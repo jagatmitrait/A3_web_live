@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Admin Portal | A3 Health</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --header-height: 70px;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: white;
+            border-right: 1px solid rgba(0,0,0,0.05);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .brand-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--brand-red);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-link {
+            padding: 1rem 1.5rem;
+            color: #6c757d;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--brand-red);
+            background: rgba(220, 53, 69, 0.05);
+            border-left-color: var(--brand-red);
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+        }
+
+        .content-body {
+            padding: 2rem;
+            flex: 1;
+        }
+
+        /* Stats Cards */
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Tables */
+        .table-custom th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            background: #f8f9fa;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 1rem;
+        }
+
+        .table-custom td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* Content Pages */
+        .content-page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="brand-logo">
+                <i class="fas fa-hospital-alt"></i> A3 Hospital
+            </a>
+        </div>
+        <nav class="nav flex-column mt-3">
+            <a href="#" class="nav-link active" data-page="overview">
+                <i class="fas fa-th-large"></i> Overview
+            </a>
+            <a href="#" class="nav-link" data-page="doctors">
+                <i class="fas fa-user-md"></i> Doctors
+            </a>
+            <a href="#" class="nav-link" data-page="departments">
+                <i class="fas fa-building"></i> Departments
+            </a>
+            <a href="#" class="nav-link" data-page="analytics">
+                <i class="fas fa-chart-line"></i> Analytics
+            </a>
+            <a href="#" class="nav-link" data-page="settings">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </nav>
+        <div class="mt-auto p-3 border-top">
+            <div class="d-flex align-items-center gap-3 px-2">
+                <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    {{ user.first_name[0] if user.first_name else 'A' }}{{ user.last_name[0] if user.last_name else 'D' }}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div class="fw-bold text-truncate">{{ user.full_name }}</div>
+                    <div class="small text-muted text-truncate">Admin</div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="text-danger"><i class="fas fa-sign-out-alt"></i></a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <h4 class="mb-0 fw-bold" id="pageTitle">Overview</h4>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-end d-none d-sm-block">
+                    <div class="small text-muted" id="currentDate"></div>
+                    <div class="fw-bold text-danger">{{ user.facility_name }}</div>
+                </div>
+                <button class="btn btn-light rounded-circle position-relative">
+                    <i class="fas fa-bell"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Body -->
+        <div class="content-body">
+            
+            <!-- OVERVIEW PAGE -->
+            <div id="overview-page" class="content-page active">
+                <!-- Stats Row -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-primary-subtle text-primary">
+                                <i class="fas fa-user-md"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1" id="totalDoctors">--</h3>
+                            <div class="text-muted small">Total Doctors</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-success-subtle text-success">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1" id="totalPatients">--</h3>
+                            <div class="text-muted small">Total Patients</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-warning-subtle text-warning">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1" id="todayAppointments">--</h3>
+                            <div class="text-muted small">Today's Appointments</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-info-subtle text-info">
+                                <i class="fas fa-rupee-sign"></i>
+                            </div>
+                            <h3 class="fw-bold mb-1" id="totalRevenue">--</h3>
+                            <div class="text-muted small">Est. Revenue</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity / Charts Placeholder -->
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h6 class="mb-0 fw-bold">Appointment Trends</h6>
+                            </div>
+                            <div class="card-body d-flex align-items-center justify-content-center text-muted" style="min-height: 300px;">
+                                <div class="text-center">
+                                    <i class="fas fa-chart-area fa-3x mb-3 opacity-25"></i>
+                                    <p>Chart visualization coming soon</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h6 class="mb-0 fw-bold">Department Performance</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>Cardiology</span>
+                                        <span class="fw-bold">85%</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-danger" style="width: 85%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>Neurology</span>
+                                        <span class="fw-bold">65%</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-primary" style="width: 65%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>Orthopedics</span>
+                                        <span class="fw-bold">40%</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success" style="width: 40%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DOCTORS PAGE -->
+            <div id="doctors-page" class="content-page">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold">Medical Staff Directory</h6>
+                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#addDoctorModal">
+                            <i class="fas fa-plus me-2"></i>Add Doctor
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Doctor Name</th>
+                                    <th>Specialty</th>
+                                    <th>Contact</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doctorsTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DEPARTMENTS PAGE -->
+            <div id="departments-page" class="content-page">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold">Department Management</h6>
+                        <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#addDepartmentModal">
+                            <i class="fas fa-plus me-2"></i>Add Department
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Department Name</th>
+                                    <th>Head of Department</th>
+                                    <th>Created Date</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="departmentsTableBody">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS PAGE -->
+            <div id="analytics-page" class="content-page">
+                <div class="row g-4 mb-4">
+                    <!-- Revenue Chart -->
+                    <div class="col-lg-8">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 fw-bold">Revenue Overview</h6>
+                                <select class="form-select form-select-sm" style="width: 120px;">
+                                    <option>This Month</option>
+                                    <option>Last Month</option>
+                                    <option>This Year</option>
+                                </select>
+                            </div>
+                            <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 300px;">
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-chart-line fa-3x mb-3 opacity-25"></i>
+                                    <p>Revenue Chart Visualization</p>
+                                    <small class="text-success fw-bold"><i class="fas fa-arrow-up me-1"></i> <span id="revenueGrowth">--</span>% vs last month</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Department Performance -->
+                    <div class="col-lg-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-white border-0 py-3">
+                                <h6 class="mb-0 fw-bold">Department Performance</h6>
+                            </div>
+                            <div class="card-body" id="analyticsDeptPerformance">
+                                <!-- Populated by JS -->
+                                <div class="text-center py-4 text-muted">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h6 class="mb-0 fw-bold">Recent Activity Log</h6>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Action</th>
+                                    <th>Details</th>
+                                    <th>Time</th>
+                                    <th class="text-end pe-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyticsActivityLog">
+                                <!-- Populated by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Add Doctor Modal -->
+    <div class="modal fade" id="addDoctorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Add New Doctor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addDoctorForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted">First Name</label>
+                                <input type="text" class="form-control" name="first_name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-muted">Last Name</label>
+                                <input type="text" class="form-control" name="last_name" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small text-muted">Specialty</label>
+                                <select class="form-select" name="specialty" required>
+                                    <option value="">Select Specialty</option>
+                                    <option value="Cardiology">Cardiology</option>
+                                    <option value="Dermatology">Dermatology</option>
+                                    <option value="Neurology">Neurology</option>
+                                    <option value="Orthopedics">Orthopedics</option>
+                                    <option value="Pediatrics">Pediatrics</option>
+                                    <option value="General Medicine">General Medicine</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small text-muted">Email</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small text-muted">Phone</label>
+                                <input type="tel" class="form-control" name="phone" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small text-muted">User ID (16-digit)</label>
+                                <input type="text" class="form-control" name="uid" pattern="\d{16}" title="16 digit UID" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small text-muted">Password</label>
+                                <input type="password" class="form-control" name="password" required>
+                            </div>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-danger">Create Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Department Modal -->
+    <div class="modal fade" id="addDepartmentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold">Add New Department</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addDepartmentForm">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Department Name</label>
+                            <input type="text" class="form-control" name="name" placeholder="e.g. Cardiology" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Head of Department (Optional)</label>
+                            <input type="text" class="form-control" name="head" placeholder="Dr. Name">
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-danger">Add Department</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='hospital_dashboard.js') }}"></script>
+</body>
+</html>

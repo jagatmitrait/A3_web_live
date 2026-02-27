@@ -1,0 +1,149 @@
+/* Health Worker Sidebar Styles */
+/* Include this in health worker pages with: <link rel="stylesheet" href="{{ url_for('static', filename='health_worker_sidebar.css') }}"> */
+
+:root {
+    --primary-red: #dc3545;
+    --dark-red: #ab2a37;
+    --sidebar-width: 260px;
+}
+
+* {
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background: #f5f5f5;
+    margin: 0;
+}
+
+/* Sidebar Container */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: linear-gradient(180deg, var(--primary-red) 0%, var(--dark-red) 100%);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
+
+/* Brand Logo */
+.sidebar .brand-logo {
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
+    padding: 20px;
+    display: block;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+/* Navigation Wrapper - Scrollable */
+.sidebar .sidebar-nav-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 10px;
+}
+
+/* Custom scrollbar for nav */
+.sidebar .sidebar-nav-wrapper::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar .sidebar-nav-wrapper::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .sidebar-nav-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+/* Navigation Links */
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+    padding: 11px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    text-decoration: none;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.sidebar .nav-link i {
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* Sidebar Footer - Fixed at bottom */
+.sidebar .sidebar-footer {
+    flex-shrink: 0;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar .sidebar-footer .user-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.sidebar .sidebar-footer .text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 140px;
+}
+
+/* Main content area */
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding: 20px;
+    min-height: 100vh;
+}
+
+/* Page header */
+.page-header {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    background: white;
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+}

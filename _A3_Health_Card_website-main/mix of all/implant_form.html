@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == 'edit' %}Edit Implant{% else %}Add Implant{% endif %} | A3 Health Card{% endblock %}
+
+{% block content %}
+<div class="form-card implant-form">
+  <div class="form-card-header compact">
+    <div>
+      <div class="kicker">Bio-Medical Implants</div>
+      <h2>{% if mode == 'edit' %}Edit Implant{% else %}Add New Implant{% endif %}</h2>
+      <p class="muted">Track your medical devices and implants for safety and reference.</p>
+    </div>
+    {% if mode == 'edit' and implant %}
+    <span class="status-pill {{ (implant.status or '')|lower }}">{{ implant.status or 'Status N/A' }}</span>
+    {% endif %}
+  </div>
+  <form id="implantForm" method="post" enctype="multipart/form-data" action="{{ url_for('implant_add') if mode == 'add' else url_for('implant_edit', implant_id=implant.id) }}">
+    <div class="form-grid two-column">
+      
+      <!-- Device Information -->
+      <div class="form-section-title full-width">Device Information</div>
+      
+      <div class="form-group">
+        <label for="device_name">Device Name <span class="text-danger">*</span></label>
+        <input type="text" id="device_name" name="device_name" class="form-control" required
+               value="{{ implant.device_name if implant else '' }}" placeholder="e.g., PaceSetter 2000" />
+      </div>
+      
+      <div class="form-group">
+        <label for="category">Category <span class="text-danger">*</span></label>
+        <input type="text" id="category" name="category" class="form-control" required list="implant_categories"
+               value="{{ implant.category if implant else '' }}" placeholder="e.g., Pacemaker" />
+        <datalist id="implant_categories">
+            <option value="Pacemaker">
+            <option value="Stent">
+            <option value="Prosthetic Joint">
+            <option value="Dental Implant">
+            <option value="Cochlear Implant">
+            <option value="Intraocular Lens">
+            <option value="Heart Valve">
+            <option value="Defibrillator">
+        </datalist>
+      </div>
+
+      <div class="form-group">
+        <label for="manufacturer">Manufacturer</label>
+        <input type="text" id="manufacturer" name="manufacturer" class="form-control"
+               value="{{ implant.manufacturer if implant else '' }}" placeholder="e.g., Medtronic" />
+      </div>
+
+      <div class="form-group">
+        <label for="model_number">Model Number</label>
+        <input type="text" id="model_number" name="model_number" class="form-control"
+               value="{{ implant.model_number if implant else '' }}" placeholder="e.g., MDT-1234" />
+      </div>
+
+      <div class="form-group">
+        <label for="serial_number">Serial Number</label>
+        <input type="text" id="serial_number" name="serial_number" class="form-control"
+               value="{{ implant.serial_number if implant else '' }}" placeholder="Unique Device ID" />
+      </div>
+
+      <div class="form-group">
+        <label for="lot_number">Lot / Batch Number</label>
+        <input type="text" id="lot_number" name="lot_number" class="form-control"
+               value="{{ implant.lot_number if implant else '' }}" />
+      </div>
+
+      <div class="form-group">
+        <label for="warranty_expiry">Warranty Expiry Date</label>
+        <input type="date" id="warranty_expiry" name="warranty_expiry" class="form-control"
+               value="{{ implant.warranty_expiry.strftime('%Y-%m-%d') if implant and implant.warranty_expiry else '' }}" />
+      </div>
+
+      <!-- Implantation Details -->
+      <div class="form-section-title full-width" style="margin-top:1rem;">Implantation Details</div>
+
+      <div class="form-group">
+        <label for="implantation_date">Implantation Date <span class="text-danger">*</span></label>
+        <input type="date" id="implantation_date" name="implantation_date" class="form-control" required
+               value="{{ implant.implantation_date.strftime('%Y-%m-%d') if implant and implant.implantation_date else '' }}" />
+      </div>
+
+      <div class="form-group">
+        <label for="surgeon_name">Surgeon Name</label>
+        <input type="text" id="surgeon_name" name="surgeon_name" class="form-control"
+               value="{{ implant.surgeon_name if implant else '' }}" placeholder="e.g., Dr. Smith" />
+      </div>
+
+      <div class="form-group">
+        <label for="hospital_name">Hospital / Clinic</label>
+        <input type="text" id="hospital_name" name="hospital_name" class="form-control"
+               value="{{ implant.hospital_name if implant else '' }}" placeholder="e.g., City Hospital" />
+      </div>
+
+      <div class="form-group">
+        <label for="location">Body Location</label>
+        <input type="text" id="location" name="location" class="form-control"
+               value="{{ implant.location if implant else '' }}" placeholder="e.g., Left Knee, Chest" />
+      </div>
+      
+      <div class="form-group full-width">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="2" class="form-control" style="resize:vertical;">{{ implant.notes if implant and implant.notes else '' }}</textarea>
+      </div>
+
+      <!-- Clinical Lifecycle -->
+      <div class="form-section-title full-width" style="margin-top:1rem;">Clinical Lifecycle</div>
+
+      <div class="form-group">
+        <label for="status">Current Status</label>
+        <select id="status" name="status" class="form-control">
+            <option value="Active" {% if not implant or implant.status == 'Active' %}selected{% endif %}>Active</option>
+            <option value="Explanted" {% if implant and implant.status == 'Explanted' %}selected{% endif %}>Explanted</option>
+            <option value="Recall" {% if implant and implant.status == 'Recall' %}selected{% endif %}>Recall</option>
+            <option value="Failed" {% if implant and implant.status == 'Failed' %}selected{% endif %}>Failed</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="explant_date">Explant Date (if applicable)</label>
+        <input type="date" id="explant_date" name="explant_date" class="form-control"
+               value="{{ implant.explant_date.strftime('%Y-%m-%d') if implant and implant.explant_date else '' }}" />
+      </div>
+      
+      <div class="form-group full-width">
+        <label for="explant_reason">Reason for Explant/Revision</label>
+        <input type="text" id="explant_reason" name="explant_reason" class="form-control"
+               value="{{ implant.explant_reason if implant else '' }}" />
+      </div>
+
+      <div class="form-group">
+        <label for="follow_up_interval">Follow-up Interval (months)</label>
+        <input type="number" id="follow_up_interval" name="follow_up_interval" class="form-control"
+               value="{{ implant.follow_up_interval if implant else '' }}" />
+      </div>
+
+      <div class="form-group">
+        <label for="next_follow_up">Next Follow-up Date</label>
+        <input type="date" id="next_follow_up" name="next_follow_up" class="form-control"
+               value="{{ implant.next_follow_up.strftime('%Y-%m-%d') if implant and implant.next_follow_up else '' }}" />
+      </div>
+
+      <div class="form-group full-width">
+        <label for="components">Additional Components</label>
+        <textarea id="components" name="components" rows="2" class="form-control" placeholder="Leads, screws, batteries, etc.">{{ implant.components if implant and implant.components else '' }}</textarea>
+      </div>
+      
+      <!-- Recall Info -->
+      <div class="form-group full-width" style="background:#fff5f5; padding:10px; border-radius:8px; border:1px solid #feb2b2;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <input type="checkbox" id="is_recall" name="is_recall" {% if implant and implant.is_recall %}checked{% endif %} style="width:18px; height:18px;">
+            <label for="is_recall" style="margin:0; color:#c53030; font-weight:600;">Is this device under recall?</label>
+        </div>
+        <label for="recall_info" style="font-size:13px;">Recall Details</label>
+        <textarea id="recall_info" name="recall_info" rows="2" class="form-control" placeholder="Recall number, instructions, etc.">{{ implant.recall_info if implant and implant.recall_info else '' }}</textarea>
+      </div>
+
+      <!-- File Uploads -->
+      <div class="form-group full-width">
+        <label class="label">Upload Documents (max 5 files, 10 MB each)</label>
+        <p class="muted" style="margin-top:0;margin-bottom:8px;font-size:13px;">Allowed types: PDF, JPG, PNG, DICOM.</p>
+        <div id="implantUploadArea" class="upload-dropzone" style="border:1px dashed #cbd5e1;border-radius:12px;padding:18px;display:flex;align-items:center;gap:12px;cursor:pointer;background:#f8fafc;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#e2e8f0;display:flex;align-items:center;justify-content:center;color:#475569;">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <div>
+            <strong>Drag &amp; drop files here</strong>
+            <p style="margin:2px 0 0;font-size:13px;color:#6b7280;">or click to browse from device</p>
+          </div>
+          <input type="file" id="implantDocuments" name="documents" multiple
+                 accept=".pdf,.jpg,.jpeg,.png,.dcm,.dicom" style="display:none;" />
+        </div>
+        <div id="implantFileError" class="muted" style="display:none;color:#b91c1c;margin-top:6px;font-size:13px;"></div>
+        <div id="implantFilePreview" class="file-preview-grid" style="margin-top:8px;"></div>
+
+        {% if documents %}
+        <div class="existing-documents" style="margin-top:12px;">
+          <p style="margin:0 0 4px;font-weight:600;">Existing documents</p>
+          <ul class="document-list">
+            {% for doc in documents %}
+            <li>
+              <i class="fas fa-file-medical"></i>
+              <span>{{ doc.original_name }}</span>
+              <small>({{ (doc.size / 1024)|round(1) }} KB)</small>
+              <label class="checkbox-pill" style="margin-left:8px;">
+                <input type="checkbox" name="remove_documents" value="{{ doc.stored_name }}" />
+                <span>Remove</span>
+              </label>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">
+        {% if mode == 'edit' %}<i class="fas fa-save"></i> Save Changes{% else %}<i class="fas fa-plus"></i> Save Implant{% endif %}
+      </button>
+      <a href="{{ url_for('implantation_dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+

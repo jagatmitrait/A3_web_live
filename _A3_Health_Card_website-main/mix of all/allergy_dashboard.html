@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Allergy Dashboard | A3 Health Card{% endblock %}
+
+{% block content %}
+<div class="allergy-dashboard">
+  <div class="page-header">
+    <h2><i class="fas fa-allergies"></i> Allergy Dashboard</h2>
+    <a href="{{ url_for('allergy_add') }}" class="btn btn-primary js-add-allergy"><i class="fas fa-plus"></i> Add New Allergy</a>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg,#ff6b6b 0%,#ee5a6f 100%); color:#fff;">
+        <i class="fas fa-list-ul"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Total Allergies</p>
+        <h3 class="stat-value">{{ stats.total }}</h3>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#E63946; color:#fff;">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Severe Allergies</p>
+        <h3 class="stat-value">{{ stats.severe }}</h3>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#FFA726; color:#fff;">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Moderate Allergies</p>
+        <h3 class="stat-value">{{ stats.moderate }}</h3>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#4CAF50; color:#fff;">
+        <i class="fas fa-info-circle"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Mild Allergies</p>
+        <h3 class="stat-value">{{ stats.mild }}</h3>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fff; border:1px solid #eee; color:#d32f2f;">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Last Updated</p>
+        <h3 class="stat-value">{{ stats.last_updated.strftime('%Y-%m-%d') if stats.last_updated else 'N/A' }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters + search -->
+  <div class="filters-row">
+    <div class="search-group">
+      <label for="allergySearchInput">Search by allergen</label>
+      <input type="search" id="allergySearchInput" class="form-control" placeholder="e.g., Peanuts, Penicillin" />
+    </div>
+    <div class="filter-group">
+      <label>Status</label>
+      <select id="allergyStatusFilter" class="form-control">
+        <option value="all">All</option>
+        <option value="active">Active</option>
+        <option value="archived">Archived</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Category</label>
+      <select id="allergyCategoryFilter" class="form-control">
+        <option value="">All</option>
+        <option value="Food">Food</option>
+        <option value="Drug">Drug</option>
+        <option value="Environmental">Environmental</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Severity</label>
+      <select id="allergySeverityFilter" class="form-control">
+        <option value="">All</option>
+        <option value="mild">Mild</option>
+        <option value="moderate">Moderate</option>
+        <option value="severe">Severe</option>
+        <option value="life-threatening">Life-threatening</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="btn btn-secondary" id="allergyResetFilters">Reset</button>
+    </div>
+  </div>
+
+  <div class="allergy-layout">
+    <div class="allergy-list">
+      <p id="allergySummary" class="muted">Showing {{ allergies|length }} of {{ stats.total }} records</p>
+      <div id="allergyCardContainer">
+        <div id="allergyEmptyState" class="card empty-state" {% if allergies %}style="display:none"{% endif %}>
+          <h3>No allergy information yet</h3>
+          <p>Add your first allergy to keep critical alerts handy for doctors and emergency responders.</p>
+          <a class="btn btn-primary js-add-allergy" href="{{ url_for('allergy_add') }}">Add New Allergy</a>
+        </div>
+        {% for a in allergies %}
+        <article class="card allergy-card">
+          {% set sev_key = (a.severity or '').lower() %}
+          {% set color = {'mild':'#4CAF50','moderate':'#FFA726','severe':'#E63946','life-threatening':'#9B0000'}.get(sev_key,'#9B0000') %}
+          <div class="allergy-card-head">
+            <div>
+              <div class="kicker">{{ a.category }}</div>
+              <h3>{{ a.allergen }}</h3>
+              <p class="muted">
+                First reaction: {{ a.first_reaction_date.strftime('%Y-%m-%d') if a.first_reaction_date else 'N/A' }}
+                • <span class="status-pill {{ 'active' if a.active else 'archived' }}">{{ 'Active' if a.active else 'Archived' }}</span>
+              </p>
+            </div>
+            <span class="severity-pill {{ sev_key }}" style="background: {{ color }}">{{ a.severity }}</span>
+          </div>
+          <p><strong>Notes:</strong> {{ a.notes or 'No notes added.' }}</p>
+          <div class="allergy-card-actions">
+            <a href="{{ url_for('allergy_view', allergy_id=a.id) }}" class="btn btn-outline">View</a>
+            <a href="{{ url_for('allergy_edit', allergy_id=a.id) }}" class="btn btn-outline">Edit</a>
+            <form method="post" action="{{ url_for('allergy_delete', allergy_id=a.id) }}" style="display:inline-block" onsubmit="return confirm('Delete this allergy permanently?');">
+              <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+    <aside class="allergy-sidepanel">
+      <div class="card">
+        <h3>Severity distribution</h3>
+        <ul id="allergySeverityDistribution" class="mini-list"></ul>
+      </div>
+      <div class="card">
+        <h3>Category mix</h3>
+        <ul id="allergyCategoryMix" class="mini-list"></ul>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" defer></script>
+<script src="{{ url_for('static', filename='allergy.js') }}"></script>
+{% endblock %}

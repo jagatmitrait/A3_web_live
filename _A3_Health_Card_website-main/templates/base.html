@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}A3 Health Card{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-3hLQb6tV5wCFYI8a9kaI0s5momkGLumZ5qX6Ch12RSaxDTXhMHDL/95B2S/bR5CV2lE8p8nXl16/ZYPDVuPEw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  </head>
+  <body data-page="{{ page_id|default('') }}">
+    <header class="navbar">
+      <div class="container inner">
+        <div class="brand">
+          <span class="brand-badge" aria-hidden="true"></span>
+          <a href="{{ url_for('index') }}" style="color:inherit;text-decoration:none">A3 Health Card</a>
+        </div>
+        <nav class="nav-links">
+          <a href="{{ url_for('index') }}">Home</a>
+          <a href="{{ url_for('login', user_type='client') }}">Login</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      {% block hero %}{% endblock %}
+      <section class="section">
+        <div class="container">
+          {% block content %}{% endblock %}
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container center">
+        <span class="badge">Made with care</span>
+        <p>© 2025 A3 Health Card</p>
+      </div>
+    </footer>
+    <script>document.documentElement.classList.add('js-enabled');</script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

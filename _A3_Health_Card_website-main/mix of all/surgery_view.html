@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}View Surgery | A3 Health Card{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div class="form-card-header">
+    <div>
+      <div class="kicker">{{ surgery.category or 'Surgery' }}</div>
+      <h2>{{ surgery.surgery_name }}</h2>
+      <p class="muted">
+        {{ surgery.surgery_date.strftime('%Y-%m-%d') if surgery.surgery_date else 'Unknown date' }}
+        &bull; {{ surgery.hospital or 'Unknown hospital' }}
+      </p>
+    </div>
+    <div class="pill-stack">
+      {% if surgery.outcome %}
+      <span class="status-pill ghost">{{ surgery.outcome }}</span>
+      {% endif %}
+      <span class="status-pill surgery-type-pill {{ (surgery.surgery_type or '')|lower }}">
+        {{ surgery.surgery_type or 'Type N/A' }}
+      </span>
+    </div>
+  </div>
+
+  <dl class="detail-list">
+    <div class="detail-row">
+      <dt>Hospital / Clinic</dt>
+      <dd>{{ surgery.hospital or 'Not recorded' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Surgeon</dt>
+      <dd>
+        {{ surgery.surgeon_name or 'Not recorded' }}
+        {% if surgery.surgeon_registration_number %}
+          (Reg: {{ surgery.surgeon_registration_number }})
+        {% endif %}
+      </dd>
+    </div>
+    <div class="detail-row">
+      <dt>Pre-op Condition</dt>
+      <dd>{{ surgery.pre_op_condition or 'Not recorded' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Outcome</dt>
+      <dd>{{ surgery.outcome or 'Not recorded' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Reason for surgery</dt>
+      <dd>{{ surgery.reason or 'Not recorded' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Symptoms before surgery</dt>
+      <dd>{{ surgery.symptoms_before or 'Not recorded' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Post-op Notes</dt>
+      <dd>{{ surgery.post_op_notes or 'Not recorded' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Follow-up Date</dt>
+      <dd>{{ surgery.follow_up_date.strftime('%Y-%m-%d') if surgery.follow_up_date else 'Not scheduled' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Implants Used</dt>
+      <dd>{{ surgery.implants_used or 'None recorded' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Documents</dt>
+      <dd>
+        {% if documents %}
+        <ul class="document-list">
+          {% for doc in documents %}
+          <li>
+            <i class="fas fa-file-medical"></i>
+            <a href="{{ url_for('surgery_document', surgery_id=surgery.id, stored_name=doc.stored_name) }}">
+              {{ doc.original_name }}
+            </a>
+            {% if doc.size %}
+            <small>({{ (doc.size / 1024)|round(1) }} KB)</small>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <span class="muted">No documents attached.</span>
+        {% endif %}
+      </dd>
+    </div>
+    <div class="detail-row">
+      <dt>Last updated</dt>
+      <dd>{{ surgery.updated_at.strftime('%Y-%m-%d %H:%M') if surgery.updated_at else surgery.created_at.strftime('%Y-%m-%d %H:%M') }}</dd>
+    </div>
+  </dl>
+
+  <div class="form-actions">
+    <a href="{{ url_for('surgery_edit', surgery_id=surgery.id) }}" class="btn btn-primary"><i class="fas fa-edit"></i> Edit</a>
+    <form method="post" action="{{ url_for('surgery_delete', surgery_id=surgery.id) }}" style="display:inline-block" onsubmit="return confirm('Delete this surgery record permanently?');">
+      <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</button>
+    </form>
+    <a href="{{ url_for('surgery_pdf', surgery_id=surgery.id) }}" class="btn btn-secondary"><i class="fas fa-file-pdf"></i> Download PDF summary</a>
+    <a href="{{ url_for('surgery_dashboard') }}" class="btn btn-secondary ghost">Back to Surgery History</a>
+  </div>
+</div>
+{% endblock %}
+

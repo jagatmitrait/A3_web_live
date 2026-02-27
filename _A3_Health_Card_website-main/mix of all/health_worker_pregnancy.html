@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pregnancy & Maternal Care | Health Worker</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Shared Sidebar CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='health_worker_sidebar.css') }}">
+    
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-red: #E63946;
+            --primary-dark: #c1121f;
+            --bg-light: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-dark: #212529;
+            --text-muted: #6c757d;
+            --success: #198754;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-light);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .main-content {
+            margin-left: 260px;
+            padding: 24px;
+            width: calc(100% - 260px);
+            min-height: 100vh;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--primary-red);
+        }
+        
+        .page-header h2 {
+            color: var(--primary-red);
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        /* Stats Cards */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--primary-red);
+        }
+        
+        .stat-card h4 {
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            margin: 0 0 8px 0;
+        }
+        
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+        
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 24px;
+        }
+        
+        @media (max-width: 1200px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content { margin-left: 0; width: 100%; padding: 16px; }
+        }
+        
+        /* Panels */
+        .panel {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        .panel h3 {
+            color: var(--primary-red);
+            font-weight: 600;
+            margin: 0 0 16px 0;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        /* Form */
+        .form-label {
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 10px 14px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
+        }
+        
+        .btn-primary {
+            background: var(--primary-red);
+            border-color: var(--primary-red);
+            padding: 12px 24px;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        .btn-outline-secondary {
+            border-radius: 8px;
+        }
+        
+        /* Table */
+        .table thead th {
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-dark));
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 12px;
+        }
+        
+        .table tbody td {
+            padding: 12px;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background: #fff5f5;
+        }
+        
+        /* Risk badges */
+        .risk-high { color: var(--danger); font-weight: 700; }
+        .risk-medium { color: var(--warning); font-weight: 700; }
+        .risk-low { color: var(--success); font-weight: 700; }
+        
+        .badge-high { background: var(--danger); }
+        .badge-medium { background: var(--warning); color: #333; }
+        .badge-low { background: var(--success); }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        
+        .quick-actions .btn {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    {% set active_page = 'pregnancy' %}
+    {% include 'health_worker_sidebar.html' %}
+    
+    <main class="main-content">
+        <div class="page-header">
+            <h2><i class="fas fa-baby me-2"></i>Pregnancy & Maternal Care</h2>
+            <div class="quick-actions">
+                <button class="btn btn-outline-secondary btn-sm" onclick="scrollToSection('formSection')">
+                    <i class="fas fa-plus me-1"></i> New Assessment
+                </button>
+                <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#birthRecordModal">
+                    <i class="fas fa-baby me-1"></i> Record Birth
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="scrollToSection('recordsSection')">
+                    <i class="fas fa-list me-1"></i> Records
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="scrollToSection('analyticsSection')">
+                    <i class="fas fa-chart-bar me-1"></i> Analytics
+                </button>
+            </div>
+        </div>
+        
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <h4><i class="fas fa-clipboard-list me-1"></i> Total Assessments</h4>
+                <div class="value" id="totalCount">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--danger);">
+                <h4><i class="fas fa-exclamation-triangle me-1"></i> High Risk</h4>
+                <div class="value" id="highCount" style="color: var(--danger);">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--warning);">
+                <h4><i class="fas fa-exclamation-circle me-1"></i> Medium Risk</h4>
+                <div class="value" id="mediumCount" style="color: var(--warning);">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--success);">
+                <h4><i class="fas fa-check-circle me-1"></i> Low Risk</h4>
+                <div class="value" id="lowCount" style="color: var(--success);">0</div>
+            </div>
+        </div>
+        
+        <div class="content-grid">
+            <!-- Left Column -->
+            <div>
+                <!-- Assessment Form -->
+                <div id="formSection" class="panel">
+                    <h3><i class="fas fa-edit me-2"></i>Pregnancy Assessment Form</h3>
+                    
+                    <!-- Patient Search -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold"><i class="fas fa-search me-1"></i> Search Patient</label>
+                        <div class="position-relative">
+                            <input type="text" id="patientSearch" class="form-control" placeholder="Type patient name or ID..." oninput="searchPatients()">
+                            <input type="hidden" id="patientId">
+                            <div id="patientResults" class="position-absolute w-100 bg-white border rounded shadow-sm" style="display:none; z-index:100; max-height:200px; overflow-y:auto;"></div>
+                        </div>
+                        <div id="selectedPatient" class="mt-2 p-2 bg-light rounded" style="display:none;">
+                            <span id="selectedPatientName" class="fw-bold text-success"></span>
+                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="clearPatient()">Clear</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Visit Type Selector -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold"><i class="fas fa-clipboard-list me-1"></i>Visit Type</label>
+                            <select id="visitType" class="form-select" onchange="togglePNCFields()">
+                                <option value="ANC">ANC (Antenatal Care)</option>
+                                <option value="PNC">PNC (Postnatal Care)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" id="pncDeliveryDateField" style="display:none;">
+                            <label class="form-label">Delivery Date</label>
+                            <input type="date" id="deliveryDate" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <!-- PNC-specific fields -->
+                    <div id="pncSpecificFields" style="display:none;" class="row mb-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Baby Weight (kg)</label>
+                            <input type="number" id="babyWeight" class="form-control" placeholder="e.g., 3.2" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Baby Status</label>
+                            <select id="babyStatus" class="form-select">
+                                <option value="healthy">Healthy</option>
+                                <option value="low_weight">Low Birth Weight</option>
+                                <option value="preterm">Preterm</option>
+                                <option value="sick">Sick Newborn</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">PNC Visit Number</label>
+                            <select id="pncVisitNumber" class="form-select">
+                                <option value="1">1st PNC Visit (within 24 hrs)</option>
+                                <option value="2">2nd PNC Visit (Day 3)</option>
+                                <option value="3">3rd PNC Visit (Day 7)</option>
+                                <option value="4">4th PNC Visit (Week 6)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Obstetric History (Phase 5: Gravida/Para) -->
+                    <div id="obstetricHistoryFields" class="row mb-3">
+                        <div class="col-12 mb-2">
+                            <label class="form-label fw-bold"><i class="fas fa-history me-1"></i>Obstetric History</label>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Gravida (G)</label>
+                            <input type="number" id="gravida" class="form-control" placeholder="0" min="0" max="20">
+                            <small class="text-muted">Pregnancies</small>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Para (P)</label>
+                            <input type="number" id="para" class="form-control" placeholder="0" min="0" max="20">
+                            <small class="text-muted">Deliveries</small>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Living</label>
+                            <input type="number" id="livingChildren" class="form-control" placeholder="0" min="0" max="20">
+                            <small class="text-muted">Children</small>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Abortions</label>
+                            <input type="number" id="abortions" class="form-control" placeholder="0" min="0" max="10">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">LMP Date</label>
+                            <input type="date" id="lmpDate" class="form-control" onchange="calculateEDD()">
+                            <small class="text-muted" id="eddDisplay"></small>
+                        </div>
+                    </div>
+                    
+                    <!-- ANC Fields (shown by default) -->
+                    <div id="ancSpecificFields" class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Pregnancy Week (1-40)</label>
+                            <input type="number" id="week" class="form-control" placeholder="1-40" min="1" max="42">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Systolic BP</label>
+                            <input type="number" id="systolic" class="form-control" placeholder="120" min="60" max="250">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Diastolic BP</label>
+                            <input type="number" id="diastolic" class="form-control" placeholder="80" min="40" max="150">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Blood Sugar (mg/dL)</label>
+                            <input type="number" id="sugar" class="form-control" placeholder="mg/dL">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Hemoglobin (g/dL)</label>
+                            <input type="number" id="hemoglobin" class="form-control" placeholder="e.g., 11.5" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fetal Heart Rate (bpm)</label>
+                            <input type="number" id="fetalHR" class="form-control" placeholder="120-160">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Weight (kg)</label>
+                            <input type="number" id="weight" class="form-control" placeholder="kg" step="0.1">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">ANC Visit Number</label>
+                            <select id="ancVisit" class="form-select">
+                                <option value="">Select</option>
+                                <option value="1">1st Visit</option>
+                                <option value="2">2nd Visit</option>
+                                <option value="3">3rd Visit</option>
+                                <option value="4">4th Visit</option>
+                                <option value="5+">5+ Visits</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Follow-up Date</label>
+                            <input type="date" id="followUpDate" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <label class="form-label">Symptoms / Notes</label>
+                        <textarea id="symptoms" class="form-control" rows="2" placeholder="e.g., nausea, swelling, dizziness, bleeding, headache"></textarea>
+                    </div>
+                    
+                    <div class="form-check mt-2">
+                        <input type="checkbox" id="referralMade" class="form-check-input">
+                        <label class="form-check-label" for="referralMade">Referral Required</label>
+                    </div>
+                    
+                    <div class="mt-3 d-flex gap-2">
+                        <button class="btn btn-primary" onclick="saveAssessment()">
+                            <i class="fas fa-save me-1"></i> Save Assessment
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="clearForm()">
+                            <i class="fas fa-times me-1"></i> Clear
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Records Table -->
+                <div id="recordsSection" class="panel">
+                    <h3><i class="fas fa-table me-2"></i>All Records</h3>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <input type="text" id="search" class="form-control" style="max-width: 250px;" placeholder="Search by name..." oninput="renderTable()">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="exportCSV()">
+                                <i class="fas fa-file-csv me-1"></i> CSV
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="exportJSON()">
+                                <i class="fas fa-download me-1"></i> JSON
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Week</th>
+                                    <th>BP</th>
+                                    <th>Risk</th>
+                                    <th>Follow-up</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="emptyState" class="text-center text-muted py-4" style="display: none;">
+                        <i class="fas fa-baby fa-3x mb-3 opacity-50"></i>
+                        <p>No assessments recorded yet</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div>
+                <!-- Analytics -->
+                <div id="analyticsSection" class="panel">
+                    <h3><i class="fas fa-chart-bar me-2"></i>Risk Analytics</h3>
+                    <canvas id="riskChart" height="180"></canvas>
+                    
+                    <div class="mt-3 pt-3 border-top">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="p-2 rounded" style="background:#ffebee;">
+                                    <i class="fas fa-exclamation-triangle text-danger"></i>
+                                    <div class="fw-bold text-danger" id="analyticsHigh">0</div>
+                                    <small class="text-muted">High Risk</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 rounded" style="background:#fff8e1;">
+                                    <i class="fas fa-exclamation-circle text-warning"></i>
+                                    <div class="fw-bold text-warning" id="analyticsMedium">0</div>
+                                    <small class="text-muted">Medium</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 rounded" style="background:#e8f5e9;">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <div class="fw-bold text-success" id="analyticsLow">0</div>
+                                    <small class="text-muted">Low Risk</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">Upcoming Follow-ups</small>
+                            <div id="upcomingFollowups" class="mt-1" style="max-height: 120px; overflow-y: auto;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Info Panel -->
+                <div class="panel">
+                    <h3><i class="fas fa-info-circle me-2"></i>Risk Indicators</h3>
+                    <div class="small">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-danger me-2">High</span>
+                            <span>Systolic ≥140 or Diastolic ≥90, Sugar ≥140, Hb &lt;7, Week &lt;12 or &gt;36, or danger symptoms</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-warning text-dark me-2">Medium</span>
+                            <span>Systolic 130-139 or Diastolic 85-89, Sugar 120-139, Hb 7-9</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-2">Low</span>
+                            <span>Normal vitals, no concerning symptoms</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Birth Record Modal (Phase 5) -->
+    <div class="modal fade" id="birthRecordModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-red), var(--primary-dark)); color: white;">
+                    <h5 class="modal-title"><i class="fas fa-baby me-2"></i>Record Birth / Delivery</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Patient Selection -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold"><i class="fas fa-user me-1"></i>Mother</label>
+                        <div class="position-relative">
+                            <input type="text" id="birthPatientSearch" class="form-control" placeholder="Search pregnant woman..." oninput="searchBirthPatient()">
+                            <input type="hidden" id="birthPatientId">
+                            <input type="hidden" id="birthPatientUid">
+                            <div id="birthPatientResults" class="position-absolute w-100 bg-white border rounded shadow-sm" style="display:none; z-index:100; max-height:200px; overflow-y:auto;"></div>
+                        </div>
+                        <div id="birthSelectedPatient" class="mt-2 p-2 bg-light rounded" style="display:none;">
+                            <span id="birthSelectedPatientName" class="fw-bold text-success"></span>
+                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" onclick="clearBirthPatient()">Clear</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Delivery Details -->
+                    <h6 class="text-muted border-bottom pb-2 mb-3"><i class="fas fa-hospital me-1"></i>Delivery Details</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Delivery Date*</label>
+                            <input type="date" id="brDeliveryDate" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Delivery Time</label>
+                            <input type="time" id="brDeliveryTime" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Delivery Place</label>
+                            <select id="brDeliveryPlace" class="form-select">
+                                <option value="Home">Home</option>
+                                <option value="PHC">PHC</option>
+                                <option value="CHC">CHC</option>
+                                <option value="District Hospital">District Hospital</option>
+                                <option value="Private Hospital">Private Hospital</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Delivery Type</label>
+                            <select id="brDeliveryType" class="form-select">
+                                <option value="Normal">Normal Vaginal</option>
+                                <option value="C-Section">Cesarean Section</option>
+                                <option value="Assisted">Assisted (Forceps/Vacuum)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Birth Outcome*</label>
+                            <select id="brBirthOutcome" class="form-select">
+                                <option value="Live Birth">Live Birth</option>
+                                <option value="Stillbirth">Stillbirth</option>
+                                <option value="Miscarriage">Miscarriage</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Baby Details -->
+                    <h6 class="text-muted border-bottom pb-2 mb-3"><i class="fas fa-child me-1"></i>Baby Details</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Gender</label>
+                            <select id="brBabyGender" class="form-select">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Birth Weight (kg)*</label>
+                            <input type="number" id="brBirthWeight" class="form-control" step="0.01" min="0.5" max="6" placeholder="e.g., 2.8">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Length (cm)</label>
+                            <input type="number" id="brBirthLength" class="form-control" step="0.1" placeholder="e.g., 48">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Head Circ. (cm)</label>
+                            <input type="number" id="brHeadCirc" class="form-control" step="0.1" placeholder="e.g., 34">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Gestational Age</label>
+                            <div class="input-group">
+                                <input type="number" id="brGestWeeks" class="form-control" placeholder="Weeks" min="24" max="42">
+                                <input type="number" id="brGestDays" class="form-control" placeholder="Days" min="0" max="6">
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">APGAR Scores (0-10)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">1 min</span>
+                                <input type="number" id="brApgar1" class="form-control" min="0" max="10" placeholder="0-10">
+                                <span class="input-group-text">5 min</span>
+                                <input type="number" id="brApgar5" class="form-control" min="0" max="10" placeholder="0-10">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Complications -->
+                    <h6 class="text-muted border-bottom pb-2 mb-3"><i class="fas fa-exclamation-triangle me-1"></i>Complications</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Maternal Complications</label>
+                            <select id="brMaternalComp" class="form-select" multiple size="3">
+                                <option value="None">None</option>
+                                <option value="PPH">Postpartum Hemorrhage</option>
+                                <option value="Eclampsia">Eclampsia</option>
+                                <option value="Sepsis">Sepsis</option>
+                                <option value="Retained Placenta">Retained Placenta</option>
+                                <option value="Perineal Tear">Perineal Tear</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Neonatal Complications</label>
+                            <select id="brNeonatalComp" class="form-select" multiple size="3">
+                                <option value="None">None</option>
+                                <option value="Asphyxia">Birth Asphyxia</option>
+                                <option value="Jaundice">Jaundice</option>
+                                <option value="Sepsis">Neonatal Sepsis</option>
+                                <option value="LBW">Low Birth Weight</option>
+                                <option value="Preterm">Preterm</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input type="checkbox" id="brResuscitation" class="form-check-input">
+                                <label class="form-check-label" for="brResuscitation">Resuscitation Required</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" id="brNICU" class="form-check-input">
+                                <label class="form-check-label" for="brNICU">NICU Admission</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input type="checkbox" id="brBreastfeeding" class="form-check-input" checked>
+                                <label class="form-check-label" for="brBreastfeeding">Breastfeeding Initiated</label>
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" id="brBreastfeedingWithin1hr" class="form-check-input">
+                                <label class="form-check-label" for="brBreastfeedingWithin1hr">Within 1 Hour of Birth</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea id="brNotes" class="form-control" rows="2" placeholder="Additional notes..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveBirthRecord()">
+                        <i class="fas fa-save me-1"></i>Save Birth Record
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        let data = [];
+        let chart;
+        let searchTimeout;
+        
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAssessments();
+        });
+        
+        // Smooth scroll
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Patient Search
+        function searchPatients() {
+            clearTimeout(searchTimeout);
+            const query = document.getElementById('patientSearch').value.trim();
+            const resultsDiv = document.getElementById('patientResults');
+            
+            if (query.length < 2) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+            
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/health-worker/search-patients?q=${encodeURIComponent(query)}`)
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success && res.patients && res.patients.length > 0) {
+                            resultsDiv.innerHTML = res.patients.map(p => `
+                                <div class="p-2 border-bottom cursor-pointer patient-result" 
+                                     style="cursor:pointer;" 
+                                     onclick="selectPatient(${p.id}, '${escapeHtml(p.name)}')">
+                                    <strong>${escapeHtml(p.name)}</strong>
+                                    ${p.uid ? `<span class="badge bg-secondary ms-2">${p.uid}</span>` : ''}
+                                    ${p.age ? `<span class="badge bg-info ms-1">${p.age} yrs</span>` : ''}
+                                    <small class="text-muted d-block">${p.email || ''}</small>
+                                </div>
+                            `).join('');
+                            resultsDiv.style.display = 'block';
+                        } else {
+                            resultsDiv.innerHTML = '<div class="p-2 text-muted">No patients found</div>';
+                            resultsDiv.style.display = 'block';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Search error:', err);
+                        resultsDiv.style.display = 'none';
+                    });
+            }, 300);
+        }
+        
+        function selectPatient(id, name) {
+            document.getElementById('patientId').value = id;
+            document.getElementById('patientSearch').value = '';
+            document.getElementById('patientResults').style.display = 'none';
+            document.getElementById('selectedPatient').style.display = 'block';
+            document.getElementById('selectedPatientName').textContent = name + ' (ID: ' + id + ')';
+        }
+        
+        function clearPatient() {
+            document.getElementById('patientId').value = '';
+            document.getElementById('selectedPatient').style.display = 'none';
+            document.getElementById('selectedPatientName').textContent = '';
+        }
+        
+        // Toggle between ANC and PNC fields
+        function togglePNCFields() {
+            const visitType = document.getElementById('visitType').value;
+            const pncFields = document.getElementById('pncSpecificFields');
+            const ancFields = document.getElementById('ancSpecificFields');
+            const pncDeliveryField = document.getElementById('pncDeliveryDateField');
+            const ancVisitField = document.getElementById('ancVisit').closest('.col-md-6');
+            
+            if (visitType === 'PNC') {
+                pncFields.style.display = 'flex';
+                pncDeliveryField.style.display = 'block';
+                // Hide pregnancy week for PNC
+                document.getElementById('week').closest('.col-md-4').style.display = 'none';
+                document.getElementById('fetalHR').closest('.col-md-4').style.display = 'none';
+                if (ancVisitField) ancVisitField.style.display = 'none';
+            } else {
+                pncFields.style.display = 'none';
+                pncDeliveryField.style.display = 'none';
+                // Show pregnancy week for ANC
+                document.getElementById('week').closest('.col-md-4').style.display = 'block';
+                document.getElementById('fetalHR').closest('.col-md-4').style.display = 'block';
+                if (ancVisitField) ancVisitField.style.display = 'block';
+            }
+        }
+        
+        // Clear form
+        function clearForm() {
+            clearPatient();
+            document.getElementById('visitType').value = 'ANC';
+            togglePNCFields();
+            document.getElementById('week').value = '';
+            document.getElementById('systolic').value = '';
+            document.getElementById('diastolic').value = '';
+            document.getElementById('sugar').value = '';
+            document.getElementById('hemoglobin').value = '';
+            document.getElementById('fetalHR').value = '';
+            document.getElementById('weight').value = '';
+            document.getElementById('ancVisit').value = '';
+            document.getElementById('followUpDate').value = '';
+            document.getElementById('symptoms').value = '';
+            document.getElementById('referralMade').checked = false;
+            // PNC fields
+            document.getElementById('deliveryDate').value = '';
+            document.getElementById('babyWeight').value = '';
+            document.getElementById('babyStatus').value = 'healthy';
+            document.getElementById('pncVisitNumber').value = '1';
+            // Obstetric history fields
+            document.getElementById('gravida').value = '';
+            document.getElementById('para').value = '';
+            document.getElementById('livingChildren').value = '';
+            document.getElementById('abortions').value = '';
+            document.getElementById('lmpDate').value = '';
+            document.getElementById('eddDisplay').textContent = '';
+        }
+        
+        // Calculate Expected Delivery Date from LMP
+        function calculateEDD() {
+            const lmpDate = document.getElementById('lmpDate').value;
+            const eddDisplay = document.getElementById('eddDisplay');
+            const weekField = document.getElementById('week');
+            
+            if (lmpDate) {
+                const lmp = new Date(lmpDate);
+                const edd = new Date(lmp);
+                edd.setDate(edd.getDate() + 280); // Add 280 days (40 weeks)
+                
+                // Calculate current pregnancy week
+                const today = new Date();
+                const diffTime = today - lmp;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                const currentWeek = Math.floor(diffDays / 7);
+                
+                eddDisplay.innerHTML = `<i class="fas fa-calendar-alt me-1"></i>EDD: <strong>${edd.toLocaleDateString()}</strong> (Week ${currentWeek})`;
+                
+                // Auto-fill pregnancy week
+                if (currentWeek >= 1 && currentWeek <= 42) {
+                    weekField.value = currentWeek;
+                }
+            } else {
+                eddDisplay.textContent = '';
+            }
+        }
+        
+        // Calculate risk with proper BP parsing
+        function calculateRisk(week, systolic, diastolic, sugar, hemoglobin, symptoms) {
+            let score = 0;
+            
+            // Week risk
+            if (week && (week < 12 || week > 36)) score += 3;
+            
+            // Blood Pressure risk (systolic >= 140 OR diastolic >= 90 is High)
+            if (systolic >= 140 || diastolic >= 90) score += 3;
+            else if (systolic >= 130 || diastolic >= 85) score += 1;
+            
+            // Blood Sugar risk
+            if (sugar && sugar >= 140) score += 3;
+            else if (sugar && sugar >= 120) score += 1;
+            
+            // Hemoglobin risk (anemia)
+            if (hemoglobin && hemoglobin < 7) score += 3;
+            else if (hemoglobin && hemoglobin < 9) score += 1;
+            
+            // Danger symptoms
+            if (symptoms) {
+                const symptomsLower = symptoms.toLowerCase();
+                const dangerSymptoms = ['bleeding', 'severe pain', 'blurred vision', 'convulsion', 'unconscious', 'fits'];
+                const moderateSymptoms = ['dizziness', 'swelling', 'headache', 'edema', 'nausea', 'vomiting'];
+                
+                dangerSymptoms.forEach(s => { if (symptomsLower.includes(s)) score += 3; });
+                moderateSymptoms.forEach(s => { if (symptomsLower.includes(s)) score += 1; });
+            }
+            
+            if (score >= 3) return 'High';
+            if (score >= 1) return 'Medium';
+            return 'Low';
+        }
+        
+        // Calculate PNC risk
+        function calculatePNCRisk(babyWeight, babyStatus, symptoms) {
+            let score = 0;
+            
+            // Baby weight risk (low birth weight < 2.5kg)
+            if (babyWeight && babyWeight < 2.5) score += 2;
+            if (babyWeight && babyWeight < 2.0) score += 2;
+            
+            // Baby status risk
+            if (babyStatus === 'low_weight') score += 1;
+            if (babyStatus === 'preterm') score += 2;
+            if (babyStatus === 'sick') score += 3;
+            
+            // Symptom checks for mother
+            if (symptoms) {
+                const symptomsLower = symptoms.toLowerCase();
+                const dangerSymptoms = ['heavy bleeding', 'high fever', 'convulsion', 'severe pain', 'unconscious', 'foul discharge'];
+                const moderateSymptoms = ['fever', 'pain', 'infection', 'weakness', 'breast', 'mastitis'];
+                
+                dangerSymptoms.forEach(s => { if (symptomsLower.includes(s)) score += 3; });
+                moderateSymptoms.forEach(s => { if (symptomsLower.includes(s)) score += 1; });
+            }
+            
+            if (score >= 3) return 'High';
+            if (score >= 1) return 'Medium';
+            return 'Low';
+        }
+        
+        // Save assessment
+        async function saveAssessment() {
+            const patientId = document.getElementById('patientId').value;
+            const visitType = document.getElementById('visitType').value; // ANC or PNC
+            const weekVal = parseInt(document.getElementById('week').value) || null;
+            const systolicVal = parseInt(document.getElementById('systolic').value) || null;
+            const diastolicVal = parseInt(document.getElementById('diastolic').value) || null;
+            const sugarVal = parseInt(document.getElementById('sugar').value) || null;
+            const hemoglobinVal = parseFloat(document.getElementById('hemoglobin').value) || null;
+            const fetalHRVal = parseInt(document.getElementById('fetalHR').value) || null;
+            const weightVal = parseFloat(document.getElementById('weight').value) || null;
+            const ancVisitVal = document.getElementById('ancVisit').value;
+            const followUpDate = document.getElementById('followUpDate').value;
+            const symptomsVal = document.getElementById('symptoms').value.trim();
+            const referralMade = document.getElementById('referralMade').checked;
+            
+            // PNC-specific fields
+            const deliveryDate = document.getElementById('deliveryDate').value;
+            const babyWeight = parseFloat(document.getElementById('babyWeight').value) || null;
+            const babyStatus = document.getElementById('babyStatus').value;
+            const pncVisitNumber = document.getElementById('pncVisitNumber').value;
+            
+            // Obstetric history fields (Phase 5)
+            const gravida = parseInt(document.getElementById('gravida').value) || null;
+            const para = parseInt(document.getElementById('para').value) || null;
+            const livingChildren = parseInt(document.getElementById('livingChildren').value) || null;
+            const abortions = parseInt(document.getElementById('abortions').value) || null;
+            const lmpDate = document.getElementById('lmpDate').value;
+            
+            if (!patientId) {
+                alert('Please select a patient first.');
+                return;
+            }
+            
+            // For PNC, validate delivery date
+            if (visitType === 'PNC' && !deliveryDate) {
+                alert('Please enter delivery date for PNC assessment.');
+                return;
+            }
+            
+            const bpVal = (systolicVal && diastolicVal) ? `${systolicVal}/${diastolicVal}` : '';
+            const risk = visitType === 'ANC' 
+                ? calculateRisk(weekVal, systolicVal, diastolicVal, sugarVal, hemoglobinVal, symptomsVal)
+                : calculatePNCRisk(babyWeight, babyStatus, symptomsVal);
+            
+            const payload = {
+                patient_id: parseInt(patientId),
+                assessment_type: visitType, // ANC or PNC
+                week: visitType === 'ANC' ? weekVal : null,
+                bp: bpVal,
+                sugar: sugarVal,
+                hemoglobin: hemoglobinVal,
+                fetal_heart_rate: visitType === 'ANC' ? fetalHRVal : null,
+                weight: weightVal,
+                anc_visit_number: visitType === 'ANC' ? ancVisitVal : null,
+                follow_up_date: followUpDate,
+                symptoms: symptomsVal,
+                referral_made: referralMade,
+                risk: risk,
+                notes: symptomsVal,
+                // PNC-specific data
+                delivery_date: visitType === 'PNC' ? deliveryDate : null,
+                baby_weight: visitType === 'PNC' ? babyWeight : null,
+                baby_status: visitType === 'PNC' ? babyStatus : null,
+                pnc_visit_number: visitType === 'PNC' ? pncVisitNumber : null,
+                // Obstetric history (Phase 5)
+                lmp_date: visitType === 'ANC' ? lmpDate : null,
+                gravida: gravida,
+                para: para
+            };
+            
+            try {
+                const response = await fetch('/api/health-worker/pregnancy/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Also update maternal profile if obstetric data provided
+                    if (gravida !== null || para !== null || lmpDate) {
+                        try {
+                            await fetch(`/api/patient/${result.patient_uid}/maternal-profile`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    gravida: gravida,
+                                    para: para,
+                                    living_children: livingChildren,
+                                    abortions: abortions,
+                                    lmp_date: lmpDate || null,
+                                    is_pregnant: visitType === 'ANC',
+                                    pregnancy_week: weekVal
+                                })
+                            });
+                        } catch (e) {
+                            console.log('Maternal profile update skipped:', e);
+                        }
+                    }
+                    
+                    alert('Assessment saved successfully! Risk level: ' + risk);
+                    clearForm();
+                    loadAssessments();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to save'));
+                }
+            } catch (err) {
+                console.error('Save error:', err);
+                alert('Failed to save assessment. Please try again.');
+            }
+        }
+        
+        // Load assessments from backend
+        async function loadAssessments() {
+            try {
+                const response = await fetch('/api/health-worker/pregnancy/list');
+                const result = await response.json();
+                
+                if (result.success) {
+                    data = result.assessments || [];
+                    renderAll();
+                } else {
+                    console.error('Load error:', result.error);
+                }
+            } catch (err) {
+                console.error('Load error:', err);
+            }
+        }
+        
+        // Render table
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            const q = document.getElementById('search').value.toLowerCase();
+            
+            const filtered = data.filter(m => 
+                (m.patient_name && m.patient_name.toLowerCase().includes(q))
+            );
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tbody.innerHTML = filtered.map(m => `
+                <tr>
+                    <td>
+                        <strong>${escapeHtml(m.patient_name)}</strong>
+                        <small class="d-block text-muted">${m.created_at || ''}</small>
+                    </td>
+                    <td>${m.patient_age || '--'}</td>
+                    <td>${m.week || '--'}</td>
+                    <td>${escapeHtml(m.bp || '--')}</td>
+                    <td><span class="badge bg-${m.risk === 'High' ? 'danger' : m.risk === 'Medium' ? 'warning' : 'success'}">${m.risk || 'Low'}</span></td>
+                    <td>${m.follow_up_date ? `<span class="badge bg-info">${m.follow_up_date}</span>` : '--'}</td>
+                    <td>
+                        <button class="btn btn-outline-primary btn-sm" onclick="exportPDF(${m.id})">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteRecord(${m.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function escapeHtml(s) {
+            if (!s) return '';
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        
+        // Update stats
+        function renderStats() {
+            const highCount = data.filter(x => x.risk === 'High').length;
+            const mediumCount = data.filter(x => x.risk === 'Medium').length;
+            const lowCount = data.filter(x => x.risk === 'Low').length;
+            
+            document.getElementById('totalCount').textContent = data.length;
+            document.getElementById('highCount').textContent = highCount;
+            document.getElementById('mediumCount').textContent = mediumCount;
+            document.getElementById('lowCount').textContent = lowCount;
+            
+            // Update analytics cards
+            document.getElementById('analyticsHigh').textContent = highCount;
+            document.getElementById('analyticsMedium').textContent = mediumCount;
+            document.getElementById('analyticsLow').textContent = lowCount;
+            
+            // Upcoming follow-ups
+            const today = new Date().toISOString().split('T')[0];
+            const upcoming = data.filter(m => m.follow_up_date && m.follow_up_date >= today)
+                .sort((a, b) => a.follow_up_date.localeCompare(b.follow_up_date))
+                .slice(0, 5);
+            
+            const followupsDiv = document.getElementById('upcomingFollowups');
+            if (upcoming.length === 0) {
+                followupsDiv.innerHTML = '<small class="text-muted">No upcoming follow-ups</small>';
+            } else {
+                followupsDiv.innerHTML = upcoming.map(m => `
+                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                        <small>${escapeHtml(m.patient_name)}</small>
+                        <small class="badge bg-info">${m.follow_up_date}</small>
+                    </div>
+                `).join('');
+            }
+        }
+        
+        // Chart
+        function renderChart() {
+            const ctx = document.getElementById('riskChart');
+            const counts = {
+                High: data.filter(x => x.risk === 'High').length,
+                Medium: data.filter(x => x.risk === 'Medium').length,
+                Low: data.filter(x => x.risk === 'Low').length
+            };
+            
+            if (chart) chart.destroy();
+            
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+                    datasets: [{
+                        data: [counts.High, counts.Medium, counts.Low],
+                        backgroundColor: ['#dc3545', '#ffc107', '#198754'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+        
+        // Delete record
+        async function deleteRecord(id) {
+            if (!confirm('Delete this assessment?')) return;
+            
+            try {
+                const response = await fetch(`/api/health-worker/pregnancy/delete/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadAssessments();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to delete'));
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
+                alert('Failed to delete. Please try again.');
+            }
+        }
+        
+        // Export PDF
+        async function exportPDF(id) {
+            const m = data.find(x => x.id === id);
+            if (!m) return;
+            
+            const card = document.createElement('div');
+            card.style.cssText = 'width:350px; padding:24px; background:#fff; font-family:Arial;';
+            card.innerHTML = `
+                <div style="text-align:center; border-bottom:2px solid #E63946; padding-bottom:10px; margin-bottom:16px;">
+                    <h2 style="color:#E63946; margin:0;">Maternal Assessment</h2>
+                    <small style="color:#666;">A3 Health Card</small>
+                </div>
+                <p><strong>Name:</strong> ${escapeHtml(m.patient_name)}</p>
+                <p><strong>Age:</strong> ${m.patient_age || 'N/A'} years</p>
+                <p><strong>Pregnancy Week:</strong> ${m.week || 'N/A'}</p>
+                <p><strong>Blood Pressure:</strong> ${escapeHtml(m.bp || 'N/A')}</p>
+                <p><strong>Blood Sugar:</strong> ${m.sugar || 'N/A'} mg/dL</p>
+                <p><strong>Hemoglobin:</strong> ${m.hemoglobin || 'N/A'} g/dL</p>
+                <p><strong>Fetal Heart Rate:</strong> ${m.fetal_heart_rate || 'N/A'} bpm</p>
+                <p><strong>Symptoms:</strong> ${escapeHtml(m.symptoms) || 'None reported'}</p>
+                <p><strong>Follow-up:</strong> ${m.follow_up_date || 'Not scheduled'}</p>
+                <div style="margin-top:16px; padding:10px; background:${m.risk === 'High' ? '#dc3545' : m.risk === 'Medium' ? '#ffc107' : '#198754'}; color:${m.risk === 'Medium' ? '#333' : '#fff'}; border-radius:8px; text-align:center;">
+                    <strong>Risk Level: ${m.risk || 'Low'}</strong>
+                </div>
+            `;
+            
+            document.body.appendChild(card);
+            
+            try {
+                const canvas = await html2canvas(card);
+                const img = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+                pdf.addImage(img, 'PNG', 10, 10, 180, 0);
+                pdf.save((m.patient_name || 'patient').replace(/\s+/g, '_') + '_maternal.pdf');
+            } catch (e) {
+                console.error(e);
+                alert('PDF export failed');
+            }
+            
+            card.remove();
+        }
+        
+        // Export CSV
+        function exportCSV() {
+            if (data.length === 0) return alert('No records to export');
+            const headers = ['Name', 'Age', 'Week', 'BP', 'Sugar', 'Hemoglobin', 'Risk', 'Follow-up', 'Date'];
+            const rows = data.map(m => [
+                m.patient_name, m.patient_age, m.week, m.bp, m.sugar, m.hemoglobin, m.risk, m.follow_up_date, m.created_at
+            ].map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(','));
+            
+            const csv = [headers.join(','), ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'maternal_assessments.csv';
+            a.click();
+        }
+        
+        // Export JSON
+        function exportJSON() {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'maternal_assessments.json';
+            a.click();
+        }
+        
+        // Render all
+        function renderAll() {
+            renderTable();
+            renderStats();
+            renderChart();
+        }
+        
+        // Close patient dropdown when clicking elsewhere
+        document.addEventListener('click', function(e) {
+            const results = document.getElementById('patientResults');
+            const search = document.getElementById('patientSearch');
+            if (!results.contains(e.target) && e.target !== search) {
+                results.style.display = 'none';
+            }
+            // Also close birth record patient dropdown
+            const brResults = document.getElementById('birthPatientResults');
+            const brSearch = document.getElementById('birthPatientSearch');
+            if (brResults && brSearch && !brResults.contains(e.target) && e.target !== brSearch) {
+                brResults.style.display = 'none';
+            }
+        });
+        
+        // ==================== BIRTH RECORD FUNCTIONS ====================
+        
+        let birthSearchTimeout;
+        
+        // Search patients for birth record modal
+        function searchBirthPatient() {
+            clearTimeout(birthSearchTimeout);
+            const query = document.getElementById('birthPatientSearch').value.trim();
+            const resultsDiv = document.getElementById('birthPatientResults');
+            
+            if (query.length < 2) {
+                resultsDiv.style.display = 'none';
+                return;
+            }
+            
+            birthSearchTimeout = setTimeout(() => {
+                fetch(`/api/health-worker/search-patients?q=${encodeURIComponent(query)}`)
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.success && res.patients && res.patients.length > 0) {
+                            resultsDiv.innerHTML = res.patients.map(p => `
+                                <div class="p-2 border-bottom" style="cursor:pointer;" 
+                                     onclick="selectBirthPatient(${p.id}, '${escapeHtml(p.name)}', '${p.uid || ''}')">
+                                    <strong>${escapeHtml(p.name)}</strong>
+                                    ${p.uid ? `<span class="badge bg-secondary ms-2">${p.uid}</span>` : ''}
+                                    ${p.is_pregnant ? '<span class="badge bg-danger ms-1">Pregnant</span>' : ''}
+                                </div>
+                            `).join('');
+                            resultsDiv.style.display = 'block';
+                        } else {
+                            resultsDiv.innerHTML = '<div class="p-2 text-muted">No patients found</div>';
+                            resultsDiv.style.display = 'block';
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Birth patient search error:', err);
+                        resultsDiv.style.display = 'none';
+                    });
+            }, 300);
+        }
+        
+        function selectBirthPatient(id, name, uid) {
+            document.getElementById('birthPatientId').value = id;
+            document.getElementById('birthPatientUid').value = uid;
+            document.getElementById('birthPatientSearch').value = '';
+            document.getElementById('birthPatientResults').style.display = 'none';
+            document.getElementById('birthSelectedPatient').style.display = 'block';
+            document.getElementById('birthSelectedPatientName').textContent = name + (uid ? ` (${uid})` : '');
+        }
+        
+        function clearBirthPatient() {
+            document.getElementById('birthPatientId').value = '';
+            document.getElementById('birthPatientUid').value = '';
+            document.getElementById('birthSelectedPatient').style.display = 'none';
+            document.getElementById('birthSelectedPatientName').textContent = '';
+        }
+        
+        // Save birth record
+        async function saveBirthRecord() {
+            const patientUid = document.getElementById('birthPatientUid').value;
+            const deliveryDate = document.getElementById('brDeliveryDate').value;
+            const birthWeight = document.getElementById('brBirthWeight').value;
+            
+            if (!patientUid) {
+                alert('Please select a mother first.');
+                return;
+            }
+            if (!deliveryDate) {
+                alert('Please enter delivery date.');
+                return;
+            }
+            
+            // Get multiple selection values
+            const maternalComp = Array.from(document.getElementById('brMaternalComp').selectedOptions).map(o => o.value);
+            const neonatalComp = Array.from(document.getElementById('brNeonatalComp').selectedOptions).map(o => o.value);
+            
+            const payload = {
+                delivery_date: deliveryDate,
+                delivery_place: document.getElementById('brDeliveryPlace').value,
+                delivery_type: document.getElementById('brDeliveryType').value,
+                birth_outcome: document.getElementById('brBirthOutcome').value,
+                baby_gender: document.getElementById('brBabyGender').value,
+                birth_weight: parseFloat(birthWeight) || null,
+                birth_length: parseFloat(document.getElementById('brBirthLength').value) || null,
+                head_circumference: parseFloat(document.getElementById('brHeadCirc').value) || null,
+                gestational_age_weeks: parseInt(document.getElementById('brGestWeeks').value) || null,
+                gestational_age_days: parseInt(document.getElementById('brGestDays').value) || null,
+                apgar_1min: parseInt(document.getElementById('brApgar1').value) || null,
+                apgar_5min: parseInt(document.getElementById('brApgar5').value) || null,
+                maternal_complications: JSON.stringify(maternalComp.filter(v => v !== 'None')),
+                neonatal_complications: JSON.stringify(neonatalComp.filter(v => v !== 'None')),
+                resuscitation_needed: document.getElementById('brResuscitation').checked,
+                nicu_admission: document.getElementById('brNICU').checked,
+                breastfeeding_initiated: document.getElementById('brBreastfeeding').checked,
+                breastfeeding_initiated_within_1hr: document.getElementById('brBreastfeedingWithin1hr').checked,
+                notes: document.getElementById('brNotes').value
+            };
+            
+            try {
+                const response = await fetch(`/api/patient/${patientUid}/birth-records`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Birth record saved successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('birthRecordModal')).hide();
+                    clearBirthRecordForm();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to save'));
+                }
+            } catch (err) {
+                console.error('Save birth record error:', err);
+                alert('Failed to save birth record. Please try again.');
+            }
+        }
+        
+        function clearBirthRecordForm() {
+            clearBirthPatient();
+            document.getElementById('brDeliveryDate').value = '';
+            document.getElementById('brDeliveryTime').value = '';
+            document.getElementById('brDeliveryPlace').value = 'Home';
+            document.getElementById('brDeliveryType').value = 'Normal';
+            document.getElementById('brBirthOutcome').value = 'Live Birth';
+            document.getElementById('brBabyGender').value = 'Male';
+            document.getElementById('brBirthWeight').value = '';
+            document.getElementById('brBirthLength').value = '';
+            document.getElementById('brHeadCirc').value = '';
+            document.getElementById('brGestWeeks').value = '';
+            document.getElementById('brGestDays').value = '';
+            document.getElementById('brApgar1').value = '';
+            document.getElementById('brApgar5').value = '';
+            document.getElementById('brMaternalComp').selectedIndex = 0;
+            document.getElementById('brNeonatalComp').selectedIndex = 0;
+            document.getElementById('brResuscitation').checked = false;
+            document.getElementById('brNICU').checked = false;
+            document.getElementById('brBreastfeeding').checked = true;
+            document.getElementById('brBreastfeedingWithin1hr').checked = false;
+            document.getElementById('brNotes').value = '';
+        }
+    </script>
+</body>
+</html>

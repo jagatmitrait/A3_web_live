@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Worker Dashboard | A3 Health Card</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard_theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='health_worker_sidebar.css') }}">
+    <style>
+        /* Page-specific styles only - sidebar styles come from shared CSS */
+        .main-content { margin-left: var(--sidebar-width); padding: 20px; min-height: 100vh; }
+        .page-header { background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .stat-card { background: white; border-radius: 12px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: transform 0.2s; height: 100%; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-icon { width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; color: white; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: #333; }
+        .stat-label { color: #666; font-size: 0.85rem; }
+        .section-card { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .section-header { padding: 15px 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .section-header h5 { margin: 0; font-weight: 600; }
+        .section-body { padding: 15px 20px; }
+        .alert-item { padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid; background: #f8f9fa; display: flex; justify-content: space-between; align-items: center; }
+        .alert-item.critical { border-left-color: #dc3545; background: #fff5f5; }
+        .alert-item.high { border-left-color: #fd7e14; background: #fff8f0; }
+        .alert-item.medium { border-left-color: #ffc107; background: #fffdf0; }
+        .visit-item { padding: 12px 15px; border-radius: 8px; margin-bottom: 10px; background: #f8f9fa; border: 1px solid #e9ecef; transition: all 0.2s; }
+        .visit-item:hover { border-color: var(--primary-red); }
+        .visit-item.completed { background: #f0fdf0; border-color: #28a745; opacity: 0.7; }
+        .visit-item.high-priority { border-left: 4px solid #dc3545; }
+        .visit-item.medium-priority { border-left: 4px solid #ffc107; }
+        .start-route-btn { background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); color: white; padding: 12px 25px; font-size: 1rem; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: transform 0.2s; }
+        .start-route-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); color: white; }
+        .loading-spinner { display: flex; justify-content: center; padding: 40px; }
+        @media (max-width: 768px) { .sidebar { display: none; } .main-content { margin-left: 0; } }
+    </style>
+</head>
+<body>
+    {% set active_page = 'dashboard' %}
+    {% include 'health_worker_sidebar.html' %}
+    
+    <main class="main-content">
+        <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h4 class="mb-1"><i class="fas fa-heartbeat text-danger me-2"></i>Dashboard</h4>
+                <small class="text-muted" id="currentDate"></small>
+            </div>
+            <button class="start-route-btn" id="startRouteBtn" onclick="startDailyRoute()">
+                <i class="fas fa-route"></i> Start Daily Route
+            </button>
+        </div>
+        
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #dc3545, #ab2a37);"><i class="fas fa-calendar-check"></i></div>
+                        <div><div class="stat-value" id="statTodayVisits">-</div><div class="stat-label">Today's Visits</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #28a745, #1e7e34);"><i class="fas fa-check-circle"></i></div>
+                        <div><div class="stat-value" id="statCompleted">-</div><div class="stat-label">Completed</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #fd7e14, #e56c00);"><i class="fas fa-bell"></i></div>
+                        <div><div class="stat-value" id="statAlerts">-</div><div class="stat-label">Active Alerts</div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #17a2b8, #117a8b);"><i class="fas fa-home"></i></div>
+                        <div><div class="stat-value" id="statHouseholds">-</div><div class="stat-label">Households</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h5><i class="fas fa-exclamation-triangle text-warning me-2"></i>Priority Alerts</h5>
+                        <span class="badge bg-warning text-dark" id="alertCount">0</span>
+                    </div>
+                    <div class="section-body" id="alertsContainer"><div class="loading-spinner"><div class="spinner-border text-danger"></div></div></div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h5><i class="fas fa-clipboard-list text-primary me-2"></i>Today's Visits</h5>
+                        <span class="badge bg-primary" id="visitCount">0</span>
+                    </div>
+                    <div class="section-body" id="visitsContainer" style="max-height: 400px; overflow-y: auto;"><div class="loading-spinner"><div class="spinner-border text-danger"></div></div></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-card mt-3">
+            <div class="section-header">
+                <h5><i class="fas fa-hospital text-danger me-2"></i>Pending Referrals</h5>
+                <span class="badge bg-danger" id="referralCount">0</span>
+            </div>
+            <div class="section-body" id="referralsContainer"><div class="loading-spinner"><div class="spinner-border text-danger"></div></div></div>
+        </div>
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            loadDashboardStats(); loadAlerts(); loadVisits(); loadReferrals();
+        });
+        
+        async function loadDashboardStats() {
+            try {
+                const res = await fetch('/api/health-worker/dashboard-stats');
+                const data = await res.json();
+                document.getElementById('statTodayVisits').textContent = data.total_visits_today || 0;
+                document.getElementById('statCompleted').textContent = data.completed_visits || 0;
+                document.getElementById('statAlerts').textContent = data.active_alerts || 0;
+                document.getElementById('statHouseholds').textContent = data.total_households || 0;
+            } catch (e) { console.error('Stats error:', e); }
+        }
+        
+        async function loadAlerts() {
+            const container = document.getElementById('alertsContainer');
+            const countBadge = document.getElementById('alertCount');
+            try {
+                const response = await fetch('/api/health-worker/alerts');
+                if (!response.ok) throw new Error('Failed to fetch alerts');
+                const data = await response.json();
+                
+                countBadge.textContent = data.alerts.length;
+                
+                if (data.alerts.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center mb-0"><i class="fas fa-check-circle text-success me-2"></i>No active alerts</p>';
+                    return;
+                }
+                
+                let html = '';
+                data.alerts.slice(0, 5).forEach(alert => {
+                    html += `
+                        <div class="alert-item ${alert.severity}" id="alert-${alert.id}">
+                            <div>
+                                <strong>${alert.title}</strong>
+                                <div class="small text-muted">${alert.village || ''} | ${alert.action_required || 'Action required'}</div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-success" id="ack-btn-${alert.id}">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                
+                // Add click handlers after rendering
+                data.alerts.slice(0, 5).forEach(alert => {
+                    const btn = document.getElementById('ack-btn-' + alert.id);
+                    if (btn) {
+                        btn.addEventListener('click', function() {
+                            acknowledgeAlert(alert.id);
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+                container.innerHTML = '<p class="text-danger">Failed to load alerts</p>';
+            }
+        }
+        
+        async function acknowledgeAlert(alertId) {
+            console.log('Acknowledging alert ID:', alertId);
+            try {
+                const response = await fetch('/api/health-worker/alert/' + alertId + '/acknowledge', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' }
+                });
+                
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response body:', result);
+                
+                if (result.success) {
+                    // Remove the alert from UI
+                    const alertElement = document.getElementById('alert-' + alertId);
+                    if (alertElement) {
+                        alertElement.style.opacity = '0.5';
+                        alertElement.style.textDecoration = 'line-through';
+                    }
+                    // Reload after small delay
+                    setTimeout(() => {
+                        loadAlerts();
+                        loadDashboardStats();
+                    }, 500);
+                } else {
+                    alert('Failed to acknowledge: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error acknowledging alert:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        async function loadVisits() {
+            const container = document.getElementById('visitsContainer');
+            const countBadge = document.getElementById('visitCount');
+            try {
+                const response = await fetch('/api/health-worker/daily-visits');
+                if (!response.ok) throw new Error('Failed to fetch visits');
+                const data = await response.json();
+                
+                countBadge.textContent = data.visits.length;
+                
+                if (data.visits.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center mb-0"><i class="fas fa-calendar-check text-success me-2"></i>No visits scheduled for today</p>';
+                    return;
+                }
+                
+                let html = '';
+                data.visits.forEach(visit => {
+                    const statusBadge = visit.status === 'completed' ? 'bg-success' : 
+                                       visit.status === 'skipped' ? 'bg-secondary' : 'bg-primary';
+                    const statusText = visit.status.charAt(0).toUpperCase() + visit.status.slice(1);
+                    const priorityBadge = visit.priority === 'high' ? 'bg-danger' : 
+                                         visit.priority === 'medium' ? 'bg-warning text-dark' : 'bg-info';
+                    
+                    html += `
+                        <div class="visit-item p-3 mb-2 rounded border" id="visit-${visit.id}" style="background: ${visit.status === 'completed' ? '#e8f5e9' : visit.status === 'skipped' ? '#f5f5f5' : '#fff'};">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1"><i class="fas fa-user me-2"></i>${visit.head_name}</h6>
+                                    <small class="text-muted"><i class="fas fa-map-marker-alt me-1"></i>${visit.village} - ${visit.address}</small><br>
+                                    <small class="text-muted"><i class="fas fa-phone me-1"></i>${visit.phone || 'N/A'}</small><br>
+                                    <small><i class="fas fa-clipboard me-1"></i>${visit.purpose || visit.visit_type}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge ${statusBadge} mb-1">${statusText}</span><br>
+                                    <span class="badge ${priorityBadge}">${visit.priority}</span>
+                                </div>
+                            </div>
+                            ${visit.status === 'pending' ? `
+                                <div class="mt-2 d-flex gap-2">
+                                    <button class="btn btn-success btn-sm" onclick="completeVisit(${visit.id})"><i class="fas fa-check me-1"></i>Complete</button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="skipVisit(${visit.id})"><i class="fas fa-forward me-1"></i>Skip</button>
+                                    ${visit.latitude && visit.longitude ? `<a href="https://www.google.com/maps/dir/?api=1&destination=${visit.latitude},${visit.longitude}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fas fa-directions me-1"></i>Navigate</a>` : ''}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading visits:', error);
+                container.innerHTML = '<p class="text-danger text-center">Failed to load visits</p>';
+            }
+        }
+        
+        async function loadReferrals() {
+            const container = document.getElementById('referralsContainer');
+            const countBadge = document.getElementById('referralCount');
+            try {
+                const response = await fetch('/api/health-worker/referrals');
+                if (!response.ok) throw new Error('Failed to fetch referrals');
+                const data = await response.json();
+                
+                countBadge.textContent = data.referrals.length;
+                
+                if (data.referrals.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center mb-0"><i class="fas fa-check-circle text-success me-2"></i>No pending referrals</p>';
+                    return;
+                }
+                
+                let html = '<div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Patient</th><th>Reason</th><th>Urgency</th><th>Referred To</th><th>Status</th></tr></thead><tbody>';
+                data.referrals.forEach(ref => {
+                    const urgencyBadge = ref.urgency === 'emergency' ? 'bg-danger' : 
+                                        ref.urgency === 'urgent' ? 'bg-warning text-dark' : 'bg-info';
+                    const statusBadge = ref.status === 'completed' ? 'bg-success' : 
+                                       ref.status === 'pending' ? 'bg-primary' : 'bg-secondary';
+                    
+                    html += `
+                        <tr>
+                            <td><strong>${ref.patient_name}</strong><br><small class="text-muted">${ref.household_name || ''} - ${ref.village || ''}</small></td>
+                            <td>${ref.reason}</td>
+                            <td><span class="badge ${urgencyBadge}">${ref.urgency}</span></td>
+                            <td>${ref.referred_to}</td>
+                            <td><span class="badge ${statusBadge}">${ref.status}</span></td>
+                        </tr>
+                    `;
+                });
+                html += '</tbody></table></div>';
+                
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading referrals:', error);
+                container.innerHTML = '<p class="text-danger text-center">Failed to load referrals</p>';
+            }
+        }
+        
+        async function completeVisit(visitId) {
+            try {
+                const response = await fetch('/api/health-worker/visit/' + visitId + '/complete', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const result = await response.json();
+                if (result.success) {
+                    loadVisits();
+                    loadDashboardStats();
+                } else {
+                    alert('Failed to complete visit: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error completing visit:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        async function skipVisit(visitId) {
+            const reason = prompt('Enter reason for skipping (optional):');
+            try {
+                const response = await fetch('/api/health-worker/visit/' + visitId + '/skip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ reason: reason || '' })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    loadVisits();
+                    loadDashboardStats();
+                } else {
+                    alert('Failed to skip visit: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error skipping visit:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        async function startDailyRoute() {
+            const btn = document.getElementById('startRouteBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...'; btn.disabled = true;
+            try {
+                const res = await fetch('/api/health-worker/route');
+                const data = await res.json();
+                btn.innerHTML = '<i class="fas fa-route"></i> Start Daily Route'; btn.disabled = false;
+                if (!data.maps_url) { alert('No pending visits with GPS coordinates found.'); return; }
+                if (confirm(`Opening Google Maps with ${data.total_visits} waypoints. Continue?`)) { window.open(data.maps_url, '_blank'); }
+            } catch (e) { alert('Failed to generate route'); btn.innerHTML = '<i class="fas fa-route"></i> Start Daily Route'; btn.disabled = false; }
+        }
+    </script>
+</body>
+</html>

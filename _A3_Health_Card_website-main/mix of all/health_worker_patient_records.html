@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Medical Records | Health Worker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='health_worker_sidebar.css') }}">
+</head>
+<body>
+    {% set active_page = 'patient_records' %}
+    {% include 'health_worker_sidebar.html' %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="page-header">
+            <h1><i class="fas fa-file-medical-alt"></i> Patient Medical Records</h1>
+            <div class="header-actions">
+                <span class="worker-badge"><i class="fas fa-user-nurse"></i> {{ current_user.full_name }}</span>
+            </div>
+        </header>
+
+        <!-- Patient Selection -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5><i class="fas fa-user-injured"></i> Select Patient</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" id="patientSearch" class="form-control" placeholder="Search by name or UID...">
+                        <div id="patientResults" class="search-results"></div>
+                    </div>
+                    <div class="col-md-6" id="selectedPatientInfo" style="display:none;">
+                        <div class="patient-card">
+                            <strong id="patientName">-</strong>
+                            <span class="text-muted ms-2" id="patientUID">-</span>
+                            <span class="badge bg-info ms-2" id="patientAge">-</span>
+                            <span class="badge bg-secondary ms-2" id="patientBlood">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Medical Records Tabs -->
+        <ul class="nav nav-tabs mb-3" id="recordsTabs">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#medicalHistoryTab"><i class="fas fa-notes-medical"></i> Medical History</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#lifestyleTab"><i class="fas fa-running"></i> Lifestyle</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#allergiesTab"><i class="fas fa-allergies"></i> Allergies</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#surgeriesTab"><i class="fas fa-procedures"></i> Surgeries</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#vaccinationsTab"><i class="fas fa-syringe"></i> Vaccinations</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#implantsTab"><i class="fas fa-heart"></i> Implants</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#familyHistoryTab"><i class="fas fa-users"></i> Family History</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Medical History Tab -->
+            <div class="tab-pane fade show active" id="medicalHistoryTab">
+                <div class="card">
+                    <div class="card-header panel-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-notes-medical me-2"></i>Medical History</h5>
+                        <button class="btn btn-sm btn-primary" onclick="showAddMedicalHistoryModal()">
+                            <i class="fas fa-plus"></i> Add Record
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="medicalHistoryList">
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-user-injured fa-3x mb-3 opacity-50"></i>
+                                <p>Select a patient to view medical history</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lifestyle Tab -->
+            <div class="tab-pane fade" id="lifestyleTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-running me-2"></i>Lifestyle & Risk Assessment</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="lifestyleForm">
+                            <!-- Substance Use -->
+                            <h6 class="section-title"><i class="fas fa-smoking"></i> Substance Use</h6>
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <label class="form-label">Tobacco Use</label>
+                                    <select class="form-control" id="tobaccoUse">
+                                        <option value="">Select...</option>
+                                        <option value="Never">Never</option>
+                                        <option value="Former">Former</option>
+                                        <option value="Occasional">Occasional</option>
+                                        <option value="Current">Current</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Type</label>
+                                    <select class="form-control" id="tobaccoType">
+                                        <option value="">Select...</option>
+                                        <option>Cigarette</option>
+                                        <option>Bidi</option>
+                                        <option>Chewing Tobacco</option>
+                                        <option>Hookah</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Alcohol Use</label>
+                                    <select class="form-control" id="alcoholUse">
+                                        <option value="">Select...</option>
+                                        <option value="Never">Never</option>
+                                        <option value="Social">Social/Occasional</option>
+                                        <option value="Moderate">Moderate</option>
+                                        <option value="Heavy">Heavy</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Substance Abuse</label>
+                                    <select class="form-control" id="substanceAbuse">
+                                        <option value="false">No</option>
+                                        <option value="true">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Physical Activity -->
+                            <h6 class="section-title"><i class="fas fa-running"></i> Physical Activity</h6>
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label">Activity Level</label>
+                                    <select class="form-control" id="activityLevel">
+                                        <option value="">Select...</option>
+                                        <option value="Sedentary">Sedentary</option>
+                                        <option value="Light">Light</option>
+                                        <option value="Moderate">Moderate</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Very Active">Very Active</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Exercise Frequency</label>
+                                    <select class="form-control" id="exerciseFrequency">
+                                        <option value="">Select...</option>
+                                        <option value="Never">Never</option>
+                                        <option value="1-2x/week">1-2x per week</option>
+                                        <option value="3-4x/week">3-4x per week</option>
+                                        <option value="Daily">Daily</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Exercise Type</label>
+                                    <input type="text" class="form-control" id="exerciseType" placeholder="Walking, Yoga, Gym...">
+                                </div>
+                            </div>
+
+                            <!-- Diet -->
+                            <h6 class="section-title"><i class="fas fa-utensils"></i> Diet</h6>
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label">Diet Type</label>
+                                    <select class="form-control" id="dietType">
+                                        <option value="">Select...</option>
+                                        <option value="Vegetarian">Vegetarian</option>
+                                        <option value="Non-vegetarian">Non-vegetarian</option>
+                                        <option value="Vegan">Vegan</option>
+                                        <option value="Eggetarian">Eggetarian</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Diet Quality</label>
+                                    <select class="form-control" id="dietQuality">
+                                        <option value="">Select...</option>
+                                        <option value="Poor">Poor</option>
+                                        <option value="Fair">Fair</option>
+                                        <option value="Good">Good</option>
+                                        <option value="Excellent">Excellent</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Meals Per Day</label>
+                                    <input type="number" class="form-control" id="mealsPerDay" min="1" max="6">
+                                </div>
+                            </div>
+
+                            <!-- BMI -->
+                            <h6 class="section-title"><i class="fas fa-weight"></i> Weight & BMI</h6>
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <label class="form-label">Weight (kg)</label>
+                                    <input type="number" step="0.1" class="form-control" id="currentWeight">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Height (cm)</label>
+                                    <input type="number" class="form-control" id="currentHeight">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">BMI (auto)</label>
+                                    <input type="text" class="form-control" id="calculatedBMI" readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">BMI Category</label>
+                                    <input type="text" class="form-control" id="bmiCategory" readonly>
+                                </div>
+                            </div>
+
+                            <!-- Occupational -->
+                            <h6 class="section-title"><i class="fas fa-briefcase"></i> Occupational Hazards</h6>
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <label class="form-label">Occupation</label>
+                                    <input type="text" class="form-control" id="occupation">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Hazards</label>
+                                    <input type="text" class="form-control" id="occupationHazards" placeholder="Dust, chemicals, noise...">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Night Shift Work</label>
+                                    <select class="form-control" id="nightShift">
+                                        <option value="false">No</option>
+                                        <option value="true">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Sleep & Stress -->
+                            <h6 class="section-title"><i class="fas fa-bed"></i> Sleep & Stress</h6>
+                            <div class="row mb-4">
+                                <div class="col-md-3">
+                                    <label class="form-label">Avg Sleep (hours)</label>
+                                    <input type="number" step="0.5" class="form-control" id="sleepHours" min="0" max="24">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Sleep Quality</label>
+                                    <select class="form-control" id="sleepQuality">
+                                        <option value="">Select...</option>
+                                        <option value="Poor">Poor</option>
+                                        <option value="Fair">Fair</option>
+                                        <option value="Good">Good</option>
+                                        <option value="Excellent">Excellent</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Stress Level</label>
+                                    <select class="form-control" id="stressLevel">
+                                        <option value="">Select...</option>
+                                        <option value="Low">Low</option>
+                                        <option value="Moderate">Moderate</option>
+                                        <option value="High">High</option>
+                                        <option value="Severe">Severe</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Travel -->
+                            <h6 class="section-title"><i class="fas fa-plane"></i> Travel History (Epidemic Relevance)</h6>
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="recentTravel">
+                                        <label class="form-check-label">Recent Travel</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="epidemicAreaTravel">
+                                        <label class="form-check-label">Traveled to Epidemic Area</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Notes</label>
+                                <textarea class="form-control" id="lifestyleNotes" rows="2"></textarea>
+                            </div>
+
+                            <button type="button" class="btn btn-primary" onclick="saveLifestyle()">
+                                <i class="fas fa-save"></i> Save Lifestyle Assessment
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Allergies Tab -->
+            <div class="tab-pane fade" id="allergiesTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-allergies me-2"></i>Allergies</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="allergiesList" class="text-center text-muted py-4">
+                            <p>Allergies managed via existing Allergy module</p>
+                            <p class="small">Patient's allergy count: <span id="allergyCount">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Surgeries Tab -->
+            <div class="tab-pane fade" id="surgeriesTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-procedures me-2"></i>Surgeries</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="surgeriesList" class="text-center text-muted py-4">
+                            <p>Surgeries managed via existing Surgery module</p>
+                            <p class="small">Patient's surgery count: <span id="surgeryCount">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vaccinations Tab -->
+            <div class="tab-pane fade" id="vaccinationsTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-syringe me-2"></i>Vaccinations</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="vaccinationsList" class="text-center text-muted py-4">
+                            <p>Vaccinations managed via existing Vaccination module</p>
+                            <p class="small">Patient's vaccination count: <span id="vaccinationCount">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Implants Tab -->
+            <div class="tab-pane fade" id="implantsTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-heart me-2"></i>Bio-Medical Implants</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="implantsList" class="text-center text-muted py-4">
+                            <p>Implants managed via existing Implant module</p>
+                            <p class="small">Patient's implant count: <span id="implantCount">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Family History Tab -->
+            <div class="tab-pane fade" id="familyHistoryTab">
+                <div class="card">
+                    <div class="card-header panel-header">
+                        <h5 class="mb-0"><i class="fas fa-users me-2"></i>Family History</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="familyHistoryList" class="text-center text-muted py-4">
+                            <p>Family history managed via existing module</p>
+                            <p class="small">Patient's family history count: <span id="familyHistoryCount">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Medical History Modal -->
+    <div class="modal fade" id="addMedicalHistoryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-plus-circle"></i> Add Medical History Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addMedicalHistoryForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Record Type <span class="text-danger">*</span></label>
+                                <select class="form-control" id="mhRecordType" required>
+                                    <option value="">Select...</option>
+                                    <option value="chronic">Chronic Illness</option>
+                                    <option value="past_illness">Past Illness</option>
+                                    <option value="hospitalization">Hospitalization</option>
+                                    <option value="ncd">Non-Communicable Disease (NCD)</option>
+                                    <option value="communicable">Communicable Disease</option>
+                                    <option value="genetic">Genetic Disorder</option>
+                                    <option value="mental_health">Mental Health</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Condition Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="mhConditionName" required placeholder="e.g., Diabetes, Hypertension">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Diagnosis Date</label>
+                                <input type="date" class="form-control" id="mhDiagnosisDate">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Severity</label>
+                                <select class="form-control" id="mhSeverity">
+                                    <option value="">Select...</option>
+                                    <option value="mild">Mild</option>
+                                    <option value="moderate">Moderate</option>
+                                    <option value="severe">Severe</option>
+                                    <option value="critical">Critical</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-control" id="mhIsActive">
+                                    <option value="true">Active/Ongoing</option>
+                                    <option value="false">Resolved</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Treatment</label>
+                                <textarea class="form-control" id="mhTreatment" rows="2" placeholder="Medications, therapy..."></textarea>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Treating Doctor/Facility</label>
+                                <input type="text" class="form-control" id="mhTreatingDoctor" placeholder="Dr. Name / Hospital">
+                            </div>
+                        </div>
+                        
+                        <!-- Hospitalization fields (shown conditionally) -->
+                        <div id="hospitalizationFields" style="display:none;">
+                            <hr>
+                            <h6>Hospitalization Details</h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Hospital Name</label>
+                                    <input type="text" class="form-control" id="mhHospitalName">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Admission Date</label>
+                                    <input type="date" class="form-control" id="mhAdmissionDate">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Discharge Date</label>
+                                    <input type="date" class="form-control" id="mhDischargeDate">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="mhNotes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveMedicalHistory()">
+                        <i class="fas fa-save"></i> Save Record
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<style>
+/* Page-specific styles */
+.page-header { background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+.page-header h1 { margin: 0; font-size: 1.5rem; color: #dc3545; }
+.worker-badge { background: #fce4ec; color: #dc3545; padding: 8px 15px; border-radius: 20px; font-weight: 500; }
+.card { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; background: white; }
+.card-header { border-radius: 12px 12px 0 0 !important; padding: 15px 20px; }
+.panel-header { background: transparent; border-bottom: 2px solid #dc3545; }
+.panel-header h5 { color: #dc3545; font-weight: 600; margin: 0; }
+.patient-card { background: #fce4ec; padding: 15px; border-radius: 10px; }
+.search-results { position: absolute; z-index: 100; background: white; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-height: 200px; overflow-y: auto; width: calc(100% - 30px); }
+.search-result-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #eee; }
+.search-result-item:hover { background: #fce4ec; }
+.nav-tabs { border: none; gap: 5px; flex-wrap: wrap; }
+.nav-tabs .nav-item { margin-bottom: 5px; }
+.nav-tabs .nav-link { border: 2px solid #e9ecef; border-radius: 8px !important; padding: 10px 15px; color: #666; background: white; }
+.nav-tabs .nav-link:hover { border-color: #dc3545; color: #dc3545; }
+.nav-tabs .nav-link.active { background: #dc3545; color: white; border-color: #dc3545; }
+.section-title { color: #dc3545; font-weight: 600; margin: 20px 0 15px 0; padding-bottom: 8px; border-bottom: 1px solid #ffcdd2; }
+.btn-primary { background: #dc3545; border-color: #dc3545; }
+.btn-primary:hover { background: #ab2a37; border-color: #ab2a37; }
+.form-control:focus, .form-select:focus { border-color: #dc3545; box-shadow: 0 0 0 0.2rem rgba(220,53,69,0.25); }
+.record-card { background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 10px; border-left: 4px solid #dc3545; }
+.record-card.resolved { border-left-color: #28a745; opacity: 0.8; }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let selectedPatient = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Patient search
+    document.getElementById('patientSearch').addEventListener('input', searchPatients);
+    
+    // BMI calculation
+    document.getElementById('currentWeight').addEventListener('input', calculateBMI);
+    document.getElementById('currentHeight').addEventListener('input', calculateBMI);
+    
+    // Show/hide hospitalization fields
+    document.getElementById('mhRecordType').addEventListener('change', function() {
+        document.getElementById('hospitalizationFields').style.display = 
+            this.value === 'hospitalization' ? 'block' : 'none';
+    });
+});
+
+function searchPatients() {
+    const query = document.getElementById('patientSearch').value;
+    const results = document.getElementById('patientResults');
+    
+    if (query.length < 2) {
+        results.innerHTML = '';
+        return;
+    }
+    
+    results.innerHTML = '<div class="search-result-item text-muted">Searching...</div>';
+    
+    fetch(`/api/health-worker/search-patients?q=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.patients && data.patients.length > 0) {
+                results.innerHTML = data.patients.map(p => 
+                    `<div class="search-result-item" onclick='selectPatient(${JSON.stringify(p)})'>
+                        <strong>${p.name}</strong> | ${p.uid || 'No UID'} | ${p.age || '?'}y ${p.gender || ''}
+                    </div>`
+                ).join('');
+            } else {
+                results.innerHTML = '<div class="search-result-item text-muted">No patients found</div>';
+            }
+        })
+        .catch(() => {
+            results.innerHTML = '<div class="search-result-item text-danger">Search error</div>';
+        });
+}
+
+function selectPatient(patient) {
+    selectedPatient = patient;
+    document.getElementById('patientSearch').value = patient.name;
+    document.getElementById('patientResults').innerHTML = '';
+    document.getElementById('selectedPatientInfo').style.display = 'block';
+    document.getElementById('patientName').textContent = patient.name;
+    document.getElementById('patientUID').textContent = patient.uid || 'No UID';
+    document.getElementById('patientAge').textContent = (patient.age || '?') + 'y ' + (patient.gender || '');
+    document.getElementById('patientBlood').textContent = patient.blood_group || 'Blood: ?';
+    
+    // Load patient medical records
+    loadMedicalRecords();
+}
+
+function loadMedicalRecords() {
+    if (!selectedPatient) return;
+    
+    fetch(`/api/patient/${selectedPatient.uid}/medical-records`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                renderMedicalHistory(data.medical_history || []);
+                loadLifestyle(data.lifestyle);
+                
+                // Update counts
+                document.getElementById('allergyCount').textContent = data.allergies_count || 0;
+                document.getElementById('surgeryCount').textContent = data.surgeries_count || 0;
+                document.getElementById('vaccinationCount').textContent = data.vaccinations_count || 0;
+                document.getElementById('implantCount').textContent = data.implants_count || 0;
+                document.getElementById('familyHistoryCount').textContent = data.family_history_count || 0;
+            }
+        })
+        .catch(err => console.error('Error loading records:', err));
+}
+
+function renderMedicalHistory(records) {
+    const container = document.getElementById('medicalHistoryList');
+    
+    if (records.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-clipboard-list fa-3x mb-3 opacity-50"></i>
+                <p>No medical history records found</p>
+            </div>`;
+        return;
+    }
+    
+    container.innerHTML = records.map(r => `
+        <div class="record-card ${r.is_active ? '' : 'resolved'}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>${r.condition_name}</strong>
+                    <span class="badge bg-secondary ms-2">${formatRecordType(r.record_type)}</span>
+                    ${r.severity ? `<span class="badge bg-${getSeverityColor(r.severity)} ms-1">${r.severity}</span>` : ''}
+                </div>
+                <div>
+                    <span class="badge bg-${r.is_active ? 'warning' : 'success'}">${r.is_active ? 'Active' : 'Resolved'}</span>
+                    <button class="btn btn-sm btn-outline-danger ms-2" onclick="deleteMedicalHistory(${r.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            ${r.diagnosis_date ? `<small class="text-muted">Diagnosed: ${r.diagnosis_date}</small>` : ''}
+            ${r.treatment ? `<p class="mb-0 mt-2 small">${r.treatment}</p>` : ''}
+        </div>
+    `).join('');
+}
+
+function formatRecordType(type) {
+    const types = {
+        'chronic': 'Chronic',
+        'past_illness': 'Past Illness',
+        'hospitalization': 'Hospitalization',
+        'ncd': 'NCD',
+        'communicable': 'Communicable',
+        'genetic': 'Genetic',
+        'mental_health': 'Mental Health'
+    };
+    return types[type] || type;
+}
+
+function getSeverityColor(severity) {
+    const colors = { 'mild': 'info', 'moderate': 'warning', 'severe': 'danger', 'critical': 'dark' };
+    return colors[severity] || 'secondary';
+}
+
+function loadLifestyle(data) {
+    if (!data) return;
+    
+    document.getElementById('tobaccoUse').value = data.tobacco_use || '';
+    document.getElementById('tobaccoType').value = data.tobacco_type || '';
+    document.getElementById('alcoholUse').value = data.alcohol_use || '';
+    document.getElementById('substanceAbuse').value = data.substance_abuse ? 'true' : 'false';
+    document.getElementById('activityLevel').value = data.physical_activity_level || '';
+    document.getElementById('exerciseFrequency').value = data.exercise_frequency || '';
+    document.getElementById('exerciseType').value = data.exercise_type || '';
+    document.getElementById('dietType').value = data.diet_type || '';
+    document.getElementById('dietQuality').value = data.diet_quality || '';
+    document.getElementById('mealsPerDay').value = data.meals_per_day || '';
+    document.getElementById('currentWeight').value = data.current_weight || '';
+    document.getElementById('currentHeight').value = data.current_height || '';
+    document.getElementById('calculatedBMI').value = data.bmi || '';
+    document.getElementById('bmiCategory').value = data.bmi_category || '';
+    document.getElementById('occupation').value = data.occupation || '';
+    document.getElementById('sleepHours').value = data.sleep_hours_avg || '';
+    document.getElementById('sleepQuality').value = data.sleep_quality || '';
+    document.getElementById('stressLevel').value = data.stress_level || '';
+    document.getElementById('recentTravel').checked = data.recent_travel || false;
+    document.getElementById('epidemicAreaTravel').checked = data.epidemic_area_travel || false;
+    document.getElementById('lifestyleNotes').value = data.notes || '';
+}
+
+function calculateBMI() {
+    const w = parseFloat(document.getElementById('currentWeight').value);
+    const h = parseFloat(document.getElementById('currentHeight').value) / 100;
+    if (w && h) {
+        const bmi = (w / (h * h)).toFixed(1);
+        document.getElementById('calculatedBMI').value = bmi;
+        
+        let cat = 'Normal';
+        if (bmi < 18.5) cat = 'Underweight';
+        else if (bmi < 25) cat = 'Normal';
+        else if (bmi < 30) cat = 'Overweight';
+        else cat = 'Obese';
+        document.getElementById('bmiCategory').value = cat;
+    }
+}
+
+function showAddMedicalHistoryModal() {
+    if (!selectedPatient) {
+        alert('Please select a patient first');
+        return;
+    }
+    document.getElementById('addMedicalHistoryForm').reset();
+    document.getElementById('hospitalizationFields').style.display = 'none';
+    new bootstrap.Modal(document.getElementById('addMedicalHistoryModal')).show();
+}
+
+function saveMedicalHistory() {
+    if (!selectedPatient) return;
+    
+    const data = {
+        record_type: document.getElementById('mhRecordType').value,
+        condition_name: document.getElementById('mhConditionName').value,
+        diagnosis_date: document.getElementById('mhDiagnosisDate').value || null,
+        severity: document.getElementById('mhSeverity').value || null,
+        is_active: document.getElementById('mhIsActive').value === 'true',
+        treatment: document.getElementById('mhTreatment').value || null,
+        treating_doctor: document.getElementById('mhTreatingDoctor').value || null,
+        hospital_name: document.getElementById('mhHospitalName').value || null,
+        admission_date: document.getElementById('mhAdmissionDate').value || null,
+        discharge_date: document.getElementById('mhDischargeDate').value || null,
+        notes: document.getElementById('mhNotes').value || null
+    };
+    
+    if (!data.record_type || !data.condition_name) {
+        alert('Please fill in required fields');
+        return;
+    }
+    
+    fetch(`/api/patient/${selectedPatient.uid}/medical-history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(result => {
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('addMedicalHistoryModal')).hide();
+            loadMedicalRecords();
+            alert('Medical history record added successfully!');
+        } else {
+            alert('Error: ' + (result.error || 'Unknown error'));
+        }
+    });
+}
+
+function deleteMedicalHistory(id) {
+    if (!confirm('Are you sure you want to delete this record?')) return;
+    
+    fetch(`/api/patient/${selectedPatient.uid}/medical-history/${id}`, {
+        method: 'DELETE'
+    })
+    .then(r => r.json())
+    .then(result => {
+        if (result.success) {
+            loadMedicalRecords();
+        } else {
+            alert('Error: ' + (result.error || 'Unknown error'));
+        }
+    });
+}
+
+function saveLifestyle() {
+    if (!selectedPatient) {
+        alert('Please select a patient first');
+        return;
+    }
+    
+    const data = {
+        tobacco_use: document.getElementById('tobaccoUse').value || null,
+        tobacco_type: document.getElementById('tobaccoType').value || null,
+        alcohol_use: document.getElementById('alcoholUse').value || null,
+        substance_abuse: document.getElementById('substanceAbuse').value === 'true',
+        physical_activity_level: document.getElementById('activityLevel').value || null,
+        exercise_frequency: document.getElementById('exerciseFrequency').value || null,
+        exercise_type: document.getElementById('exerciseType').value || null,
+        diet_type: document.getElementById('dietType').value || null,
+        diet_quality: document.getElementById('dietQuality').value || null,
+        meals_per_day: parseInt(document.getElementById('mealsPerDay').value) || null,
+        current_weight: parseFloat(document.getElementById('currentWeight').value) || null,
+        current_height: parseFloat(document.getElementById('currentHeight').value) || null,
+        occupation: document.getElementById('occupation').value || null,
+        occupation_hazards: document.getElementById('occupationHazards').value ? 
+            document.getElementById('occupationHazards').value.split(',').map(s => s.trim()) : [],
+        night_shift_work: document.getElementById('nightShift').value === 'true',
+        sleep_hours_avg: parseFloat(document.getElementById('sleepHours').value) || null,
+        sleep_quality: document.getElementById('sleepQuality').value || null,
+        stress_level: document.getElementById('stressLevel').value || null,
+        recent_travel: document.getElementById('recentTravel').checked,
+        epidemic_area_travel: document.getElementById('epidemicAreaTravel').checked,
+        notes: document.getElementById('lifestyleNotes').value || null
+    };
+    
+    fetch(`/api/patient/${selectedPatient.uid}/lifestyle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(result => {
+        if (result.success) {
+            alert('Lifestyle assessment saved successfully!');
+        } else {
+            alert('Error: ' + (result.error || 'Unknown error'));
+        }
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training & Guidelines | Health Worker</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Shared Sidebar CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='health_worker_sidebar.css') }}">
+    
+    <style>
+        :root {
+            --primary-red: #E63946;
+            --primary-dark: #c1121f;
+            --bg-light: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-muted: #6c757d;
+            --success: #198754;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+        
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-light); margin: 0; display: flex; min-height: 100vh; }
+        
+        .main-content { margin-left: 260px; padding: 24px; width: calc(100% - 260px); min-height: 100vh; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid var(--primary-red); }
+        .page-header h2 { color: var(--primary-red); font-weight: 700; margin: 0; }
+        
+        @media (max-width: 768px) { .main-content { margin-left: 0; width: 100%; padding: 16px; } }
+        
+        /* Stats Row - Same as other pages */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-red); }
+        .stat-card h4 { color: var(--text-muted); font-size: 14px; font-weight: 500; margin: 0 0 8px 0; }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: var(--primary-red); }
+        
+        /* Panel - Same as other pages */
+        .panel { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .panel h3 { color: var(--primary-red); font-weight: 600; margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 1px solid #eee; }
+        
+        /* Training Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .training-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 4px solid var(--primary-red);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+        }
+        
+        .training-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(230, 57, 70, 0.15);
+            border-left-color: var(--primary-dark);
+        }
+        
+        .training-card .icon-wrapper {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .training-card h4 {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .training-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 0;
+            line-height: 1.5;
+        }
+        
+        .training-card .badge-status {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .badge-coming { background: var(--primary-red); color: white; }
+        .badge-available { background: var(--success); color: white; }
+        
+        /* Icon Colors - Using primary red tones */
+        .icon-video { background: linear-gradient(135deg, var(--primary-red), var(--primary-dark)); color: white; }
+        .icon-who { background: linear-gradient(135deg, #11998e, #38ef7d); color: white; }
+        .icon-national { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .icon-howto { background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; }
+        .icon-quiz { background: linear-gradient(135deg, #f093fb, #f5576c); color: white; }
+        .icon-cert { background: linear-gradient(135deg, #fa709a, #fee140); color: white; }
+        
+        /* Right sidebar panel */
+        .content-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+        @media (max-width: 1100px) { .content-grid { grid-template-columns: 1fr; } }
+        
+        .progress-item { padding: 12px 0; border-bottom: 1px solid #eee; }
+        .progress-item:last-child { border-bottom: none; }
+        .progress-item .title { font-weight: 500; color: #333; margin-bottom: 4px; }
+        .progress-item .progress { height: 8px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    {% set active_page = 'training' %}
+    {% include 'health_worker_sidebar.html' %}
+    
+    <main class="main-content">
+        <div class="page-header">
+            <h2><i class="fas fa-book-open me-2"></i>Training & Guidelines</h2>
+        </div>
+        
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <h4><i class="fas fa-graduation-cap me-1"></i> Total Modules</h4>
+                <div class="value">6</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--success);">
+                <h4><i class="fas fa-check-circle me-1"></i> Completed</h4>
+                <div class="value" style="color: var(--success);">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--warning);">
+                <h4><i class="fas fa-clock me-1"></i> In Progress</h4>
+                <div class="value" style="color: var(--warning);">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #6c757d;">
+                <h4><i class="fas fa-certificate me-1"></i> Certifications</h4>
+                <div class="value" style="color: #6c757d;">0</div>
+            </div>
+        </div>
+        
+        <div class="content-grid">
+            <div>
+                <!-- Training Modules -->
+                <div class="panel">
+                    <h3><i class="fas fa-th-large me-2"></i>Training Modules</h3>
+                    
+                    <div class="cards-grid">
+                        <!-- Video Tutorials -->
+                        <a href="#" class="training-card">
+                            <span class="badge-status badge-coming">Coming Soon</span>
+                            <div class="icon-wrapper icon-video">
+                                <i class="fas fa-play-circle"></i>
+                            </div>
+                            <h4>Video Tutorials</h4>
+                            <p>Watch step-by-step video guides on health assessments, patient care, and emergency procedures.</p>
+                        </a>
+                        
+                        <!-- WHO Protocols -->
+                        <a href="#" class="training-card">
+                            <span class="badge-status badge-coming">Coming Soon</span>
+                            <div class="icon-wrapper icon-who">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <h4>WHO Protocols</h4>
+                            <p>Access World Health Organization guidelines and international best practices.</p>
+                        </a>
+                        
+                        <!-- National Guidelines -->
+                        <a href="#" class="training-card">
+                            <span class="badge-status badge-coming">Coming Soon</span>
+                            <div class="icon-wrapper icon-national">
+                                <i class="fas fa-flag"></i>
+                            </div>
+                            <h4>National Guidelines</h4>
+                            <p>Government-approved health protocols, immunization schedules, and programs.</p>
+                        </a>
+                        
+                        <!-- How-to Videos -->
+                        <a href="#" class="training-card">
+                            <span class="badge-status badge-coming">Coming Soon</span>
+                            <div class="icon-wrapper icon-howto">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <h4>How-to Videos</h4>
+                            <p>Practical demonstrations for using equipment and conducting screenings.</p>
+                        </a>
+                        
+                        <!-- Practice Quizzes -->
+                        <a href="#" class="training-card">
+                            <span class="badge-status badge-coming">Coming Soon</span>
+                            <div class="icon-wrapper icon-quiz">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <h4>Practice Quizzes</h4>
+                            <p>Test your knowledge with interactive quizzes and assessments.</p>
+                        </a>
+                        
+                        <!-- Certification Tracking -->
+                        <a href="#" class="training-card">
+                            <span class="badge-status badge-coming">Coming Soon</span>
+                            <div class="icon-wrapper icon-cert">
+                                <i class="fas fa-certificate"></i>
+                            </div>
+                            <h4>Certification Tracking</h4>
+                            <p>View your training progress and completed certifications.</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Sidebar -->
+            <div>
+                <!-- Training Progress -->
+                <div class="panel">
+                    <h3><i class="fas fa-chart-line me-2"></i>Your Progress</h3>
+                    <div class="progress-item">
+                        <div class="title">Overall Completion</div>
+                        <div class="progress">
+                            <div class="progress-bar bg-danger" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted">0% complete</small>
+                    </div>
+                    <div class="progress-item">
+                        <div class="title">Video Tutorials</div>
+                        <div class="progress">
+                            <div class="progress-bar" style="width: 0%; background: var(--primary-red);"></div>
+                        </div>
+                        <small class="text-muted">0/10 watched</small>
+                    </div>
+                    <div class="progress-item">
+                        <div class="title">Quizzes Passed</div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted">0/5 passed</small>
+                    </div>
+                </div>
+                
+                <!-- Upcoming Trainings -->
+                <div class="panel">
+                    <h3><i class="fas fa-calendar-alt me-2"></i>Upcoming</h3>
+                    <div class="text-muted small">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-circle text-warning me-2" style="font-size: 8px;"></i>
+                            <span>Basic Health Training - Due in 30 days</span>
+                        </div>
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-circle text-info me-2" style="font-size: 8px;"></i>
+                            <span>Immunization Update - Due in 45 days</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-circle text-secondary me-2" style="font-size: 8px;"></i>
+                            <span>NCD Management - Due in 60 days</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Tips -->
+                <div class="panel">
+                    <h3><i class="fas fa-lightbulb me-2"></i>Quick Tips</h3>
+                    <div class="small text-muted">
+                        <p><i class="fas fa-check-circle text-success me-1"></i> Complete all modules for certification</p>
+                        <p><i class="fas fa-check-circle text-success me-1"></i> Watch videos to earn points</p>
+                        <p class="mb-0"><i class="fas fa-check-circle text-success me-1"></i> Pass quizzes with 80% to advance</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

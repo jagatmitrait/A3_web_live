@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictive AI Dashboard | Health Worker</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Shared Sidebar CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='health_worker_sidebar.css') }}">
+    
+    <style>
+        :root {
+            --primary-red: #E63946;
+            --primary-dark: #c1121f;
+            --bg-light: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-muted: #6c757d;
+            --success: #198754;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+        
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-light); margin: 0; display: flex; min-height: 100vh; }
+        
+        .main-content { margin-left: 260px; padding: 24px; width: calc(100% - 260px); min-height: 100vh; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid var(--primary-red); }
+        .page-header h2 { color: var(--primary-red); font-weight: 700; margin: 0; }
+        
+        @media (max-width: 768px) { .main-content { margin-left: 0; width: 100%; padding: 16px; } }
+        
+        /* AI Badge */
+        .ai-badge { background: linear-gradient(135deg, var(--primary-red), var(--primary-dark)); color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        
+        /* Stats Row */
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-red); }
+        .stat-card h4 { color: var(--text-muted); font-size: 14px; font-weight: 500; margin: 0 0 8px 0; }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: var(--primary-red); }
+        
+        /* Panel */
+        .panel { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .panel h3 { color: var(--primary-red); font-weight: 600; margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 1px solid #eee; }
+        
+        /* Content Grid */
+        .content-grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; }
+        @media (max-width: 1100px) { .content-grid { grid-template-columns: 1fr; } }
+        
+        /* Prediction Card */
+        .prediction-card { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--primary-red); }
+        .prediction-card.high-risk { border-left-color: var(--danger); background: #fff5f5; }
+        .prediction-card.medium-risk { border-left-color: var(--warning); background: #fffbeb; }
+        .prediction-card.low-risk { border-left-color: var(--success); background: #f0fdf4; }
+        
+        .prediction-card .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .prediction-card .name { font-weight: 600; color: #333; }
+        .prediction-card .prediction { font-size: 14px; color: #555; }
+        .prediction-card .action { font-size: 13px; color: var(--primary-red); margin-top: 8px; font-weight: 500; }
+        
+        /* Risk Score Gauge */
+        .risk-gauge { display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
+        .gauge-circle { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(var(--danger) 0deg, var(--danger) 90deg, var(--warning) 90deg, var(--warning) 180deg, var(--success) 180deg, var(--success) 360deg); display: flex; align-items: center; justify-content: center; }
+        .gauge-inner { width: 90px; height: 90px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: var(--primary-red); }
+        
+        /* Table */
+        .table thead th { background: linear-gradient(135deg, var(--primary-red), var(--primary-dark)); color: white; font-weight: 600; border: none; padding: 12px; }
+        .table tbody td { padding: 12px; vertical-align: middle; }
+        .table tbody tr:hover { background: #fff5f5; }
+        
+        /* AI Insight */
+        .ai-insight { background: linear-gradient(135deg, var(--primary-red), var(--primary-dark)); color: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .ai-insight h4 { opacity: 0.9; font-size: 14px; margin: 0 0 8px 0; }
+        .ai-insight p { margin: 0; font-size: 15px; }
+        
+        .chart-container { height: 250px; }
+    </style>
+</head>
+<body>
+    {% set active_page = 'predictive_ai' %}
+    {% include 'health_worker_sidebar.html' %}
+    
+    <main class="main-content">
+        <div class="page-header">
+            <h2><i class="fas fa-brain me-2"></i>Predictive AI Dashboard <span class="ai-badge ms-2">AI-Powered</span></h2>
+            <button class="btn btn-outline-secondary btn-sm" onclick="loadPredictions()"><i class="fas fa-sync-alt me-1"></i> Refresh</button>
+        </div>
+        
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <h4><i class="fas fa-exclamation-triangle me-1"></i> High-Risk Predictions</h4>
+                <div class="value" id="highRiskCount">--</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--warning);">
+                <h4><i class="fas fa-user-clock me-1"></i> Follow-ups Due</h4>
+                <div class="value" style="color: var(--warning);" id="followupCount">--</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--success);">
+                <h4><i class="fas fa-check-double me-1"></i> Predictions Actioned</h4>
+                <div class="value" style="color: var(--success);" id="actionedCount">--</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #0d6efd;">
+                <h4><i class="fas fa-percentage me-1"></i> Model Accuracy</h4>
+                <div class="value" style="color: #0d6efd;" id="accuracy">--%</div>
+            </div>
+        </div>
+        
+        <!-- AI Insight -->
+        <div class="ai-insight">
+            <h4><i class="fas fa-lightbulb me-1"></i> AI Insight of the Day</h4>
+            <p id="aiInsight">Based on seasonal patterns and historical data, respiratory infections are expected to increase by 35% in the next 2 weeks. Consider prioritizing elderly and children visits.</p>
+        </div>
+        
+        <div class="content-grid">
+            <div>
+                <!-- Risk Predictions -->
+                <div class="panel">
+                    <h3><i class="fas fa-radar me-2"></i>Health Risk Predictions</h3>
+                    <div id="predictionsList">
+                        <div class="prediction-card high-risk">
+                            <div class="header">
+                                <span class="name"><i class="fas fa-user me-1"></i> Asha Devi</span>
+                                <span class="badge bg-danger">92% Risk</span>
+                            </div>
+                            <div class="prediction"><strong>Prediction:</strong> High probability of gestational diabetes based on BMI, age, and family history.</div>
+                            <div class="action"><i class="fas fa-arrow-right me-1"></i> Recommended: Schedule glucose tolerance test within 7 days</div>
+                        </div>
+                        
+                        <div class="prediction-card high-risk">
+                            <div class="header">
+                                <span class="name"><i class="fas fa-user me-1"></i> Ram Singh</span>
+                                <span class="badge bg-danger">88% Risk</span>
+                            </div>
+                            <div class="prediction"><strong>Prediction:</strong> Cardiovascular event risk elevated due to uncontrolled hypertension pattern.</div>
+                            <div class="action"><i class="fas fa-arrow-right me-1"></i> Recommended: Urgent referral to PHC for medication review</div>
+                        </div>
+                        
+                        <div class="prediction-card medium-risk">
+                            <div class="header">
+                                <span class="name"><i class="fas fa-user me-1"></i> Sunita Kumari</span>
+                                <span class="badge bg-warning text-dark">65% Risk</span>
+                            </div>
+                            <div class="prediction"><strong>Prediction:</strong> Anemia risk detected based on diet patterns and recent symptoms.</div>
+                            <div class="action"><i class="fas fa-arrow-right me-1"></i> Recommended: Iron supplementation and dietary counseling</div>
+                        </div>
+                        
+                        <div class="prediction-card low-risk">
+                            <div class="header">
+                                <span class="name"><i class="fas fa-user me-1"></i> Meera Devi</span>
+                                <span class="badge bg-success">25% Risk</span>
+                            </div>
+                            <div class="prediction"><strong>Prediction:</strong> Normal pregnancy progression expected. All vitals within range.</div>
+                            <div class="action"><i class="fas fa-arrow-right me-1"></i> Recommended: Continue routine ANC visits</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Outbreak Prediction -->
+                <div class="panel">
+                    <h3><i class="fas fa-virus me-2"></i>Disease Outbreak Prediction</h3>
+                    <div class="chart-container">
+                        <canvas id="outbreakChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Sidebar -->
+            <div>
+                <!-- Risk Summary -->
+                <div class="panel text-center">
+                    <h3><i class="fas fa-chart-pie me-2"></i>Community Risk Score</h3>
+                    <div class="risk-gauge">
+                        <div class="gauge-circle">
+                            <div class="gauge-inner" id="communityScore">67</div>
+                        </div>
+                        <div class="mt-2 small text-muted">out of 100</div>
+                        <span class="badge bg-warning text-dark mt-2">Moderate Risk</span>
+                    </div>
+                </div>
+                
+                <!-- Upcoming Risks -->
+                <div class="panel">
+                    <h3><i class="fas fa-calendar-alt me-2"></i>Upcoming Risk Events</h3>
+                    <div class="small">
+                        <div class="d-flex align-items-start py-2 border-bottom">
+                            <i class="fas fa-baby text-danger me-2 mt-1"></i>
+                            <div>
+                                <strong>3 High-Risk Deliveries</strong>
+                                <div class="text-muted">Expected in next 2 weeks</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start py-2 border-bottom">
+                            <i class="fas fa-syringe text-warning me-2 mt-1"></i>
+                            <div>
+                                <strong>12 Immunizations</strong>
+                                <div class="text-muted">Due dates approaching</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start py-2 border-bottom">
+                            <i class="fas fa-heartbeat text-info me-2 mt-1"></i>
+                            <div>
+                                <strong>8 NCD Follow-ups</strong>
+                                <div class="text-muted">Medication refills needed</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start py-2">
+                            <i class="fas fa-lungs text-secondary me-2 mt-1"></i>
+                            <div>
+                                <strong>Respiratory Season Alert</strong>
+                                <div class="text-muted">Peak expected Dec 15-30</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Model Performance -->
+                <div class="panel">
+                    <h3><i class="fas fa-robot me-2"></i>AI Model Stats</h3>
+                    <div class="small">
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span>Predictions Made</span>
+                            <strong>1,247</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span>Accuracy Rate</span>
+                            <strong class="text-success">87.3%</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2 border-bottom">
+                            <span>True Positives</span>
+                            <strong>892</strong>
+                        </div>
+                        <div class="d-flex justify-content-between py-2">
+                            <span>Last Updated</span>
+                            <strong>2 hrs ago</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPredictions();
+            renderOutbreakChart();
+        });
+        
+        function loadPredictions() {
+            // Update stats with demo data
+            document.getElementById('highRiskCount').textContent = '12';
+            document.getElementById('followupCount').textContent = '23';
+            document.getElementById('actionedCount').textContent = '156';
+            document.getElementById('accuracy').textContent = '87%';
+        }
+        
+        function renderOutbreakChart() {
+            var ctx = document.getElementById('outbreakChart').getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
+                    datasets: [{
+                        label: 'Actual Cases',
+                        data: [5, 8, 12, 15, 18, 22],
+                        borderColor: '#E63946',
+                        backgroundColor: 'rgba(230, 57, 70, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Predicted Cases',
+                        data: [null, null, null, null, 20, 28],
+                        borderColor: '#ffc107',
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Cases' } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

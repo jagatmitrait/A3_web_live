@@ -1,0 +1,637 @@
+/* Red & White Aesthetic Theme
+   - Palette: red primary, white surfaces, soft grays
+   - Drop-in: include via {{ url_for('static', filename='theme.css') }}
+*/
+
+:root{
+  --brand-red: #d7263d;
+  --brand-red-600: #c01f34;
+  --brand-red-700: #a61a2c;
+  --brand-white: #ffffff;
+  /* Compatibility with existing styles.css */
+  --primary-red: #d7263d;
+
+  --bg: #ffffff;
+  --surface: #fafafa;
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+
+  --radius: 12px;
+  --shadow-sm: 0 2px 10px rgba(215,38,61,.08);
+  --shadow: 0 8px 24px rgba(215,38,61,.12);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+}
+
+*{ box-sizing: border-box }
+html,body{ height:100% }
+body{
+  margin:0;
+  color:var(--text);
+  background:
+    linear-gradient(180deg, var(--bg) 0%, var(--bg) 65%, #fff5f6 100%);
+  font: 400 16px/1.6 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+
+img,svg,video{ max-width:100%; height:auto; display:block }
+a{ color:var(--brand-red); text-decoration: none }
+a:hover{ text-decoration: underline; text-underline-offset: 2px }
+
+h1,h2,h3,h4,h5,h6{
+  margin: 0 0 var(--space-4);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+h1{ font-size: clamp(2rem, 3.5vw, 3rem) }
+h2{ font-size: clamp(1.5rem, 2.4vw, 2rem) }
+p{ margin: 0 0 var(--space-4); color: #1f2937 }
+
+.container{
+  width: min(1100px, 100% - 32px);
+  margin-inline: auto;
+}
+
+.section{ padding: var(--space-8) 0 }
+
+/* Navbar */
+.navbar{
+  position: sticky; top: 0; z-index: 40;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: saturate(120%) blur(6px);
+}
+.navbar .inner{
+  display:flex; align-items:center; justify-content:space-between;
+  padding: var(--space-3) 0;
+}
+.brand{
+  display:flex; align-items:center; gap:10px; font-weight:700; color:#111;
+}
+.brand-badge{
+  width:34px; height:34px; border-radius:10px;
+  background: linear-gradient(135deg, var(--brand-red), var(--brand-red-700));
+  box-shadow: var(--shadow-sm);
+}
+.nav-links{ display:flex; gap:18px; align-items:center }
+.nav-links a{ color:#374151; font-weight:500 }
+.nav-links a:hover{ color: var(--brand-red-700) }
+
+/* Hero */
+.hero{
+  padding: clamp(48px, 8vw, 96px) 0;
+  background:
+    radial-gradient(60% 60% at 10% 10%, #fff0f3 0%, transparent 50%),
+    radial-gradient(60% 60% at 90% 10%, #ffe6ea 0%, transparent 50%);
+}
+.hero h1{ margin-bottom: var(--space-3) }
+.hero p{ color: var(--muted); max-width: 65ch }
+.hero .actions{ display:flex; gap:12px; margin-top: var(--space-5) }
+
+/* Buttons */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  border: 1px solid transparent;
+  padding: 10px 18px; border-radius: 999px;
+  font-weight:600; letter-spacing:.2px;
+  transition: transform .08s ease, box-shadow .2s ease, background .2s ease;
+  cursor: pointer; text-align:center;
+}
+.btn:active{ transform: translateY(1px) }
+
+.btn-primary{
+  background: linear-gradient(180deg, var(--brand-red), var(--brand-red-600));
+  color: var(--brand-white);
+  box-shadow: var(--shadow);
+}
+.btn-primary:hover{ filter: brightness(1.03) }
+.btn-primary:focus{ outline: 3px solid #ffd9df; outline-offset: 2px }
+
+.btn-outline{
+  background: transparent;
+  border-color: var(--brand-red-600);
+  color: var(--brand-red-700);
+}
+.btn-outline:hover{ background:#fff1f3 }
+.btn-ghost{
+  background: transparent; color: #374151;
+}
+.btn-ghost:hover{ background:#f9fafb }
+
+/* Cards */
+.card{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.card:hover{
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: #f0a7b0;
+}
+.card h3{ margin-bottom: var(--space-2) }
+.kicker{
+  display:inline-block; font-size:12px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color: var(--brand-red-700);
+  background:#fff0f2; padding: 4px 8px; border-radius: 999px; margin-bottom: 8px;
+}
+
+/* Grid */
+.grid{
+  display:grid; gap: var(--space-5);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+/* Forms */
+.input, select, textarea{
+  width:100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border:1px solid var(--border);
+  background: #fff;
+  color: #111;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.input::placeholder, textarea::placeholder{ color:#9ca3af }
+.input:focus, select:focus, textarea:focus{
+  outline: none;
+  border-color: var(--brand-red-600);
+  box-shadow: 0 0 0 4px #ffe1e6;
+}
+.label{ display:block; font-weight:600; margin-bottom:8px }
+
+/* Badges and pills */
+.badge{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:12px; font-weight:600; color: var(--brand-red-700);
+  background:#fff0f2; border:1px solid #ffd6dc; border-radius:999px;
+  padding: 6px 10px;
+}
+
+/* Footer */
+.footer{
+  border-top:1px solid var(--border); background:#fff;
+  color:#6b7280; padding: var(--space-6) 0;
+}
+
+/* Utilities */
+.center{ text-align:center }
+.muted{ color: var(--muted) }
+.pad-hero{ padding: var(--space-8) 0 }
+.hide{ display:none !important }
+
+/* Optional subtle divider section */
+.divider{
+  height:1px; background:linear-gradient(90deg, transparent, #ffd6dc, transparent);
+  margin: var(--space-7) 0;
+}
+
+/* Allergy dashboard enhancements */
+.stats-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+}
+.stat-card{
+  padding: var(--space-5);
+  border-radius: var(--radius);
+  border:1px solid #ffe1e6;
+  background:#fff;
+  box-shadow: var(--shadow-sm);
+}
+.stat-card h4{ margin:0 0 4px; font-size:14px; letter-spacing:.08em; text-transform:uppercase; color:#7f1d1d }
+.stat-card strong{ font-size:32px; display:block }
+.stat-card small{ color: var(--muted) }
+
+.filter-toolbar{
+  margin-top: var(--space-5);
+  padding: var(--space-5);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  display:flex;
+  flex-direction:column;
+  gap: var(--space-4);
+}
+.chip-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap: var(--space-2);
+}
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:6px 14px;
+  font-size:14px;
+  background:#fff;
+  color:#374151;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.chip:hover{ border-color: var(--brand-red-600); color: var(--brand-red-700) }
+.chip.is-active{
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--brand-red), var(--brand-red-600));
+  color:#fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-fallback{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+.js-enabled .filter-fallback{ display:none }
+
+.status-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-weight:600;
+  font-size:12px;
+}
+.status-pill.active{ background:#e6f9f1; color:#0f5132 }
+.status-pill.archived{ background:#fff3cd; color:#78350f }
+.status-pill.status-completed{ background:#e6f9f1; color:#0f5132 }
+.status-pill.status-scheduled{ background:#e0f2ff; color:#0b4a82 }
+.status-pill.status-missed{ background:#fff3cd; color:#78350f }
+.status-pill.status-upcoming{ background:#f3e8ff; color:#5b21b6 }
+.status-pill.status-overdue{ background:#fdecea; color:#7f1d1d }
+
+.severity-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:700;
+  text-transform:uppercase;
+  border-radius:999px;
+  padding:6px 12px;
+  color:#fff;
+}
+.severity-pill.mild{ background:#4CAF50 }
+.severity-pill.moderate{ background:#FFA726 }
+.severity-pill.severe{ background:#E63946 }
+.severity-pill.life-threatening{ background:#9B0000 }
+
+.reaction-chip{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#fff;
+  border:1px dashed #f5b0b9;
+  color:#9b1c1c;
+  font-size:13px;
+  font-weight:600;
+}
+
+.reactions-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap: var(--space-2);
+}
+
+.file-preview-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.file-preview-card{
+  border:1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  background:#fff;
+}
+.file-preview-card strong{ display:block; margin-bottom:6px }
+.file-preview-card span{ font-size:13px; color: var(--muted) }
+
+.empty-state{
+  text-align:center;
+  padding: var(--space-6);
+}
+.empty-state p{ color: var(--muted); margin-bottom: var(--space-4) }
+
+.document-tag{
+  border:1px solid #cbd5f5;
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap: var(--space-3);
+}
+.document-tag strong{ display:block }
+.document-tag small{ color: var(--muted) }
+
+.timeline{
+  border-left:3px solid #ffe1e6;
+  padding-left: var(--space-3);
+  margin-left:6px;
+}
+.timeline p{ margin-bottom: var(--space-2) }
+
+/* Allergy dashboard layout */
+.allergy-hero{
+  display:flex;
+  justify-content:space-between;
+  gap: var(--space-5);
+  flex-wrap:wrap;
+  padding: var(--space-6);
+  border-radius: var(--radius);
+  border:1px solid #ffe1e6;
+  background:linear-gradient(135deg,#fff,#fff5f6);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--space-5);
+}
+.allergy-hero-actions{
+  display:flex;
+  gap: var(--space-3);
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
+.allergy-hero-actions .btn{
+  min-width:180px;
+}
+.allergy-hero-meta{
+  display:flex;
+  gap: var(--space-4);
+  flex-wrap:wrap;
+  margin-top: var(--space-3);
+  color: var(--muted);
+}
+.allergy-hero-meta strong{
+  font-size:20px;
+  color: var(--brand-red-700);
+}
+
+.allergy-stats-grid{
+  display:grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+  margin-bottom: var(--space-5);
+}
+
+.allergy-quick-actions{
+  display:grid;
+  grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.allergy-quick-btn{
+  border:1px dashed #fecdd3;
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  background:#fff;
+  font-weight:600;
+  color:#7f1d1d;
+  display:flex;
+  align-items:center;
+  gap: var(--space-2);
+  justify-content:center;
+  transition: transform .15s ease, box-shadow .15s ease;
+  cursor:pointer;
+}
+.allergy-quick-btn.primary{ background:#fff5f6; border-color:#fda4af }
+.allergy-quick-btn.danger{ border-color:#f87171; color:#b91c1c }
+.allergy-quick-btn:hover{ transform:translateY(-2px); box-shadow: var(--shadow-sm) }
+
+.allergy-dashboard-layout{
+  display:grid;
+  grid-template-columns: 280px 1fr 280px;
+  gap: var(--space-4);
+}
+.allergy-side-panel{
+  display:flex;
+  flex-direction:column;
+  gap: var(--space-4);
+}
+.side-card{
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  background:#fff;
+  box-shadow: var(--shadow-sm);
+}
+.side-card.highlight{
+  text-align:center;
+  background: linear-gradient(180deg,#fff1f2,#ffe4e6);
+  color:#7f1d1d;
+}
+.distribution-list, .insights-list, .care-tasks{
+  list-style:none;
+  padding:0;
+  margin: var(--space-3) 0 0;
+}
+.distribution-list li,
+.insights-list li{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:6px 0;
+  font-weight:600;
+}
+.distribution-list .dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+  margin-right:8px;
+}
+.distribution-list .dot.severity-mild{ background:#4CAF50 }
+.distribution-list .dot.severity-moderate{ background:#FFA726 }
+.distribution-list .dot.severity-severe{ background:#E63946 }
+.distribution-list .dot.severity-life-threatening{ background:#9B0000 }
+.care-tasks li{
+  display:flex;
+  gap:8px;
+  margin-bottom:6px;
+  color:#374151;
+}
+.care-tasks i{ color: var(--brand-red) }
+
+.allergy-main-panel{
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  background:#fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-toolbar-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap: var(--space-3);
+  flex-wrap:wrap;
+}
+.filter-toolbar-actions{
+  display:flex;
+  gap: var(--space-2);
+}
+.filter-toolbar-row{
+  display:flex;
+  gap: var(--space-3);
+  flex-wrap:wrap;
+  margin-top: var(--space-4);
+}
+.filter-field{
+  flex:1;
+  min-width:220px;
+}
+.filter-field.narrow{
+  max-width:200px;
+}
+.input-icon{
+  position:relative;
+}
+.input-icon i{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#cbd5f5;
+}
+
+.allergy-list-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+.allergy-list-grid .card{
+  transition: transform .12s ease, box-shadow .2s ease;
+}
+.allergy-list-grid .card:hover{
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+.allergy-card-head{
+  display:flex;
+  justify-content:space-between;
+  gap: var(--space-3);
+  flex-wrap:wrap;
+}
+.allergy-card-actions{
+  display:flex;
+  gap: var(--space-2);
+  flex-wrap:wrap;
+  margin-top: var(--space-3);
+}
+
+.form-card .allergy-form{
+  margin-top: var(--space-4);
+}
+.allergen-input-field small{
+  display:block;
+  margin-top:4px;
+}
+.allergen-suggestion-panel{
+  border:1px dashed #fecdd3;
+  border-radius: var(--radius);
+  padding: var(--space-4);
+  margin-top: var(--space-4);
+  background:#fff;
+}
+.allergen-suggestion-panel .panel-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap: var(--space-2);
+}
+.allergen-suggestion-list{
+  margin-top: var(--space-3);
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  padding: 6px 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  white-space: nowrap;
+}
+.allergen-suggestion-list::-webkit-scrollbar{ height:8px }
+.allergen-suggestion-list::-webkit-scrollbar-thumb{ background: rgba(0,0,0,0.08); border-radius: 8px }
+.allergen-suggestion-list .suggestion-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid rgba(0,0,0,0.08);
+  background:var(--surface, #fff);
+  border-radius: 999px;
+  padding:8px 14px;
+  cursor:pointer;
+  font-weight:600;
+  color:var(--text, #111);
+  box-shadow: 0 1px 2px rgba(16,24,40,0.04);
+  transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+  white-space: normal;
+}
+.allergen-suggestion-list .suggestion-chip:hover,
+.allergen-suggestion-list .suggestion-chip:focus{
+  transform: translateY(-2px);
+  background: #fff7f9;
+  box-shadow: 0 6px 18px rgba(16,24,40,0.06);
+  outline: none;
+}
+.allergen-suggestion-list .suggestion-chip[aria-pressed="true"],
+.allergen-suggestion-list .suggestion-chip.active{
+  background: linear-gradient(90deg, rgba(254,178,203,0.18), rgba(254,202,228,0.14));
+  border-color: #fbcfe8;
+  box-shadow: 0 6px 20px rgba(219,39,119,0.06);
+}
+.allergen-suggestion-list .suggestion-chip .chip-label{ display:inline-block }
+.allergen-suggestion-list .suggestion-chip .chip-close{ display:none }
+
+@media (max-width:700px){
+  .allergen-suggestion-list{ gap:6px; padding:6px }
+  .allergen-suggestion-list .suggestion-chip{ padding:6px 10px; font-size:14px }
+}
+
+.file-input{
+  padding:10px;
+  cursor:pointer;
+}
+
+@media (max-width: 1100px){
+  .allergy-dashboard-layout{
+    grid-template-columns: 260px 1fr;
+  }
+  .allergy-dashboard-layout > .allergy-side-panel:last-child{
+    grid-column: span 2;
+    flex-direction:row;
+    flex-wrap:wrap;
+  }
+}
+@media (max-width: 900px){
+  .allergy-dashboard-layout{
+    grid-template-columns: 1fr;
+  }
+  .allergy-side-panel{
+    flex-direction:row;
+    flex-wrap:wrap;
+  }
+  .side-card{
+    flex:1 1 240px;
+  }
+}

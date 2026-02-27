@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}View Implant | A3 Health Card{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <div class="form-card-header">
+    <div>
+      <div class="kicker">{{ implant.category or 'Medical Device' }}</div>
+      <h2>{{ implant.device_name }}</h2>
+      <p class="muted">
+        Implanted: {{ implant.implantation_date.strftime('%Y-%m-%d') if implant.implantation_date else 'Unknown date' }}
+        &bull; {{ implant.hospital_name or 'Unknown hospital' }}
+      </p>
+    </div>
+    <div class="pill-stack">
+      <span class="status-pill {{ (implant.status or '')|lower }}">{{ implant.status or 'Status N/A' }}</span>
+      {% if implant.is_recall %}
+      <span class="status-pill recall">Recall Alert</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <dl class="detail-list">
+    <!-- Device Details -->
+    <div class="detail-row">
+      <dt>Manufacturer</dt>
+      <dd>{{ implant.manufacturer or 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Model Number</dt>
+      <dd>{{ implant.model_number or 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Serial Number</dt>
+      <dd>{{ implant.serial_number or 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Lot Number</dt>
+      <dd>{{ implant.lot_number or 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Warranty Expiry</dt>
+      <dd>{{ implant.warranty_expiry.strftime('%Y-%m-%d') if implant.warranty_expiry else 'N/A' }}</dd>
+    </div>
+
+    <!-- Implantation Details -->
+    <div class="detail-row">
+      <dt>Surgeon</dt>
+      <dd>{{ implant.surgeon_name or 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Hospital / Clinic</dt>
+      <dd>{{ implant.hospital_name or 'N/A' }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Body Location</dt>
+      <dd>{{ implant.location or 'N/A' }}</dd>
+    </div>
+    
+    <!-- Clinical Status -->
+    <div class="detail-row">
+      <dt>Status</dt>
+      <dd>{{ implant.status }}</dd>
+    </div>
+    
+    {% if implant.explant_date %}
+    <div class="detail-row">
+      <dt>Explant Date</dt>
+      <dd>{{ implant.explant_date.strftime('%Y-%m-%d') }}</dd>
+    </div>
+    <div class="detail-row">
+      <dt>Explant Reason</dt>
+      <dd>{{ implant.explant_reason or 'N/A' }}</dd>
+    </div>
+    {% endif %}
+    
+    <div class="detail-row">
+      <dt>Next Follow-up</dt>
+      <dd>{{ implant.next_follow_up.strftime('%Y-%m-%d') if implant.next_follow_up else 'Not scheduled' }}</dd>
+    </div>
+    
+    {% if implant.is_recall %}
+    <div class="detail-row" style="background:#fff5f5; border-left:4px solid #c53030;">
+      <dt style="color:#c53030;">Recall Information</dt>
+      <dd style="color:#c53030;">{{ implant.recall_info or 'No details provided.' }}</dd>
+    </div>
+    {% endif %}
+
+    <div class="detail-row">
+      <dt>Notes</dt>
+      <dd>{{ implant.notes or 'None' }}</dd>
+    </div>
+    
+    <div class="detail-row">
+      <dt>Components</dt>
+      <dd>{{ implant.components or 'None' }}</dd>
+    </div>
+
+    <div class="detail-row">
+      <dt>Documents</dt>
+      <dd>
+        {% if documents %}
+        <ul class="document-list">
+          {% for doc in documents %}
+          <li>
+            <i class="fas fa-file-medical"></i>
+            <a href="{{ url_for('implant_document', implant_id=implant.id, filename=doc.stored_name) }}">
+              {{ doc.original_name }}
+            </a>
+            {% if doc.size %}
+            <small>({{ (doc.size / 1024)|round(1) }} KB)</small>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <span class="muted">No documents attached.</span>
+        {% endif %}
+      </dd>
+    </div>
+  </dl>
+
+  <div class="form-actions">
+    <a href="{{ url_for('implant_edit', implant_id=implant.id) }}" class="btn btn-primary"><i class="fas fa-edit"></i> Edit</a>
+    <form method="post" action="{{ url_for('implant_delete', implant_id=implant.id) }}" style="display:inline-block" onsubmit="return confirm('Delete this implant record permanently?');">
+      <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</button>
+    </form>
+    <a href="{{ url_for('implant_pdf', implant_id=implant.id) }}" class="btn btn-secondary"><i class="fas fa-file-pdf"></i> Download PDF</a>
+    <a href="{{ url_for('implantation_dashboard') }}" class="btn btn-secondary ghost">Back to Implants</a>
+  </div>
+</div>
+{% endblock %}

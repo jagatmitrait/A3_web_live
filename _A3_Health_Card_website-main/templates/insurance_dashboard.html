@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insurance Company Dashboard | A3 Health Card</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='insurance_dashboard.css') }}">
+    
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="insurance-header">
+        <div class="header-left">
+            <h1 class="brand-logo">A3 Health Card</h1>
+            <span class="header-subtitle">Insurance Partner Dashboard</span>
+        </div>
+        <div class="header-center">
+            <h3 class="company-name">{{ company.company_name if company else 'Insurance Company' }}</h3>
+        </div>
+        <div class="header-right">
+            <button class="icon-btn" id="refreshBtn" title="Refresh">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <button class="icon-btn" id="helpBtn" title="Help">
+                <i class="fas fa-question-circle"></i>
+            </button>
+            <button class="icon-btn notification-btn" id="notificationBtn" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notificationBadge">0</span>
+            </button>
+            <div class="user-profile dropdown" id="userProfileBtn">
+                <img src="https://ui-avatars.com/api/?name={{ user.full_name or 'User' }}&background=2196F3&color=fff" alt="Profile" class="profile-img" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-chevron-down" data-bs-toggle="dropdown"></i>
+                <ul class="dropdown-menu dropdown-menu-end" style="margin-top: 10px;">
+                    <li><span class="dropdown-item-text fw-bold">{{ user.full_name or 'User' }}</span></li>
+                    <li><span class="dropdown-item-text small text-muted">{{ company.company_name if company else 'Insurance Company' }}</span></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="#" data-page="overview"><i class="fas fa-th-large me-2"></i>Dashboard</a></li>
+                    <li><a class="dropdown-item" href="#" id="profileSettings"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}" id="headerLogoutBtn"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="dashboard-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="overview">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard Overview</span>
+                </a>
+                <a href="#" class="nav-item" data-page="policyholders">
+                    <i class="fas fa-users"></i>
+                    <span>Policyholder Directory</span>
+                </a>
+                <a href="#" class="nav-item" data-page="policy-details">
+                    <i class="fas fa-file-contract"></i>
+                    <span>Policy Details</span>
+                </a>
+                <a href="#" class="nav-item" data-page="claims">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Claim Management</span>
+                </a>
+                <a href="#" class="nav-item" data-page="cashless">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Cashless Pre-Auth</span>
+                </a>
+                <a href="#" class="nav-item" data-page="medical-review">
+                    <i class="fas fa-user-md"></i>
+                    <span>Medical Review</span>
+                </a>
+                <a href="#" class="nav-item" data-page="fraud">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Fraud Monitoring</span>
+                </a>
+                <a href="#" class="nav-item" data-page="documents">
+                    <i class="fas fa-folder-open"></i>
+                    <span>Documents</span>
+                </a>
+                <a href="#" class="nav-item" data-page="settlement">
+                    <i class="fas fa-money-check-alt"></i>
+                    <span>Settlement & Payout</span>
+                </a>
+                <a href="#" class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics & Reports</span>
+                </a>
+                <a href="#" class="nav-item" data-page="consent">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Consent Management</span>
+                </a>
+                <a href="#" class="nav-item" data-page="audit">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>Audit & Compliance</span>
+                </a>
+                <hr class="sidebar-divider">
+                <a href="{{ url_for('logout') }}" class="nav-item text-danger" id="logoutLink">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content" id="mainContent">
+            
+            <!-- Overview Page -->
+            <div class="content-page active" id="overview-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-th-large"></i> Dashboard Overview</h2>
+                    <p class="text-muted">Real-time operational visibility and alerts</p>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="stat-card stat-primary">
+                            <div class="stat-icon">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">Total Active Policies</p>
+                                <h3 class="stat-value" id="statTotalPolicies">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="stat-card stat-success">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">Active Policyholders</p>
+                                <h3 class="stat-value" id="statActivePolicyholders">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="stat-card stat-warning">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">Claims Today / Month</p>
+                                <h3 class="stat-value" id="statClaimsToday">0</h3>
+                                <small class="text-muted">Month: <span id="statClaimsMonth">0</span></small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="stat-card stat-info">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">Claims Approved</p>
+                                <h3 class="stat-value" id="statClaimsApproved">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="stat-card stat-danger">
+                            <div class="stat-icon">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">Claims Rejected</p>
+                                <h3 class="stat-value" id="statClaimsRejected">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="stat-card stat-secondary">
+                            <div class="stat-icon">
+                                <i class="fas fa-hourglass-half"></i>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">Claims Under Review</p>
+                                <h3 class="stat-value" id="statClaimsUnderReview">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="stat-card stat-purple">
+                            <div class="stat-icon">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">Cashless Pending</p>
+                                <h3 class="stat-value" id="statCashlessPending">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="stat-card stat-red">
+                            <div class="stat-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <p class="stat-label">Fraud Flags Raised</p>
+                                <h3 class="stat-value" id="statFraudFlags">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alert Panel -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-warning text-dark">
+                                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Priority Alerts & Notifications</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="alertsContainer" class="alerts-list">
+                                    <div class="text-center text-muted py-3">
+                                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                                        <p>No urgent alerts at this time</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Policyholder Directory Page -->
+            <div class="content-page" id="policyholders-page">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2><i class="fas fa-users"></i> Policyholder Directory</h2>
+                        <p class="text-muted mb-0">Controlled identity & policy visibility</p>
+                    </div>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addPolicyModal">
+                        <i class="fas fa-plus me-2"></i>Add Policy for Client
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Policy Status</label>
+                                <select class="form-select" id="policyStatusFilter">
+                                    <option value="All">All Statuses</option>
+                                    <option value="Active" selected>Active</option>
+                                    <option value="Lapsed">Lapsed</option>
+                                    <option value="Suspended">Suspended</option>
+                                    <option value="Expired">Expired</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Search</label>
+                                <input type="text" class="form-control" id="policySearch" placeholder="Policy Number or Client Name">
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" id="applyPolicyFilters">
+                                    <i class="fas fa-filter me-2"></i>Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Policyholders Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Policy Number</th>
+                                        <th>Client ID</th>
+                                        <th>Client Name</th>
+                                        <th>Policy Type</th>
+                                        <th>Status</th>
+                                        <th>Coverage Amount</th>
+                                        <th>Validity</th>
+                                        <th>Consent</th>
+                                        <th>Last Claim</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="policyholdersTable">
+                                    <tr>
+                                        <td colspan="10" class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                            <p>Loading policyholders...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Policy Details Page -->
+            <div class="content-page" id="policy-details-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-file-contract"></i> Policy Details</h2>
+                    <p class="text-muted">Coverage verification and limits</p>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Enter Policy Number</label>
+                                <input type="text" class="form-control" id="policyNumberInput" placeholder="e.g., POL-2025-123456">
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" id="loadPolicyDetails">
+                                    <i class="fas fa-search me-2"></i>Load Policy Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="policyDetailsContainer" style="display: none;">
+                    <!-- Policy details will be loaded here dynamically -->
+                </div>
+            </div>
+
+            <!-- Claim Management Page -->
+            <div class="content-page" id="claims-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-file-invoice-dollar"></i> Claim Management</h2>
+                    <p class="text-muted">Claim lifecycle handling</p>
+                </div>
+
+                <!-- Filters -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-select" id="claimStatusFilter">
+                                    <option value="All">All Claims</option>
+                                    <option value="Submitted">Submitted</option>
+                                    <option value="Under Review">Under Review</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Settled">Settled</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date From</label>
+                                <input type="date" class="form-control" id="claimDateFrom">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date To</label>
+                                <input type="date" class="form-control" id="claimDateTo">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" id="applyClaimFilters">
+                                    <i class="fas fa-filter me-2"></i>Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Claims Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Claim ID</th>
+                                        <th>Policy Number</th>
+                                        <th>Client Name</th>
+                                        <th>Hospital</th>
+                                        <th>Claim Type</th>
+                                        <th>Claimed Amount</th>
+                                        <th>Status</th>
+                                        <th>Submitted</th>
+                                        <th>SLA Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="claimsTable">
+                                    <tr>
+                                        <td colspan="10" class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                            <p>Loading claims...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cashless Pre-Authorization Page -->
+            <div class="content-page" id="cashless-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-hand-holding-usd"></i> Cashless Pre-Authorization</h2>
+                    <p class="text-muted">Real-time hospital approvals</p>
+                </div>
+
+                <!-- Filters -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Approval Status</label>
+                                <select class="form-select" id="cashlessStatusFilter">
+                                    <option value="Pending" selected>Pending</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Partial">Partial Approval</option>
+                                    <option value="All">All</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">SLA Breach Only</label>
+                                <select class="form-select" id="cashlessSlaFilter">
+                                    <option value="false">Show All</option>
+                                    <option value="true">SLA Breached Only</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" id="applyCashlessFilters">
+                                    <i class="fas fa-filter me-2"></i>Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pre-Auth Requests Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Pre-Auth ID</th>
+                                        <th>Policy Number</th>
+                                        <th>Patient Name</th>
+                                        <th>Hospital</th>
+                                        <th>Diagnosis Category</th>
+                                        <th>Estimated Cost</th>
+                                        <th>Requested Amount</th>
+                                        <th>Status</th>
+                                        <th>Request Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cashlessRequestsTable">
+                                    <tr>
+                                        <td colspan="10" class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                            <p>Loading pre-authorization requests...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Review Panel -->
+            <div class="content-page" id="medical-review-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-user-md"></i> Medical Review Panel</h2>
+                    <p class="text-muted">Reviewer decision support</p>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Note:</strong> Medical reviews are based on diagnosis categories and treatment summaries only. Full medical records are not accessible to maintain patient privacy.
+                </div>
+
+                <!-- Claim Review Interface will be loaded dynamically -->
+                <div id="medicalReviewContainer">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-clipboard-check fa-3x mb-3"></i>
+                        <p>Select a claim from Claim Management to review</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fraud & Risk Monitoring Page -->
+            <div class="content-page" id="fraud-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-shield-alt"></i> Fraud & Risk Monitoring</h2>
+                    <p class="text-muted">Abuse detection and investigation</p>
+                </div>
+
+                <!-- Filters -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Risk Level</label>
+                                <select class="form-select" id="fraudRiskFilter">
+                                    <option value="All">All Risk Levels</option>
+                                    <option value="Critical">Critical (90-100)</option>
+                                    <option value="High" selected>High (70-89)</option>
+                                    <option value="Medium">Medium (40-69)</option>
+                                    <option value="Low">Low (0-39)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" id="applyFraudFilters">
+                                    <i class="fas fa-filter me-2"></i>Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fraud Cases Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Claim ID</th>
+                                        <th>Fraud Score</th>
+                                        <th>Risk Level</th>
+                                        <th>Indicators</th>
+                                        <th>Claim Frequency</th>
+                                        <th>Policy Age (Days)</th>
+                                        <th>Investigation Status</th>
+                                        <th>Flagged Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="fraudCasesTable">
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                            <p>Loading fraud cases...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents Page -->
+            <div class="content-page" id="documents-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-folder-open"></i> Documents & Evidence</h2>
+                    <p class="text-muted">Controlled document access</p>
+                </div>
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Access Control:</strong> All document access is logged and requires valid patient consent.
+                </div>
+
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-folder-open fa-3x mb-3"></i>
+                    <p>Document access is available from individual claim detail pages</p>
+                </div>
+            </div>
+
+            <!-- Settlement & Payout Page -->
+            <div class="content-page" id="settlement-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-money-check-alt"></i> Settlement & Payout</h2>
+                    <p class="text-muted">Financial closure and payment tracking</p>
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Claim ID</th>
+                                        <th>Policy Number</th>
+                                        <th>Client Name</th>
+                                        <th>Approved Amount</th>
+                                        <th>Settlement Status</th>
+                                        <th>Payment Mode</th>
+                                        <th>Settlement Date</th>
+                                        <th>Finance Ref ID</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="settlementTable">
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                            <p>Loading settlement records...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics & Reports Page -->
+            <div class="content-page" id="analytics-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-chart-line"></i> Analytics & Reports</h2>
+                    <p class="text-muted">Aggregated insights and trends</p>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0">Claims by Disease Category</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="diseaseChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0">Approval vs Rejection Ratio</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="approvalChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm text-center">
+                            <div class="card-body">
+                                <h3 class="text-primary mb-2" id="avgSettlementTime">0</h3>
+                                <p class="text-muted mb-0">Average Settlement Time (Days)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm text-center">
+                            <div class="card-body">
+                                <h3 class="text-success mb-2" id="approvalRate">0%</h3>
+                                <p class="text-muted mb-0">Claim Approval Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm text-center">
+                            <div class="card-body">
+                                <h3 class="text-danger mb-2" id="fraudIncidence">0%</h3>
+                                <p class="text-muted mb-0">Fraud Incidence Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Consent Management Page -->
+            <div class="content-page" id="consent-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-user-shield"></i> Consent Management</h2>
+                    <p class="text-muted">Patient consent tracking</p>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Privacy Policy:</strong> All data access requires valid patient consent. Consents are time-bound and purpose-specific.
+                </div>
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Consent ID</th>
+                                        <th>Patient Name</th>
+                                        <th>Patient UID</th>
+                                        <th>Purpose</th>
+                                        <th>Access Level</th>
+                                        <th>Valid From</th>
+                                        <th>Valid Until</th>
+                                        <th>Status</th>
+                                        <th>Access Count</th>
+                                        <th>Last Accessed</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="consentsTable">
+                                    <tr>
+                                        <td colspan="10" class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                            <p>Loading consent records...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit & Compliance Page -->
+            <div class="content-page" id="audit-page">
+                <div class="page-header">
+                    <h2><i class="fas fa-clipboard-list"></i> Audit & Compliance</h2>
+                    <p class="text-muted">Regulatory readiness and access logs</p>
+                </div>
+
+                <!-- Filters -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label class="form-label">Date From</label>
+                                <input type="date" class="form-control" id="auditDateFrom">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Date To</label>
+                                <input type="date" class="form-control" id="auditDateTo">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Action Type</label>
+                                <input type="text" class="form-control" id="auditActionFilter" placeholder="e.g., Viewed Claim">
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" id="applyAuditFilters">
+                                    <i class="fas fa-filter me-2"></i>Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Logs Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Access & Activity Logs</h6>
+                        <button class="btn btn-sm btn-light" id="exportAuditBtn">
+                            <i class="fas fa-download me-1"></i>Export
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Role</th>
+                                        <th>Action</th>
+                                        <th>Category</th>
+                                        <th>Target Type</th>
+                                        <th>Consent Used</th>
+                                        <th>IP Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="auditLogsTable">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                            <p>Loading audit logs...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Claim Detail Modal -->
+    <div class="modal fade" id="claimDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-file-medical-alt me-2"></i>Claim Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="claimDetailContent">
+                    <!-- Content loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cashless Review Modal -->
+    <div class="modal fade" id="cashlessReviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Pre-Authorization Review</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="cashlessReviewContent">
+                    <!-- Content loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Policy for Client Modal -->
+    <div class="modal fade" id="addPolicyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-file-medical me-2"></i>Add Policy for Client</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPolicyForClientForm">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Enter the client's A3 Health Card ID to add a policy directly to their account.
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Client A3 Health Card ID <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addPolicyClientId" required placeholder="e.g., A3HC-12345678">
+                                <div id="clientIdStatus" class="mt-1"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Client Name</label>
+                                <input type="text" class="form-control" id="addPolicyClientName" readonly placeholder="Will be fetched automatically">
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Policy Number <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="addPolicyNumber" required placeholder="e.g., POL-2026-12345">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Policy Name</label>
+                                <input type="text" class="form-control" id="addPolicyName" placeholder="e.g., Gold Health Cover">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Policy Type</label>
+                                <select class="form-select" id="addPolicyType">
+                                    <option value="Health">Health Insurance</option>
+                                    <option value="Life">Life Insurance</option>
+                                    <option value="Accident">Accident Cover</option>
+                                    <option value="Critical Illness">Critical Illness</option>
+                                    <option value="Family Floater">Family Floater</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Coverage Type</label>
+                                <select class="form-select" id="addPolicyCoverageType">
+                                    <option value="Individual">Individual</option>
+                                    <option value="Family">Family</option>
+                                    <option value="Group">Group</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Sum Insured (₹) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="addPolicySumInsured" required placeholder="e.g., 500000">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Premium Amount (₹)</label>
+                                <input type="number" class="form-control" id="addPolicyPremium" placeholder="e.g., 12000">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="addPolicyStartDate" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">End Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="addPolicyEndDate" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="submitAddPolicyBtn">
+                        <i class="fas fa-save me-2"></i>Add Policy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='insurance_dashboard.js') }}"></script>
+</body>
+</html>

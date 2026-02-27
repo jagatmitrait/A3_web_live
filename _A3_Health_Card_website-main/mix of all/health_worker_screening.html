@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screening & Testing | Health Worker</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Shared Sidebar CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='health_worker_sidebar.css') }}">
+    
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-red: #E63946;
+            --primary-dark: #c1121f;
+            --bg-light: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-muted: #6c757d;
+            --success: #198754;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-light);
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .main-content {
+            margin-left: 260px;
+            padding: 24px;
+            width: calc(100% - 260px);
+            min-height: 100vh;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--primary-red);
+        }
+        
+        .page-header h2 {
+            color: var(--primary-red);
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--primary-red);
+        }
+        
+        .stat-card h4 {
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            margin: 0 0 8px 0;
+        }
+        
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-red);
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+        }
+        
+        @media (max-width: 1200px) {
+            .content-grid { grid-template-columns: 1fr; }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content { margin-left: 0; width: 100%; padding: 16px; }
+        }
+        
+        .panel {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        .panel h3 {
+            color: var(--primary-red);
+            font-weight: 600;
+            margin: 0 0 16px 0;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-top: 12px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 10px 14px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15);
+        }
+        
+        .btn-primary {
+            background: var(--primary-red);
+            border-color: var(--primary-red);
+            padding: 10px 20px;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, var(--primary-red), var(--primary-dark));
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 12px;
+        }
+        
+        .table tbody td {
+            padding: 12px;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background: #fff5f5;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        /* Patient Search Styles */
+        .patient-search-results {
+            position: absolute;
+            z-index: 100;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            margin-top: 2px;
+        }
+        
+        .patient-result {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .patient-result:hover {
+            background: #fce4ec;
+        }
+        
+        .selected-patient {
+            background: #fce4ec;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-red);
+        }
+    </style>
+</head>
+<body>
+    {% set active_page = 'screenings' %}
+    {% include 'health_worker_sidebar.html' %}
+    
+    <main class="main-content">
+        <div class="page-header">
+            <h2><i class="fas fa-vials me-2"></i>Screening & Testing</h2>
+            <div class="quick-actions">
+                <button class="btn btn-outline-secondary btn-sm" onclick="scrollToSection('formSection')">
+                    <i class="fas fa-plus me-1"></i> New Screening
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" onclick="scrollToSection('recordsSection')">
+                    <i class="fas fa-list me-1"></i> Records
+                </button>
+            </div>
+        </div>
+        
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <h4><i class="fas fa-clipboard-list me-1"></i> Total Screenings</h4>
+                <div class="value" id="totalCount">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--danger);">
+                <h4><i class="fas fa-exclamation-triangle me-1"></i> High Risk</h4>
+                <div class="value" id="highCount" style="color: var(--danger);">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--warning);">
+                <h4><i class="fas fa-exclamation-circle me-1"></i> Medium Risk</h4>
+                <div class="value" id="mediumCount" style="color: var(--warning);">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--success);">
+                <h4><i class="fas fa-check-circle me-1"></i> Low Risk</h4>
+                <div class="value" id="lowCount" style="color: var(--success);">0</div>
+            </div>
+        </div>
+        
+        <div class="content-grid">
+            <!-- Left Column -->
+            <div>
+                <!-- Screening Form -->
+                <div id="formSection" class="panel">
+                    <h3><i class="fas fa-edit me-2"></i>New Health Screening</h3>
+                    <!-- Patient Search -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Search Patient</label>
+                            <input type="text" id="patientSearch" class="form-control" placeholder="Search by name or UID...">
+                            <div id="patientResults" class="patient-search-results"></div>
+                            <input type="hidden" id="patientId">
+                        </div>
+                        <div class="col-md-4" id="selectedPatientInfo" style="display:none;">
+                            <label class="form-label">Selected</label>
+                            <div class="selected-patient">
+                                <strong id="selectedPatientName">-</strong>
+                                <small class="d-block text-muted" id="selectedPatientUid">-</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" id="name" class="form-control" placeholder="Patient name">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Age</label>
+                            <input type="number" id="age" class="form-control" placeholder="Years">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Card ID</label>
+                            <input type="text" id="cardId" class="form-control" placeholder="Optional">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Temperature (°C)</label>
+                            <input type="number" id="temp" class="form-control" placeholder="37.0" step="0.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Chronic Illness?</label>
+                            <select id="chronic" class="form-select">
+                                <option value="no">No</option>
+                                <option value="yes">Yes</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Screening Type</label>
+                            <select id="screenType" class="form-select">
+                                <option value="general">General</option>
+                                <option value="covid">COVID-19</option>
+                                <option value="tb">TB</option>
+                                <option value="malaria">Malaria</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-2">
+                        <label class="form-label">Symptoms</label>
+                        <textarea id="symptoms" class="form-control" rows="2" placeholder="fever, cough, fatigue, headache..."></textarea>
+                    </div>
+                    
+                    <div class="mt-3 d-flex gap-2">
+                        <button class="btn btn-primary" onclick="submitScreening()">
+                            <i class="fas fa-save me-1"></i> Save Screening
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="clearForm()">
+                            <i class="fas fa-times me-1"></i> Clear
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Records Table -->
+                <div id="recordsSection" class="panel">
+                    <h3><i class="fas fa-table me-2"></i>Screening Records</h3>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div class="d-flex gap-2">
+                            <input type="text" id="search" class="form-control" style="max-width: 200px;" placeholder="Search..." oninput="renderTable()">
+                            <select id="filterRisk" class="form-select" style="max-width: 140px;" onchange="renderTable()">
+                                <option value="">All Risks</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-secondary btn-sm" onclick="exportCSV()"><i class="fas fa-file-csv"></i></button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="exportJSON()"><i class="fas fa-download"></i></button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Age</th>
+                                    <th>Temp</th>
+                                    <th>Risk</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="emptyState" class="text-center text-muted py-4" style="display: none;">
+                        <i class="fas fa-vials fa-3x mb-3 opacity-50"></i>
+                        <p>No screenings recorded yet</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div>
+                <!-- Analytics -->
+                <div class="panel">
+                    <h3><i class="fas fa-chart-bar me-2"></i>Risk Analytics</h3>
+                    <canvas id="riskChart" height="200"></canvas>
+                </div>
+                
+                <!-- Selected Record -->
+                <div class="panel">
+                    <h3><i class="fas fa-user me-2"></i>Selected Record</h3>
+                    <div id="noSelection" class="text-muted small">Click "View" on a row to see details</div>
+                    <div id="recordCard" style="display:none;">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div id="rc-name" class="fw-bold fs-5"></div>
+                                <div id="rc-age" class="text-muted small"></div>
+                                <div id="rc-card" class="text-muted small"></div>
+                                <div id="rc-risk" class="mt-2 fw-bold"></div>
+                            </div>
+                            <div id="qrHolder"></div>
+                        </div>
+                        <div class="mt-3 d-flex gap-2">
+                            <button class="btn btn-primary btn-sm" onclick="downloadSelectedPDF()"><i class="fas fa-file-pdf me-1"></i>PDF</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="deselect()">Deselect</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Info Panel -->
+                <div class="panel">
+                    <h3><i class="fas fa-info-circle me-2"></i>Risk Scoring</h3>
+                    <div class="small text-muted">
+                        <p><strong>High Risk:</strong> Age ≥60, chronic illness, temp ≥37.5°C, danger symptoms</p>
+                        <p><strong>Medium Risk:</strong> Some symptoms present</p>
+                        <p><strong>Low Risk:</strong> No concerning factors</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        let screenings = [];
+        let selectedId = null;
+        let selectedPatient = null;
+        let chart = null;
+        
+        // Load on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadScreenings();
+            setupPatientSearch();
+        });
+        
+        // Patient Search
+        function setupPatientSearch() {
+            const searchInput = document.getElementById('patientSearch');
+            const resultsDiv = document.getElementById('patientResults');
+            let timeout = null;
+            
+            searchInput.addEventListener('input', function() {
+                clearTimeout(timeout);
+                const q = this.value.trim();
+                if (q.length < 2) { resultsDiv.innerHTML = ''; return; }
+                
+                timeout = setTimeout(() => {
+                    fetch('/api/health-worker/screening/search-patients?q=' + encodeURIComponent(q))
+                        .then(r => r.json())
+                        .then(result => {
+                            if (!result.success || !result.patients.length) {
+                                resultsDiv.innerHTML = '<div class="p-2 text-muted">No patients found</div>';
+                                return;
+                            }
+                            resultsDiv.innerHTML = result.patients.map(p => 
+                                `<div class="patient-result" onclick="selectPatient(${p.id}, '${escapeHtml(p.name)}', '${escapeHtml(p.uid)}', ${p.age || 0})">
+                                    <strong>${escapeHtml(p.name)}</strong>
+                                    <small class="text-muted ms-2">${p.uid || ''}</small>
+                                    ${p.age ? `<span class="badge bg-secondary ms-2">${p.age} yrs</span>` : ''}
+                                </div>`
+                            ).join('');
+                        });
+                }, 300);
+            });
+        }
+        
+        function selectPatient(id, name, uid, age) {
+    selectedPatient = { id, name, uid, age };
+    document.getElementById('patientId').value = id;
+    document.getElementById('patientSearch').value = name;
+    document.getElementById('patientResults').innerHTML = '';
+    document.getElementById('selectedPatientInfo').style.display = 'block';
+    document.getElementById('selectedPatientName').textContent = name;
+    document.getElementById('selectedPatientUid').textContent = uid || 'No UID';
+    document.getElementById('name').value = name || '';
+    document.getElementById('age').value = age || '';
+    document.getElementById('cardId').value = uid || '';
+}        
+        function loadScreenings() {
+            fetch('/api/health-worker/screening/list')
+                .then(r => r.json())
+                .then(result => {
+                    if (result.success) {
+                        screenings = result.screenings || [];
+                        renderAll();
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading screenings:', err);
+                    renderAll();
+                });
+        }
+        
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function clearForm() {
+            selectedPatient = null;
+            document.getElementById('patientId').value = '';
+            document.getElementById('patientSearch').value = '';
+            document.getElementById('selectedPatientInfo').style.display = 'none';
+            document.getElementById('age').value = '';
+            document.getElementById('cardId').value = '';
+            document.getElementById('temp').value = '';
+            document.getElementById('chronic').value = 'no';
+            document.getElementById('symptoms').value = '';
+            document.getElementById('screenType').value = 'general';
+        }
+        
+        function calculateRisk(data) {
+            let score = 0;
+            const keywords = ['fever','cough','breath','breathing','fatigue','pain','sore throat','loss of smell','headache','diarrhea'];
+            const symptoms = (data.symptoms || '').toLowerCase();
+            keywords.forEach(k => { if (symptoms.includes(k)) score += 1; });
+            
+            if (data.age >= 60) score += 2;
+            if (data.chronic === 'yes') score += 2;
+            if (data.temp && data.temp >= 37.5) score += 2;
+            
+            if (score >= 5) return 'High';
+            if (score >= 2) return 'Medium';
+            return 'Low';
+        }
+        
+        function submitScreening() {
+            if (!selectedPatient) {
+                alert('Please search and select a patient first.');
+                return;
+            }
+            
+            const age = parseInt(document.getElementById('age').value) || selectedPatient.age || 0;
+            const cardId = document.getElementById('cardId').value.trim();
+            const temp = parseFloat(document.getElementById('temp').value) || null;
+            const chronic = document.getElementById('chronic').value;
+            const symptoms = document.getElementById('symptoms').value.trim();
+            const screenType = document.getElementById('screenType').value;
+            
+            const risk = calculateRisk({ symptoms, age, chronic, temp });
+            
+            fetch('/api/health-worker/screening/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    patient_id: selectedPatient.id,
+                    temperature: temp,
+                    symptoms: symptoms,
+                    screening_type: screenType,
+                    chronic: chronic,
+                    card_id: cardId,
+                    risk: risk
+                })
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    alert('Screening saved! Risk: ' + risk);
+                    clearForm();
+                    loadScreenings();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to save'));
+                }
+            })
+            .catch(err => alert('Error: ' + err.message));
+        }
+        
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            const q = document.getElementById('search').value.toLowerCase();
+            const riskFilter = document.getElementById('filterRisk').value;
+            
+            const filtered = screenings.filter(s => {
+                if (riskFilter && s.risk !== riskFilter) return false;
+                if (!q) return true;
+                return (s.name && s.name.toLowerCase().includes(q)) || (s.cardId && s.cardId.toLowerCase().includes(q));
+            });
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            tbody.innerHTML = filtered.map(s => `
+                <tr>
+                    <td>
+                        <strong>${escapeHtml(s.name)}</strong>
+                        <small class="d-block text-muted">${s.cardId || ''}</small>
+                    </td>
+                    <td>${s.age || '--'}</td>
+                    <td>${s.temp ? s.temp + '°C' : '--'}</td>
+                    <td><span class="badge bg-${s.risk === 'High' ? 'danger' : s.risk === 'Medium' ? 'warning' : 'success'}">${s.risk}</span></td>
+                    <td>
+                        <button class="btn btn-outline-primary btn-sm" onclick="viewRecord(${s.id})"><i class="fas fa-eye"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="downloadRowPDF(${s.id})"><i class="fas fa-file-pdf"></i></button>
+                        <button class="btn btn-outline-danger btn-sm" onclick="deleteRecord(${s.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        function escapeHtml(s) {
+            if (!s) return '';
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, "\\'");
+        }
+        
+        function renderStats() {
+            document.getElementById('totalCount').textContent = screenings.length;
+            document.getElementById('highCount').textContent = screenings.filter(s => s.risk === 'High').length;
+            document.getElementById('mediumCount').textContent = screenings.filter(s => s.risk === 'Medium').length;
+            document.getElementById('lowCount').textContent = screenings.filter(s => s.risk === 'Low').length;
+        }
+        
+        function renderChart() {
+            const ctx = document.getElementById('riskChart');
+            const counts = {
+                High: screenings.filter(s => s.risk === 'High').length,
+                Medium: screenings.filter(s => s.risk === 'Medium').length,
+                Low: screenings.filter(s => s.risk === 'Low').length
+            };
+            
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['High Risk', 'Medium Risk', 'Low Risk'],
+                    datasets: [{ data: [counts.High, counts.Medium, counts.Low], backgroundColor: ['#dc3545', '#ffc107', '#198754'], borderWidth: 0 }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+        
+        function viewRecord(id) {
+            const s = screenings.find(x => x.id === id);
+            if (!s) return;
+            
+            selectedId = id;
+            document.getElementById('noSelection').style.display = 'none';
+            document.getElementById('recordCard').style.display = 'block';
+            document.getElementById('rc-name').textContent = s.name;
+            document.getElementById('rc-age').textContent = 'Age: ' + (s.age || 'N/A');
+            document.getElementById('rc-card').textContent = 'Card: ' + (s.cardId || 'N/A');
+            document.getElementById('rc-risk').textContent = 'Risk: ' + s.risk;
+            document.getElementById('rc-risk').className = 'mt-2 fw-bold text-' + (s.risk === 'High' ? 'danger' : s.risk === 'Medium' ? 'warning' : 'success');
+            
+            document.getElementById('qrHolder').innerHTML = '';
+            const qEl = document.createElement('div');
+            new QRCode(qEl, { text: JSON.stringify({id:s.id, name:s.name, risk:s.risk}), width:80, height:80 });
+            document.getElementById('qrHolder').appendChild(qEl);
+        }
+        
+        function deselect() {
+            selectedId = null;
+            document.getElementById('recordCard').style.display = 'none';
+            document.getElementById('noSelection').style.display = 'block';
+        }
+        
+        function deleteRecord(id) {
+            if (!confirm('Delete this screening?')) return;
+            
+            fetch('/api/health-worker/screening/delete/' + id, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(result => {
+                    if (result.success) {
+                        if (selectedId === id) deselect();
+                        loadScreenings();
+                    } else {
+                        alert('Error: ' + (result.error || 'Delete failed'));
+                    }
+                })
+                .catch(err => alert('Error: ' + err.message));
+        }
+        
+        async function downloadRowPDF(id) {
+            const s = screenings.find(x => x.id === id);
+            if (!s) return;
+            
+            const card = document.createElement('div');
+            card.style.cssText = 'width:350px; padding:24px; background:#fff; font-family:Arial;';
+            card.innerHTML = `
+                <div style="text-align:center; border-bottom:2px solid #E63946; padding-bottom:10px; margin-bottom:16px;">
+                    <h2 style="color:#E63946; margin:0;">Health Screening</h2>
+                    <small style="color:#666;">A3 Health Card</small>
+                </div>
+                <p><strong>Name:</strong> ${escapeHtml(s.name)}</p>
+                <p><strong>Card ID:</strong> ${escapeHtml(s.cardId || 'N/A')}</p>
+                <p><strong>Age:</strong> ${s.age || 'N/A'} years</p>
+                <p><strong>Temperature:</strong> ${s.temp ? s.temp + '°C' : 'N/A'}</p>
+                <p><strong>Symptoms:</strong> ${escapeHtml(s.symptoms) || 'None'}</p>
+                <div style="margin-top:16px; padding:10px; background:${s.risk === 'High' ? '#dc3545' : s.risk === 'Medium' ? '#ffc107' : '#198754'}; color:${s.risk === 'Medium' ? '#333' : '#fff'}; border-radius:8px; text-align:center;">
+                    <strong>Risk Level: ${s.risk}</strong>
+                </div>
+            `;
+            
+            document.body.appendChild(card);
+            try {
+                const canvas = await html2canvas(card);
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF();
+                pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 10, 10, 180, 0);
+                pdf.save((s.name || 'screening').replace(/\s+/g, '_') + '_screening.pdf');
+            } catch (e) { alert('PDF export failed'); }
+            card.remove();
+        }
+        
+        async function downloadSelectedPDF() { if (selectedId) await downloadRowPDF(selectedId); }
+        
+        function exportCSV() {
+            if (screenings.length === 0) return alert('No records');
+            const headers = ['Name', 'Age', 'CardID', 'Temp', 'Chronic', 'Symptoms', 'Risk', 'Date'];
+            const rows = screenings.map(s => [
+                s.name, s.age, s.cardId, s.temp, s.chronic, s.symptoms, s.risk, s.created
+            ].map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(','));
+            
+            const csv = [headers.join(','), ...rows].join('\n');
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'screenings.csv'; a.click();
+        }
+        
+        function exportJSON() {
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(screenings, null, 2)], {type:'application/json'})); a.download = 'screenings.json'; a.click();
+        }
+        
+        function renderAll() { renderTable(); renderStats(); renderChart(); }
+    </script>
+</body>
+</html>

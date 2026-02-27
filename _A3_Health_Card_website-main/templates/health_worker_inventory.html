@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory & Supply | Health Worker</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Shared Sidebar CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='health_worker_sidebar.css') }}">
+    
+    <style>
+        :root {
+            --primary-red: #E63946;
+            --primary-dark: #c1121f;
+            --bg-light: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-muted: #6c757d;
+            --success: #198754;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+        
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-light); margin: 0; display: flex; min-height: 100vh; }
+        
+        .main-content { margin-left: 260px; padding: 24px; width: calc(100% - 260px); min-height: 100vh; }
+        
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid var(--primary-red); }
+        .page-header h2 { color: var(--primary-red); font-weight: 700; margin: 0; }
+        
+        @media (max-width: 768px) { .main-content { margin-left: 0; width: 100%; padding: 16px; } }
+        
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-left: 4px solid var(--primary-red); }
+        .stat-card h4 { color: var(--text-muted); font-size: 14px; font-weight: 500; margin: 0 0 8px 0; }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: var(--primary-red); }
+        
+        .content-grid { display: grid; grid-template-columns: 1fr 380px; gap: 24px; }
+        @media (max-width: 1100px) { .content-grid { grid-template-columns: 1fr; } }
+        
+        .panel { background: var(--card-bg); border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .panel h3 { color: var(--primary-red); font-weight: 600; margin: 0 0 16px 0; padding-bottom: 12px; border-bottom: 1px solid #eee; }
+        
+        .form-label { font-weight: 500; color: var(--text-muted); margin-top: 12px; }
+        .form-control, .form-select { border-radius: 8px; padding: 10px 14px; }
+        .form-control:focus, .form-select:focus { border-color: var(--primary-red); box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.15); }
+        
+        .btn-primary { background: var(--primary-red); border-color: var(--primary-red); padding: 10px 20px; font-weight: 600; border-radius: 8px; }
+        .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+        
+        .table thead th { background: linear-gradient(135deg, var(--primary-red), var(--primary-dark)); color: white; font-weight: 600; border: none; padding: 12px; }
+        .table tbody td { padding: 12px; vertical-align: middle; }
+        .table tbody tr:hover { background: #fff5f5; }
+        
+        .low-stock { color: var(--danger); font-weight: 700; }
+        .ok-stock { color: var(--success); }
+        .expiring-soon { background: #fff3cd; }
+    </style>
+</head>
+<body>
+    {% set active_page = 'inventory' %}
+    {% include 'health_worker_sidebar.html' %}
+    
+    <main class="main-content">
+        <div class="page-header">
+            <h2><i class="fas fa-boxes me-2"></i>Inventory & Supply</h2>
+            <button class="btn btn-primary btn-sm" onclick="scrollToForm()"><i class="fas fa-plus me-1"></i> Add Item</button>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <h4><i class="fas fa-cubes me-1"></i> Total Items</h4>
+                <div class="value" id="totalItems">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--danger);">
+                <h4><i class="fas fa-exclamation-triangle me-1"></i> Low Stock</h4>
+                <div class="value" id="lowStock" style="color: var(--danger);">0</div>
+            </div>
+            <div class="stat-card" style="border-left-color: var(--success);">
+                <h4><i class="fas fa-check-circle me-1"></i> In Stock</h4>
+                <div class="value" id="inStock" style="color: var(--success);">0</div>
+            </div>
+            <div class="stat-card">
+                <h4><i class="fas fa-rupee-sign me-1"></i> Total Value</h4>
+                <div class="value" id="totalValue">₹0</div>
+            </div>
+        </div>
+        
+        <div class="content-grid">
+            <div>
+                <!-- Add Item Form -->
+                <div id="formSection" class="panel">
+                    <h3 id="formTitle"><i class="fas fa-edit me-2"></i>Add Inventory Item</h3>
+                    <input type="hidden" id="editingId">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Item Name *</label>
+                            <input type="text" id="itemName" class="form-control" placeholder="Medicine / Supply name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Category</label>
+                            <select id="category" class="form-select">
+                                <option value="Medicine">Medicine</option>
+                                <option value="Vaccine">Vaccine</option>
+                                <option value="Equipment">Equipment</option>
+                                <option value="Consumable">Consumable</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Quantity *</label>
+                            <input type="number" id="quantity" class="form-control" placeholder="100" min="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Unit</label>
+                            <select id="unit" class="form-select">
+                                <option value="pcs">Pieces</option>
+                                <option value="boxes">Boxes</option>
+                                <option value="vials">Vials</option>
+                                <option value="strips">Strips</option>
+                                <option value="bottles">Bottles</option>
+                                <option value="kg">Kg</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Unit Price (₹)</label>
+                            <input type="number" id="price" class="form-control" placeholder="50" min="0" step="0.01">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-2">
+                        <div class="col-md-4">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="date" id="expiry" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Min Stock Level</label>
+                            <input type="number" id="minStock" class="form-control" placeholder="10" min="0">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Batch Number</label>
+                            <input type="text" id="batchNumber" class="form-control" placeholder="Optional">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Supplier</label>
+                            <input type="text" id="supplier" class="form-control" placeholder="Supplier name (optional)">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Notes</label>
+                            <input type="text" id="notes" class="form-control" placeholder="Additional notes">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 d-flex gap-2">
+                        <button class="btn btn-primary" id="saveBtn" onclick="saveItem()"><i class="fas fa-save me-1"></i> Save Item</button>
+                        <button class="btn btn-outline-secondary" onclick="clearForm()">Clear</button>
+                    </div>
+                </div>
+                
+                <!-- Inventory Table -->
+                <div class="panel">
+                    <h3><i class="fas fa-table me-2"></i>Inventory List</h3>
+                    
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        <input type="text" id="search" class="form-control" style="max-width: 200px;" placeholder="Search..." oninput="renderTable()">
+                        <select id="filterCategory" class="form-select" style="max-width: 150px;" onchange="renderTable()">
+                            <option value="">All Categories</option>
+                            <option value="Medicine">Medicine</option>
+                            <option value="Vaccine">Vaccine</option>
+                            <option value="Equipment">Equipment</option>
+                            <option value="Consumable">Consumable</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="exportCSV()" title="Export CSV"><i class="fas fa-file-csv"></i></button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="loadInventory()" title="Refresh"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead><tr><th>Item</th><th>Category</th><th>Stock</th><th>Value</th><th>Actions</th></tr></thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="emptyState" class="text-center text-muted py-4" style="display: none;">
+                        <i class="fas fa-boxes fa-3x mb-3 opacity-50"></i>
+                        <p>No items in inventory</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div>
+                <div class="panel">
+                    <h3><i class="fas fa-chart-pie me-2"></i>Category Distribution</h3>
+                    <canvas id="categoryChart" height="200"></canvas>
+                </div>
+                
+                <!-- Low Stock Alerts -->
+                <div class="panel">
+                    <h3><i class="fas fa-exclamation-circle me-2"></i>Low Stock Alerts</h3>
+                    <div id="lowStockList" class="small">
+                        <p class="text-muted">No alerts</p>
+                    </div>
+                </div>
+                
+                <!-- Expiring Soon -->
+                <div class="panel">
+                    <h3><i class="fas fa-calendar-times me-2"></i>Expiring Soon</h3>
+                    <div id="expiringList" class="small">
+                        <p class="text-muted">No items expiring soon</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        let items = [];
+        let chart = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInventory();
+        });
+        
+        function scrollToForm() {
+            clearForm();
+            document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('itemName').focus();
+        }
+        
+        function clearForm() {
+            document.getElementById('editingId').value = '';
+            document.getElementById('itemName').value = '';
+            document.getElementById('category').value = 'Medicine';
+            document.getElementById('quantity').value = '';
+            document.getElementById('unit').value = 'pcs';
+            document.getElementById('price').value = '';
+            document.getElementById('expiry').value = '';
+            document.getElementById('minStock').value = '';
+            document.getElementById('batchNumber').value = '';
+            document.getElementById('supplier').value = '';
+            document.getElementById('notes').value = '';
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Add Inventory Item';
+            document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save me-1"></i> Save Item';
+        }
+        
+        // Load inventory from backend
+        async function loadInventory() {
+            try {
+                const response = await fetch('/api/health-worker/inventory');
+                const result = await response.json();
+                if (result.success) {
+                    items = result.items;
+                    renderAll();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to load'));
+                }
+            } catch (err) {
+                console.error('Load error:', err);
+                alert('Failed to load inventory');
+            }
+        }
+        
+        // Save item
+        async function saveItem() {
+            const itemName = document.getElementById('itemName').value.trim();
+            const quantity = document.getElementById('quantity').value;
+            
+            if (!itemName) { alert('Please enter item name.'); return; }
+            if (!quantity || parseInt(quantity) < 0) { alert('Please enter valid quantity.'); return; }
+            
+            const editingId = document.getElementById('editingId').value;
+            
+            const payload = {
+                item_name: itemName,
+                category: document.getElementById('category').value,
+                quantity: parseInt(quantity),
+                unit: document.getElementById('unit').value,
+                unit_price: parseFloat(document.getElementById('price').value) || 0,
+                expiry_date: document.getElementById('expiry').value || null,
+                min_stock_level: parseInt(document.getElementById('minStock').value) || 0,
+                batch_number: document.getElementById('batchNumber').value.trim(),
+                supplier: document.getElementById('supplier').value.trim(),
+                notes: document.getElementById('notes').value.trim()
+            };
+            
+            try {
+                let url = '/api/health-worker/inventory/add';
+                if (editingId) {
+                    url = '/api/health-worker/inventory/' + editingId + '/update';
+                }
+                
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert(editingId ? 'Item updated!' : 'Item added!');
+                    clearForm();
+                    loadInventory();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to save'));
+                }
+            } catch (err) {
+                console.error('Save error:', err);
+                alert('Failed to save item.');
+            }
+        }
+        
+        // Edit item
+        function editItem(id) {
+            const item = items.find(function(i) { return i.id === id; });
+            if (!item) { alert('Item not found'); return; }
+            
+            document.getElementById('editingId').value = item.id;
+            document.getElementById('itemName').value = item.item_name || '';
+            document.getElementById('category').value = item.category || 'Medicine';
+            document.getElementById('quantity').value = item.quantity || 0;
+            document.getElementById('unit').value = item.unit || 'pcs';
+            document.getElementById('price').value = item.unit_price || 0;
+            document.getElementById('expiry').value = item.expiry_date || '';
+            document.getElementById('minStock').value = item.min_stock_level || 0;
+            document.getElementById('batchNumber').value = item.batch_number || '';
+            document.getElementById('supplier').value = item.supplier || '';
+            document.getElementById('notes').value = item.notes || '';
+            
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Item';
+            document.getElementById('saveBtn').innerHTML = '<i class="fas fa-save me-1"></i> Update Item';
+            document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Adjust stock
+        async function adjustStock(id, delta) {
+            try {
+                const response = await fetch('/api/health-worker/inventory/' + id + '/adjust', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ delta: delta })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    loadInventory();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to adjust'));
+                }
+            } catch (err) {
+                console.error('Adjust error:', err);
+            }
+        }
+        
+        // Delete item
+        async function deleteItem(id) {
+            if (!confirm('Delete this item?')) return;
+            
+            try {
+                const response = await fetch('/api/health-worker/inventory/' + id + '/delete', { method: 'DELETE' });
+                const result = await response.json();
+                if (result.success) {
+                    loadInventory();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to delete'));
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
+            }
+        }
+        
+        // Render table
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const empty = document.getElementById('emptyState');
+            const q = document.getElementById('search').value.toLowerCase();
+            const catFilter = document.getElementById('filterCategory').value;
+            
+            const filtered = items.filter(function(item) {
+                if (catFilter && item.category !== catFilter) return false;
+                if (!q) return true;
+                return item.item_name.toLowerCase().indexOf(q) >= 0;
+            });
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            empty.style.display = 'none';
+            let html = '';
+            
+            for (let i = 0; i < filtered.length; i++) {
+                const item = filtered[i];
+                const isLow = item.min_stock_level && item.quantity <= item.min_stock_level;
+                const stockClass = isLow ? 'low-stock' : 'ok-stock';
+                const totalVal = item.quantity * item.unit_price;
+                
+                html += '<tr>';
+                html += '<td><strong>' + escapeHtml(item.item_name) + '</strong>';
+                if (item.expiry_date) html += '<small class="d-block text-muted">Exp: ' + item.expiry_date + '</small>';
+                if (item.batch_number) html += '<small class="d-block text-muted">Batch: ' + item.batch_number + '</small>';
+                html += '</td>';
+                html += '<td><span class="badge bg-secondary">' + item.category + '</span></td>';
+                html += '<td class="' + stockClass + '">' + item.quantity + ' ' + item.unit + '</td>';
+                html += '<td>₹' + totalVal.toLocaleString() + '</td>';
+                html += '<td>';
+                html += '<button class="btn btn-outline-success btn-sm" onclick="adjustStock(' + item.id + ', 1)" title="Add"><i class="fas fa-plus"></i></button> ';
+                html += '<button class="btn btn-outline-warning btn-sm" onclick="adjustStock(' + item.id + ', -1)" title="Remove"><i class="fas fa-minus"></i></button> ';
+                html += '<button class="btn btn-outline-primary btn-sm" onclick="editItem(' + item.id + ')" title="Edit"><i class="fas fa-edit"></i></button> ';
+                html += '<button class="btn btn-outline-danger btn-sm" onclick="deleteItem(' + item.id + ')" title="Delete"><i class="fas fa-trash"></i></button>';
+                html += '</td>';
+                html += '</tr>';
+            }
+            
+            tbody.innerHTML = html;
+        }
+        
+        function escapeHtml(s) {
+            if (!s) return '';
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        
+        function renderStats() {
+            const totalValue = items.reduce(function(sum, i) { return sum + (i.quantity * i.unit_price); }, 0);
+            const lowStockItems = items.filter(function(i) { return i.min_stock_level && i.quantity <= i.min_stock_level; });
+            
+            document.getElementById('totalItems').textContent = items.length;
+            document.getElementById('lowStock').textContent = lowStockItems.length;
+            document.getElementById('inStock').textContent = items.length - lowStockItems.length;
+            document.getElementById('totalValue').textContent = '₹' + totalValue.toLocaleString();
+            
+            // Low stock list
+            const lowList = document.getElementById('lowStockList');
+            if (lowStockItems.length === 0) {
+                lowList.innerHTML = '<p class="text-muted mb-0">No low stock alerts</p>';
+            } else {
+                let html = '';
+                for (let i = 0; i < lowStockItems.length; i++) {
+                    html += '<div class="text-danger mb-1"><i class="fas fa-exclamation-triangle me-1"></i>' + escapeHtml(lowStockItems[i].item_name) + ': ' + lowStockItems[i].quantity + ' left</div>';
+                }
+                lowList.innerHTML = html;
+            }
+            
+            // Expiring soon (within 30 days)
+            const today = new Date();
+            const thirtyDays = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+            const expiringItems = items.filter(function(i) {
+                if (!i.expiry_date) return false;
+                const exp = new Date(i.expiry_date);
+                return exp <= thirtyDays && exp >= today;
+            });
+            
+            const expList = document.getElementById('expiringList');
+            if (expiringItems.length === 0) {
+                expList.innerHTML = '<p class="text-muted mb-0">No items expiring soon</p>';
+            } else {
+                let html = '';
+                for (let i = 0; i < expiringItems.length; i++) {
+                    html += '<div class="text-warning mb-1"><i class="fas fa-calendar-times me-1"></i>' + escapeHtml(expiringItems[i].item_name) + ': ' + expiringItems[i].expiry_date + '</div>';
+                }
+                expList.innerHTML = html;
+            }
+        }
+        
+        function renderChart() {
+            const ctx = document.getElementById('categoryChart');
+            const categories = {};
+            for (let i = 0; i < items.length; i++) {
+                categories[items[i].category] = (categories[items[i].category] || 0) + 1;
+            }
+            
+            if (chart) chart.destroy();
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categories),
+                    datasets: [{
+                        data: Object.values(categories),
+                        backgroundColor: ['#E63946', '#198754', '#0d6efd', '#ffc107', '#6c757d'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+        
+        function exportCSV() {
+            if (items.length === 0) { alert('No data to export'); return; }
+            
+            const headers = ['Name', 'Category', 'Quantity', 'Unit', 'Price', 'Total Value', 'Expiry', 'MinStock', 'Batch', 'Supplier'];
+            let csv = headers.join(',') + '\n';
+            
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const row = [
+                    item.item_name,
+                    item.category,
+                    item.quantity,
+                    item.unit,
+                    item.unit_price,
+                    item.quantity * item.unit_price,
+                    item.expiry_date || '',
+                    item.min_stock_level || '',
+                    item.batch_number || '',
+                    item.supplier || ''
+                ];
+                csv += row.map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(',') + '\n';
+            }
+            
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+            a.download = 'inventory.csv';
+            a.click();
+        }
+        
+        function renderAll() {
+            renderTable();
+            renderStats();
+            renderChart();
+        }
+    </script>
+</body>
+</html>

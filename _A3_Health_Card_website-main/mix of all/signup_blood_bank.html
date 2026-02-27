@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blood Bank Signup | A3 Health Card</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+
+  <!-- Theme CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}" />
+  <!-- Custom CSS -->
+  <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet" />
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <nav class="navbar navbar-expand-lg" role="navigation" aria-label="Main Navigation">
+    <div class="container">
+      <h2><a class="navbar-brand fw-bold" href="{{ url_for('index') }}">A3 Health Card</a></h2>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center align-items-start gap-lg-2 gap-1 mt-2 mt-lg-0">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#home">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#about">About Us</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#a3">A3 Concept</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#blog">Blog</a></li>
+          <li class="nav-item">
+            <a class="btn emergency-btn" href="{{ url_for('index') }}#emergency-login" role="button">Emergency Login</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Signup Section -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="card shadow-sm">
+            <div class="card-body p-5">
+              <h2 class="card-title text-center mb-4 fw-bold">Register Your Blood Bank</h2>
+              <p class="text-muted text-center mb-4">Provide your organization details to partner with A3 Health Card for life-saving support.</p>
+              
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                  {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+                      {{ message }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endwith %}
+              
+              <form method="POST" action="{{ url_for('signup', user_type='blood_bank') }}">
+                <fieldset>
+                  <legend class="h5 fw-semibold mb-3">Organization Information</legend>
+
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label for="facilityName" class="form-label">Facility Name <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="facilityName" name="facilityName" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="licenseNumber" class="form-label">License / Registration Number <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="licenseNumber" name="licenseNumber" required>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-0">
+                    <div class="col-md-6">
+                      <label for="officialEmail" class="form-label">Official Email Address <span class="text-danger">*</span></label>
+                      <input type="email" class="form-control" id="officialEmail" name="officialEmail" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="contactPhone" class="form-label">Primary Contact Phone <span class="text-danger">*</span></label>
+                      <input type="tel" class="form-control" id="contactPhone" name="contactPhone" pattern="[0-9]{10}" placeholder="Enter 10-digit number" required>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <fieldset class="mt-4">
+                  <legend class="h5 fw-semibold mb-3">Location Details</legend>
+
+                  <div class="mb-3">
+                    <label for="addressLine" class="form-label">Address Line <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="addressLine" name="addressLine" required>
+                  </div>
+
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="city" name="city" required>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="state" class="form-label">State / Province <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="state" name="state" required>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="postalCode" class="form-label">PIN / Postal Code <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="postalCode" name="postalCode"  placeholder="Enter postal/ZIP code" required>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <fieldset class="mt-4">
+                  <legend class="h5 fw-semibold mb-3">Operational Details</legend>
+
+                  <div class="mb-3">
+                    <label for="bloodBankType" class="form-label">Blood Bank Type <span class="text-danger">*</span></label>
+                    <select class="form-select" id="bloodBankType" name="bloodBankType" required>
+                      <option value="" selected disabled>Select type</option>
+                      <option value="government">Government</option>
+                      <option value="private">Private</option>
+                      <option value="ngo">NGO</option>
+                      <option value="hospital-based">Hospital-based</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="operatingHours" class="form-label">Operating Hours <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="operatingHours" name="operatingHours" placeholder="e.g., 9:00 AM - 9:00 PM" required>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Services Offered</label>
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" value="donor-collection" id="serviceDonorCollection" name="services">
+                          <label class="form-check-label" for="serviceDonorCollection">Donor Collection</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" value="component-separation" id="serviceComponentSeparation" name="services">
+                          <label class="form-check-label" for="serviceComponentSeparation">Component Separation</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" value="screening" id="serviceScreening" name="services">
+                          <label class="form-check-label" for="serviceScreening">Screening & Testing</label>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" value="emergency-supply" id="serviceEmergencySupply" name="services">
+                          <label class="form-check-label" for="serviceEmergencySupply">Emergency Supply</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" value="mobile-camps" id="serviceMobileCamps" name="services">
+                          <label class="form-check-label" for="serviceMobileCamps">Mobile Donation Camps</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" value="other" id="serviceOther" name="services">
+                          <label class="form-check-label" for="serviceOther">Other</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="storageCapacity" class="form-label">Storage Capacity (Optional)</label>
+                    <input type="text" class="form-control" id="storageCapacity" name="storageCapacity" placeholder="e.g., 500 units">
+                  </div>
+                </fieldset>
+
+                <fieldset class="mt-4">
+                  <legend class="h5 fw-semibold mb-3">Compliance &amp; Documents</legend>
+
+                  <div class="mb-3">
+                    <label for="licenseDocument" class="form-label">Upload License / Accreditation Certificate <span class="text-danger">*</span></label>
+                    <input type="file" class="form-control" id="licenseDocument" name="licenseDocument" accept=".pdf,.jpg,.jpeg,.png" required>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="idProof" class="form-label">Upload ID Proof of Authorized Person <span class="text-danger">*</span></label>
+                    <input type="file" class="form-control" id="idProof" name="idProof" accept=".pdf,.jpg,.jpeg,.png" required>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="fireSafetyCertificate" class="form-label">Upload Fire Safety / Regulatory Certificate (Optional)</label>
+                    <input type="file" class="form-control" id="fireSafetyCertificate" name="fireSafetyCertificate" accept=".pdf,.jpg,.jpeg,.png">
+                  </div>
+                </fieldset>
+
+                <fieldset class="mt-4">
+                  <legend class="h5 fw-semibold mb-3">Authorized Contact Person</legend>
+
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label for="contactPersonName" class="form-label">Contact Person Name <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="contactPersonName" name="contactPersonName" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="contactPersonDesignation" class="form-label">Designation <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="contactPersonDesignation" name="contactPersonDesignation" required>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-0">
+                    <div class="col-md-6">
+                      <label for="contactPersonMobile" class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                      <input type="tel" class="form-control" id="contactPersonMobile" name="contactPersonMobile" pattern="[0-9]{10}" placeholder="Enter 10-digit number" required>
+                    </div>
+                    <div class="col-md-6">
+                      <label for="alternateEmail" class="form-label">Alternate Email (Optional)</label>
+                      <input type="email" class="form-control" id="alternateEmail" name="alternateEmail">
+                    </div>
+                  </div>
+                
+                  <div class="mb-3">
+                    <label for="country" class="form-label">Country <span class="text-danger">*</span></label>
+                    <select class="form-select" id="country" name="country" required>
+                      <option value="" selected disabled>Select your country</option>
+                      <option value="India">India</option>
+                      <option value="United States">United States</option>
+                      <option value="United Kingdom">United Kingdom</option>
+                      <option value="Canada">Canada</option>
+                      <option value="Australia">Australia</option>
+                      <option value="Germany">Germany</option>
+                      <option value="France">France</option>
+                      <option value="China">China</option>
+                      <option value="Japan">Japan</option>
+                      <option value="Brazil">Brazil</option>
+                      <option value="South Africa">South Africa</option>
+                      <option value="Mexico">Mexico</option>
+                      <option value="Italy">Italy</option>
+                      <option value="Spain">Spain</option>
+                      <option value="Russia">Russia</option>
+                      <option value="Saudi Arabia">Saudi Arabia</option>
+                      <option value="UAE">UAE</option>
+                      <option value="Singapore">Singapore</option>
+                      <option value="Malaysia">Malaysia</option>
+                      <option value="Thailand">Thailand</option>
+                      <option value="Pakistan">Pakistan</option>
+                      <option value="Bangladesh">Bangladesh</option>
+                      <option value="Sri Lanka">Sri Lanka</option>
+                      <option value="Nepal">Nepal</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+</fieldset>
+
+                <fieldset class="mt-4">
+                  <legend class="h5 fw-semibold mb-3">Account Security</legend>
+
+                  <div class="mb-3">
+                    <label for="createPassword" class="form-label">Create Password <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                      <input type="password" class="form-control" id="createPassword" name="createPassword" minlength="8" required>
+                      <button class="btn btn-outline-secondary" type="button" id="togglePassword">Show Password</button>
+                    </div>
+                    <div class="form-text">Password must be at least 8 characters long.</div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" minlength="8" required>
+                  </div>
+                </fieldset>
+
+                <button type="submit" class="btn btn-primary w-100" style="background-color: var(--primary-red); border: none;">Create Account</button>
+              </form>
+              <div class="text-center mt-3">
+                <span class="text-muted">Already registered?</span>
+                <a href="{{ url_for('login', user_type='blood_bank') }}" class="text-decoration-none fw-semibold">Log in</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container text-center">
+      <div class="mb-2">© 2025 A3 Health Card. All rights reserved.</div>
+      <div class="footer-links">
+        <a href="#terms">Terms &amp; Privacy</a>
+        <span class="sep">•</span>
+        <a href="#help">Help</a>
+        <span class="sep">•</span>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS (with Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script>
+    (function () {
+      const passwordField = document.querySelector('#createPassword');
+      const toggleButton = document.querySelector('#togglePassword');
+
+      if (!passwordField || !toggleButton) return;
+
+      toggleButton.addEventListener('click', () => {
+        const isHidden = passwordField.type === 'password';
+        passwordField.type = isHidden ? 'text' : 'password';
+        toggleButton.textContent = isHidden ? 'Hide Password' : 'Show Password';
+        toggleButton.setAttribute('aria-pressed', String(isHidden));
+      });
+    })();
+  </script>
+</body>
+</html>
+

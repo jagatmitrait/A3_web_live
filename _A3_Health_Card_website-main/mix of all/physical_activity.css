@@ -1,0 +1,740 @@
+/* ===========================================
+   Physical Activity Module Styles
+   A3 Health Card - Red & White Theme
+   =========================================== */
+
+/* CSS Variables for Physical Activity Theme - Matching Diet Plan */
+:root {
+    --pa-primary: #d7263d;
+    --pa-primary-dark: #a61a2c;
+    --pa-primary-light: #fce4e8;
+    --pa-secondary: #667eea;
+    --pa-success: #27ae60;
+    --pa-warning: #f1c40f;
+    --pa-danger: #e74c3c;
+    --pa-text: #1a1a2e;
+    --pa-text-light: #6c757d;
+    --pa-border: #e9ecef;
+    --pa-bg: #f8f9fa;
+    --pa-card-radius: 16px;
+    --pa-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.pa-container {
+    padding: 20px;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Tab Navigation */
+.pa-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 12px;
+}
+
+.pa-tab {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #6c757d;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pa-tab:hover {
+    background: rgba(243, 156, 18, 0.1);
+    color: var(--pa-primary);
+}
+
+.pa-tab.active {
+    background: var(--pa-primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+}
+
+.pa-tab i {
+    font-size: 1rem;
+}
+
+/* Tab Content */
+.pa-tab-content {
+    display: none;
+}
+
+.pa-tab-content.active {
+    display: block;
+}
+
+/* Stats Grid */
+.pa-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.pa-stat-card {
+    background: white;
+    border-radius: var(--pa-card-radius);
+    padding: 20px;
+    box-shadow: var(--pa-shadow);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pa-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.pa-stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: white;
+}
+
+.pa-stat-content {
+    flex: 1;
+}
+
+.pa-stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--pa-text);
+    line-height: 1.2;
+}
+
+.pa-stat-label {
+    font-size: 0.85rem;
+    color: var(--pa-text-light);
+}
+
+/* Section Cards */
+.pa-section-card {
+    background: white;
+    border-radius: var(--pa-card-radius);
+    padding: 20px;
+    box-shadow: var(--pa-shadow);
+    margin-bottom: 20px;
+}
+
+.pa-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.pa-section-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--pa-text);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pa-section-header h3 i {
+    color: var(--pa-primary);
+}
+
+.pa-btn-link {
+    background: none;
+    border: none;
+    color: var(--pa-primary);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+}
+
+.pa-btn-link:hover {
+    text-decoration: underline;
+}
+
+/* Quick Actions */
+.pa-quick-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.pa-action-btn {
+    padding: 12px 24px;
+    border: 2px solid var(--pa-border);
+    background: white;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    color: var(--pa-text);
+}
+
+.pa-action-btn:hover {
+    border-color: var(--pa-primary);
+    color: var(--pa-primary);
+}
+
+.pa-action-btn.pa-action-primary {
+    background: linear-gradient(135deg, var(--pa-primary) 0%, var(--pa-primary-dark) 100%);
+    border: none;
+    color: white;
+}
+
+.pa-action-btn.pa-action-primary:hover {
+    box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Empty States */
+.pa-empty-state-small {
+    text-align: center;
+    padding: 30px;
+    color: var(--pa-text-light);
+}
+
+.pa-empty-state-small i {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+    opacity: 0.5;
+    color: var(--pa-primary);
+}
+
+.pa-empty-state-small p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* Weekly Progress */
+.pa-weekly-progress {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.pa-progress-stat {
+    text-align: center;
+}
+
+/* Exercise Filters */
+.pa-exercise-filters {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.pa-progress-label {
+    font-size: 0.85rem;
+    color: var(--pa-text-light);
+    margin-bottom: 4px;
+}
+
+.pa-progress-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--pa-text);
+    margin-bottom: 8px;
+}
+
+.pa-progress-bar {
+    height: 8px;
+    background: var(--pa-border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.pa-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--pa-primary) 0%, var(--pa-primary-dark) 100%);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+/* Loading State */
+.pa-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px;
+}
+
+.pa-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--pa-border);
+    border-top-color: var(--pa-primary);
+    border-radius: 50%;
+    animation: pa-spin 0.8s linear infinite;
+}
+
+@keyframes pa-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Workout Card */
+.pa-workout-card {
+    background: white;
+    border: 1px solid var(--pa-border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.2s;
+}
+
+.pa-workout-card:hover {
+    border-color: var(--pa-primary);
+    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.1);
+}
+
+.pa-workout-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--pa-primary-light);
+    color: var(--pa-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.pa-workout-info {
+    flex: 1;
+}
+
+.pa-workout-name {
+    font-weight: 600;
+    color: var(--pa-text);
+    margin-bottom: 4px;
+}
+
+.pa-workout-meta {
+    font-size: 0.85rem;
+    color: var(--pa-text-light);
+    display: flex;
+    gap: 12px;
+}
+
+.pa-workout-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pa-workout-calories {
+    font-weight: 600;
+    color: var(--pa-secondary);
+}
+
+/* Exercise Card */
+.pa-exercise-card {
+    background: white;
+    border: 1px solid var(--pa-border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.pa-exercise-card:hover {
+    border-color: var(--pa-primary);
+    transform: translateY(-2px);
+    box-shadow: var(--pa-shadow);
+}
+
+.pa-exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.pa-exercise-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--pa-text);
+}
+
+.pa-exercise-category {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--pa-primary-light);
+    color: var(--pa-primary-dark);
+    font-weight: 500;
+}
+
+.pa-exercise-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 0.85rem;
+    color: var(--pa-text-light);
+}
+
+.pa-difficulty-badge {
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.pa-difficulty-badge.easy {
+    background: #d4edda;
+    color: #155724;
+}
+
+.pa-difficulty-badge.medium {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.pa-difficulty-badge.hard {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Goal Card */
+.pa-goal-card {
+    background: white;
+    border: 1px solid var(--pa-border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.pa-goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.pa-goal-name {
+    font-weight: 600;
+    color: var(--pa-text);
+}
+
+.pa-goal-progress {
+    margin-bottom: 8px;
+}
+
+.pa-goal-progress-text {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+}
+
+.pa-goal-current {
+    font-weight: 600;
+    color: var(--pa-primary);
+}
+
+/* Modals */
+.pa-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.pa-modal.show {
+    display: flex;
+}
+
+.pa-modal-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.pa-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--pa-border);
+}
+
+.pa-modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.pa-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--pa-text-light);
+}
+
+.pa-modal-body {
+    padding: 24px;
+}
+
+.pa-modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--pa-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Form Styles */
+.pa-form-group {
+    margin-bottom: 16px;
+}
+
+.pa-form-group label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 6px;
+    color: var(--pa-text);
+    font-size: 0.9rem;
+}
+
+.pa-form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--pa-border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.pa-form-control:focus {
+    outline: none;
+    border-color: var(--pa-primary);
+}
+
+.pa-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pa-btn-primary {
+    background: linear-gradient(135deg, var(--pa-primary) 0%, var(--pa-primary-dark) 100%);
+    color: white;
+}
+
+.pa-btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+}
+
+.pa-btn-secondary {
+    background: var(--pa-border);
+    color: var(--pa-text);
+}
+
+.pa-btn-secondary:hover {
+    background: #ddd;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .pa-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pa-weekly-progress {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .pa-tab span {
+        display: none;
+    }
+
+    .pa-tab {
+        padding: 10px 14px;
+    }
+
+    .pa-stats-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .pa-quick-actions {
+        flex-direction: column;
+    }
+
+    .pa-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .pa-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Exercise Grid */
+.pa-exercise-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+/* Category Badges */
+.pa-category-cardio {
+    background: #ffe0e0 !important;
+    color: #e74c3c !important;
+}
+
+.pa-category-strength {
+    background: #e0f0ff !important;
+    color: #3498db !important;
+}
+
+.pa-category-yoga {
+    background: #e0ffe0 !important;
+    color: #27ae60 !important;
+}
+
+.pa-category-hiit {
+    background: #ffe8e0 !important;
+    color: #e67e22 !important;
+}
+
+.pa-category-dance {
+    background: #ffe0f5 !important;
+    color: #e91e63 !important;
+}
+
+.pa-category-sports {
+    background: #fff7e0 !important;
+    color: #f39c12 !important;
+}
+
+/* Achievement Card */
+.pa-achievement-card {
+    background: white;
+    border: 2px solid var(--pa-border);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.pa-achievement-card.earned {
+    border-color: #ffd700;
+    background: linear-gradient(135deg, #fffdf0 0%, #fff9e0 100%);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.pa-achievement-card.earned .pa-achievement-points {
+    color: #27ae60;
+}
+
+.pa-achievement-card.locked {
+    opacity: 0.6;
+    background: #f8f9fa;
+}
+
+.pa-achievement-card.locked .pa-achievement-icon {
+    filter: grayscale(50%);
+}
+
+.pa-achievement-icon {
+    font-size: 3rem;
+    margin-bottom: 12px;
+}
+
+.pa-achievement-name {
+    font-weight: 600;
+    color: var(--pa-text);
+    margin-bottom: 8px;
+}
+
+.pa-achievement-desc {
+    font-size: 0.85rem;
+    color: var(--pa-text-light);
+}
+
+.pa-achievement-points {
+    margin-top: 12px;
+    font-weight: 600;
+    color: #ffd700;
+}
+
+/* Schedule Item */
+.pa-schedule-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: white;
+    border: 1px solid var(--pa-border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+.pa-schedule-time {
+    min-width: 80px;
+    text-align: center;
+    padding: 8px;
+    background: var(--pa-primary-light);
+    border-radius: 8px;
+    font-weight: 600;
+    color: var(--pa-primary-dark);
+}
+
+.pa-schedule-info {
+    flex: 1;
+}
+
+.pa-schedule-title {
+    font-weight: 600;
+    color: var(--pa-text);
+}
+
+.pa-schedule-duration {
+    font-size: 0.85rem;
+    color: var(--pa-text-light);
+}

@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MNC Dashboard | A3 Health Card</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!--
+
+ Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mnc_dashboard.css') }}">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Leaflet JS for Maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="header-left">
+            <h1 class="brand-logo">A3 Health Card</h1>
+        </div>
+        <div class="header-right">
+            <button class="icon-btn" id="refreshBtn" title="Refresh">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <button class="icon-btn notification-btn" id="notificationBtn" title="Notifications">
+                <i class="fas fa-bell"></i>
+                <span class="badge-count" id="notif-count">0</span>
+            </button>
+            <div class="user-profile" id="userProfileBtn">
+                <img src="https://ui-avatars.com/api/?name={{ user.full_name or 'User' }}&background=d32f2f&color=fff" alt="Profile" class="profile-img">
+                <span class="user-name">{{ user.mnc_name or 'Company' }}</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="dashboard-container">
+        <!-- Left Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="overview">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard Overview</span>
+                </a>
+                <a href="#" class="nav-item" data-page="employees">
+                    <i class="fas fa-users"></i>
+                    <span>Employee Directory</span>
+                </a>
+                <a href="#" class="nav-item" data-page="fitness">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>Fitness Assessment</span>
+                </a>
+                <a href="#" class="nav-item" data-page="health-trends">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Health Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-page="vaccination">
+                    <i class="fas fa-syringe"></i>
+                    <span>Vaccination Compliance</span>
+                </a>
+                <a href="#" class="nav-item" data-page="incidents">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Incident Reports</span>
+                </a>
+                <a href="#" class="nav-item" data-page="compliance">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>Compliance & Audit</span>
+                </a>
+                <a href="#" class="nav-item" data-page="reports">
+                    <i class="fas fa-file-export"></i>
+                    <span>Export Reports</span>
+                </a>
+                
+                <div class="nav-divider"></div>
+                
+                <a href="{{ url_for('logout') }}" class="nav-item logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            
+            <!-- OVERVIEW PAGE -->
+            <div class="page-content active" id="overview-page">
+                <div class="page-header">
+                    <h2 class="page-title">Corporate Health Dashboard</h2>
+                    <p class="page-subtitle">Monitor workforce health and ensure compliance</p>
+                </div>
+
+                <!-- Privacy Notice -->
+                <div class="alert alert-info privacy-alert">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    <strong>Privacy Commitment:</strong> Employee health summaries are displayed with respect for privacy. Full medical details are never accessible to employers.
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card primary-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-label">Total Employees</span>
+                            <h3 class="stat-value" id="stat-total">0</h3>
+                            <span class="stat-change positive">Enrolled in system</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card success-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-label">Fit for Duty</span>
+                            <h3 class="stat-value" id="stat-fit">0</h3>
+                            <span class="stat-change positive">Medically cleared</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card warning-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-label">Under Review</span>
+                            <h3 class="stat-value" id="stat-review">0</h3>
+                            <span class="stat-change">Pending evaluation</span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card danger-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-ban"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-label">Temporarily Unfit</span>
+                            <h3 class="stat-value" id="stat-unfit">0</h3>
+                            <span class="stat-change negative">Require attention</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Cards -->
+                <div class="row g-4 mt-4">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0"><i class="fas fa-bell me-2"></i>Active Alerts</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="alerts-container">
+                                    <div class="alert-item info">
+                                        <div class="alert-icon">
+                                            <i class="fas fa-info-circle"></i>
+                                        </div>
+                                        <div class="alert-content">
+                                            <strong>System Ready</strong>
+                                            <p>Dashboard operational. No critical alerts.</p>
+                                        </div>
+                                        <span class="alert-time">Just now</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="quick-actions-list">
+                                    <button class="quick-action-btn" onclick="navigateToPage('employees')">
+                                        <i class="fas fa-users"></i>
+                                        <span>View Employees</span>
+                                    </button>
+                                    <button class="quick-action-btn" onclick="navigateToPage('fitness')">
+                                        <i class="fas fa-heartbeat"></i>
+                                        <span>Fitness Status</span>
+                                    </button>
+                                    <button class="quick-action-btn" onclick="navigateToPage('reports')">
+                                        <i class="fas fa-file-download"></i>
+                                        <span>Export Report</span>
+                                    </button>
+                                    <button class="quick-action-btn" onclick="navigateToPage('incidents')">
+                                        <i class="fas fa-plus-circle"></i>
+                                        <span>Report Incident</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EMPLOYEES PAGE -->
+            <div class="page-content" id="employees-page">
+                <div class="page-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="page-title">Employee Directory</h2>
+                        <p class="page-subtitle">Employee health information</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-success" onclick="showRegisterEmployeeModal()">
+                            <i class="fas fa-user-plus me-2"></i>Register Employee
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fas fa-search me-2"></i>Search</label>
+                                    <input type="text" class="form-control" id="employee-search" placeholder="Search by UID or name...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fas fa-building me-2"></i>Department</label>
+                                    <select class="form-select" id="filter-department">
+                                        <option value="">All Departments</option>
+                                        <option value="IT">IT</option>
+                                        <option value="HR">HR</option>
+                                        <option value="Operations">Operations</option>
+                                        <option value="Sales">Sales</option>
+                                        <option value="Finance">Finance</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label class="form-label"><i class="fas fa-heartbeat me-2"></i>Fitness Status</label>
+                                    <select class="form-select" id="filter-fitness">
+                                        <option value="">All Status</option>
+                                        <option value="Fit">Fit for Duty</option>
+                                        <option value="Fit with Restrictions">Fit with Restrictions</option>
+                                        <option value="Review Required">Review Required</option>
+                                        <option value="Temporarily Unfit">Temporarily Unfit</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label d-block">&nbsp;</label>
+                                <button class="btn btn-primary w-100" onclick="applyEmployeeFilters()">
+                                    <i class="fas fa-filter me-2"></i>Apply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Table -->
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>UID</th>
+                                        <th>Employee ID</th>
+                                        <th>Name</th>
+                                        <th>Age</th>
+                                        <th>Department</th>
+                                        <th>Job Role</th>
+                                        <th>Fitness Status</th>
+                                        <th>Last Review</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employee-table-body">
+                                    <tr>
+                                        <td colspan="9" class="text-center py-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-2 text-muted">Loading employees...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="text-muted" id="employee-count">0 employees found</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FITNESS PAGE -->
+            <div class="page-content" id="fitness-page">
+                <div class="page-header">
+                    <h2 class="page-title">Fitness Assessment Management</h2>
+                    <p class="page-subtitle">Conduct and track employee fitness assessments</p>
+                    <button class="btn btn-primary" onclick="showCreateAssessmentModal()">
+                        <i class="fas fa-plus me-2"></i>New Assessment
+                    </button>
+                </div>
+
+                <!-- Fitness Statistics Cards -->
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card stat-fit">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="fit-count">0</h3>
+                                <p>Fit for Duty</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card stat-restricted">
+                            <div class="stat-icon">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="fit-restricted-count">0</h3>
+                                <p>Fit with Restrictions</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card stat-unfit">
+                            <div class="stat-icon">
+                                <i class="fas fa-ban"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="unfit-count">0</h3>
+                                <p>Temporarily Unfit</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card stat-review">
+                            <div class="stat-icon">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="review-count">0</h3>
+                                <p>Review Required</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="alert alert-warning" id="upcoming-reviews-alert" style="display:none;">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong id="upcoming-reviews-count">0</strong> assessments due for review in next 30 days
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-danger" id="overdue-reviews-alert" style="display:none;">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong id="overdue-reviews-count">0</strong> assessments overdue for review
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employees Needing Assessment -->
+                <div class="card mb-4">
+                    <div class="card-header bg-warning-subtle">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user-clock me-2"></i>Employees Requiring Assessment
+                            <span class="badge bg-warning ms-2" id="pending-assessment-count">0</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>UID</th>
+                                        <th>Name</th>
+                                        <th>Employee ID</th>
+                                        <th>Department</th>
+                                        <th>Job Role</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pending-assessment-body">
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>Loading employees...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Completed Assessments Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="fas fa-clipboard-check me-2"></i>Completed Fitness Assessments</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Employee ID</th>
+                                        <th>Department</th>
+                                        <th>Assessment Date</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Next Review</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="assessments-table-body">
+                                    <tr>
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>Loading assessments...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HEALTH TRENDS PAGE -->
+            <div class="page-content" id="health-trends-page">
+                <div class="page-header">
+                    <h2 class="page-title">Health Analytics</h2>
+                    <p class="page-subtitle">Aggregated workforce health trends (no individual identification)</p>
+                </div>
+
+                <!-- Charts -->
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Fitness Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="fitness-chart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Age Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="age-chart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Vaccination Coverage</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="vaccination-chart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Key Insights</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="insights-list">
+                                    <div class="insight-item">
+                                        <i class="fas fa-lightbulb text-warning"></i>
+                                        <p>Analytics data will be displayed here based on workforce health trends.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- INCIDENTS PAGE -->
+            <div class="page-content" id="incidents-page">
+                <div class="page-header">
+                    <h2 class="page-title">Workplace Health Incidents</h2>
+                    <p class="page-subtitle">Track and manage occupational health and safety incidents</p>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Report New Incident</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="incident-form">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Employee UID</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="incident-uid" placeholder="16-digit UID" required>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="fetchEmployeeName()">
+                                            <i class="fas fa-search"></i> Fetch
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Employee Name</label>
+                                    <input type="text" class="form-control" id="incident-employee-name" placeholder="Auto-fetched" readonly>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Incident Date</label>
+                                    <input type="date" class="form-control" id="incident-date" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Incident Time</label>
+                                    <input type="time" class="form-control" id="incident-time" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Incident Type</label>
+                                    <select class="form-select" id="incident-type" required>
+                                        <option value="">Select Type</option>
+                                        <option value="injury">Workplace Injury</option>
+                                        <option value="exposure">Chemical/Biological Exposure</option>
+                                        <option value="illness">Sudden Illness</option>
+                                        <option value="accident">Accident</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Location Description</label>
+                                    <input type="text" class="form-control" id="incident-location" placeholder="Building, Floor, Area" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" id="incident-description" rows="3" placeholder="Describe what happened..." required></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Immediate Action Taken</label>
+                                    <textarea class="form-control" id="incident-action" rows="2" placeholder="First aid, evacuation, etc."></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Submit Report
+                                    </button>
+                                    <button type="reset" class="btn btn-secondary ms-2">
+                                        <i class="fas fa-times me-2"></i>Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Recent Incidents</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Incident ID</th>
+                                        <th>Date/Time</th>
+                                        <th>Employee</th>
+                                        <th>Type</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="incidents-table-body">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+                                            <p class="mt-3 text-muted">No incidents reported. Keep up the good safety practices!</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COMPLIANCE PAGE -->
+            <div class="page-content" id="compliance-page">
+                <div class="page-header">
+                    <h2 class="page-title">Compliance & Certification</h2>
+                    <p class="page-subtitle">Regulatory compliance tracking and audit readiness</p>
+                </div>
+
+                <!-- Compliance Stats -->
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="compliance-stat-card">
+                            <div class="compliance-icon green">
+                                <i class="fas fa-certificate"></i>
+                            </div>
+                            <h4 id="compliance-certified">0</h4>
+                            <p>Fitness Certifications</p>
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar bg-success" id="progress-certified" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="compliance-stat-card">
+                            <div class="compliance-icon blue">
+                                <i class="fas fa-syringe"></i>
+                            </div>
+                            <h4 id="compliance-vaccinated">0</h4>
+                            <p>Vaccination Compliant</p>
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar bg-info" id="progress-vaccinated" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="compliance-stat-card">
+                            <div class="compliance-icon orange">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <h4 id="compliance-expiring">0</h4>
+                            <p>Expiring in 30 Days</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="compliance-stat-card">
+                            <div class="compliance-icon red">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <h4 id="compliance-overdue">0</h4>
+                            <p>Health Check Overdue</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audit Log -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0"><i class="fas fa-history me-2"></i>Audit Log</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Every access and action is logged for transparency and compliance</p>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Action</th>
+                                        <th>Resource</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="audit-log-body">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">No audit logs available</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VACCINATION COMPLIANCE PAGE -->
+            <div class="page-content" id="vaccination-page">
+                <div class="page-header">
+                    <h2 class="page-title">Vaccination Compliance Management</h2>
+                    <p class="page-subtitle">Monitor and manage employee vaccination requirements</p>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" onclick="showCreatePolicyModal()">
+                            <i class="fas fa-plus me-2"></i>Create Policy
+                        </button>
+                        <button class="btn btn-success" onclick="recalculateCompliance()">
+                            <i class="fas fa-sync-alt me-2"></i>Refresh Compliance
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Compliance Summary Cards -->
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card" style="border-left: 4px solid #28a745;">
+                            <div class="stat-icon" style="background: #d4edda; color: #28a745;">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="vac-compliant-count">0</h3>
+                                <p>Fully Compliant</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card" style="border-left: 4px solid #ffc107;">
+                            <div class="stat-icon" style="background: #fff3cd; color: #ffc107;">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="vac-partial-count">0</h3>
+                                <p>Partially Compliant</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card" style="border-left: 4px solid #dc3545;">
+                            <div class="stat-icon" style="background: #f8d7da; color: #dc3545;">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="vac-noncompliant-count">0</h3>
+                                <p>Non-Compliant</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="stat-card" style="border-left: 4px solid #17a2b8;">
+                            <div class="stat-icon" style="background: #d1ecf1; color: #17a2b8;">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="stat-content">
+                                <h3 id="vac-compliance-rate">0%</h3>
+                                <p>Compliance Rate</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Verification Section -->
+                <div class="card mb-4" id="pending-verification-card" style="display:none;">
+                    <div class="card-header bg-warning-subtle">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-clock me-2"></i>Pending Verification
+                            <span class="badge bg-warning ms-2" id="pending-count">0</span>
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Vaccine</th>
+                                        <th>Date</th>
+                                        <th>Dose</th>
+                                        <th>Uploaded</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pending-verification-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vaccination Policies -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>Vaccination Policies
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Policy Name</th>
+                                        <th>Vaccine</th>
+                                        <th>Category</th>
+                                        <th>Mandatory</th>
+                                        <th>Required Doses</th>
+                                        <th>Deadline</th>
+                                        <th>Applies To</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="policies-table-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Compliance Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-users me-2"></i>Employee Vaccination Compliance
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Employee</th>
+                                        <th>Department</th>
+                                        <th>Compliance %</th>
+                                        <th>Compliant</th>
+                                        <th>Total Policies</th>
+                                        <th>Overdue</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employee-vaccination-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REPORTS PAGE -->
+            <div class="page-content" id="reports-page">
+                <div class="page-header">
+                    <h2 class="page-title">Export Reports</h2>
+                    <p class="page-subtitle">Generate compliance and analytics reports</p>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card report-card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-pdf text-danger" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3">Compliance Report (PDF)</h5>
+                                <p class="text-muted">Fitness, vaccination compliance & certifications</p>
+                                <button class="btn btn-danger" onclick="exportComplianceReport('pdf')">
+                                    <i class="fas fa-download me-2"></i>Download PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card report-card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-file-excel text-success" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3">Employee Health Data (Excel)</h5>
+                                <p class="text-muted">Complete employee health records & compliance</p>
+                                <button class="btn btn-success" onclick="exportComplianceReport('excel')">
+                                    <i class="fas fa-download me-2"></i>Download Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card report-card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-syringe text-info" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3">Vaccination Report</h5>
+                                <p class="text-muted">Policies, compliance status & verification records</p>
+                                <button class="btn btn-info" onclick="exportComplianceReport('vaccination')">
+                                    <i class="fas fa-download me-2"></i>Download Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card report-card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-heartbeat text-warning" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3">Fitness Assessments</h5>
+                                <p class="text-muted">Assessment history & re-assessment tracking</p>
+                                <button class="btn btn-warning" onclick="exportComplianceReport('fitness')">
+                                    <i class="fas fa-download me-2"></i>Download Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card report-card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-clipboard-list text-primary" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3">Audit Summary</h5>
+                                <p class="text-muted">System activity logs & compliance tracking</p>
+                                <button class="btn btn-primary" onclick="exportComplianceReport('audit')">
+                                    <i class="fas fa-download me-2"></i>Download Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- User Profile Dropdown -->
+    <div class="dropdown-menu-custom" id="userDropdown">
+        <div class="dropdown-header">
+            <img src="https://ui-avatars.com/api/?name={{ user.full_name or 'User' }}&background=d32f2f&color=fff" alt="Profile">
+            <div>
+                <strong>{{ user.full_name }}</strong>
+                <small>{{ user.email }}</small>
+            </div>
+        </div>
+        <a href="#" class="dropdown-item"><i class="fas fa-user me-2"></i>My Profile</a>
+        <a href="#" class="dropdown-item"><i class="fas fa-cog me-2"></i>Settings</a>
+        <div class="dropdown-divider"></div>
+        <a href="{{ url_for('logout') }}" class="dropdown-item text-danger"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+    </div>
+
+    <!-- Register Employee Modal -->
+    <div class="modal fade" id="registerEmployeeModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Register New Employee</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registerEmployeeForm">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <small>Enter employee's A3 Health Card UID to auto-fetch their details, or check the box below if they don't have one</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="no_uid_checkbox" onchange="toggleUIDField()">
+                                    <label class="form-check-label" for="no_uid_checkbox">
+                                        <strong>Employee doesn't have A3 Health Card UID</strong> - Generate new UID
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="uid_section">
+                                <div class="col-md-8">
+                                    <label class="form-label">Employee A3 Health Card UID <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="reg_uid" placeholder="16-digit UID" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label d-block">&nbsp;</label>
+                                    <button type="button" class="btn btn-primary w-100" onclick="fetchEmployeeDetails()">
+                                        <i class="fas fa-search me-2"></i>Fetch Details
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="new_employee_section" style="display: none;">
+                                <div class="col-12"><hr><h6 class="text-primary"><i class="fas fa-user-plus me-2"></i>New Employee Registration</h6></div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="new_full_name" placeholder="Enter full name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="new_email" placeholder="email@example.com">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Mobile <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="new_mobile" placeholder="10-digit mobile">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Gender <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="new_gender">
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="new_dob">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Blood Group</label>
+                                    <select class="form-select" id="new_blood_group">
+                                        <option value="">Select Blood Group</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B-">B-</option>
+                                        <option value="AB+">AB+</option>
+                                        <option value="AB-">AB-</option>
+                                        <option value="O+">O+</option>
+                                        <option value="O-">O-</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div id="employee_details_section" style="display: none;">
+                                <div class="col-12"><hr></div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="reg_full_name" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="reg_email" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Mobile</label>
+                                    <input type="tel" class="form-control" id="reg_mobile" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Gender</label>
+                                    <input type="text" class="form-control" id="reg_gender" readonly>
+                                </div>
+                                
+                                <div class="col-12"><hr><h6 class="text-muted">Company-Specific Details (Optional)</h6></div>
+                                
+                                <div class="col-md-6">
+                                    <label class="form-label">Employee ID</label>
+                                    <input type="text" class="form-control" id="reg_employee_id" placeholder="Company's internal ID">
+                                    <small class="text-muted">Your company's employee ID</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Department</label>
+                                    <select class="form-select" id="reg_department">
+                                        <option value="">Select Department</option>
+                                        <option value="IT">IT</option>
+                                        <option value="HR">HR</option>
+                                        <option value="Operations">Operations</option>
+                                        <option value="Sales">Sales</option>
+                                        <option value="Finance">Finance</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Engineering">Engineering</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">Job Role</label>
+                                    <input type="text" class="form-control" id="reg_job_role" placeholder="e.g. Software Engineer">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="registerEmployee()">
+                        <i class="fas fa-check me-2"></i>Register Employee
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Assessment Modal -->
+    <div class="modal fade" id="createAssessmentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-heartbeat me-2"></i>Create Fitness Assessment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createAssessmentForm">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Select Employee <span class="text-danger">*</span></label>
+                                <select class="form-select" id="assess_employee" required>
+                                    <option value="">Choose employee...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Assessment Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="assess_date" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Assessment Type <span class="text-danger">*</span></label>
+                                <select class="form-select" id="assess_type" required>
+                                    <option value="">Select type...</option>
+                                    <option value="Pre-employment">Pre-employment</option>
+                                    <option value="Annual">Annual</option>
+                                    <option value="Incident-based">Incident-based</option>
+                                    <option value="Return-to-work">Return-to-work</option>
+                                    <option value="Post-illness">Post-illness</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Fitness Status <span class="text-danger">*</span></label>
+                                <select class="form-select" id="assess_status" required>
+                                    <option value="">Select status...</option>
+                                    <option value="Fit">Fit for Duty</option>
+                                    <option value="Fit with Restrictions">Fit with Restrictions</option>
+                                    <option value="Temporarily Unfit">Temporarily Unfit</option>
+                                    <option value="Review Required">Review Required</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Review Frequency <span class="text-danger">*</span></label>
+                                <select class="form-select" id="assess_frequency" required>
+                                    <option value="Annual">Annual</option>
+                                    <option value="Biannual">Biannual (6 months)</option>
+                                    <option value="Quarterly">Quarterly (3 months)</option>
+                                    <option value="Monthly">Monthly</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-12">
+                                <label class="form-label">Work Restrictions (if any)</label>
+                                <textarea class="form-control" id="assess_restrictions" rows="2" 
+                                    placeholder="e.g., No night shifts, No heavy lifting, Desk work only"></textarea>
+                                <small class="text-muted">List any work limitations or restrictions</small>
+                            </div>
+                            
+                            <div class="col-md-12">
+                                <label class="form-label">Work Capability Summary</label>
+                                <textarea class="form-control" id="assess_summary" rows="3" 
+                                    placeholder="Brief summary of employee's work capability"></textarea>
+                                <small class="text-muted">General assessment without medical details</small>
+                            </div>
+                            
+                            <div class="col-md-12">
+                                <label class="form-label">Recommended Accommodations</label>
+                                <textarea class="form-control" id="assess_accommodations" rows="2" 
+                                    placeholder="e.g., Ergonomic chair, Flexible hours, Regular breaks"></textarea>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Doctor ID (Optional)</label>
+                                <input type="number" class="form-control" id="assess_doctor" placeholder="Enter doctor ID">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Facility ID (Optional)</label>
+                                <input type="number" class="form-control" id="assess_facility" placeholder="Enter facility ID">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createAssessment()">
+                        <i class="fas fa-save me-2"></i>Create Assessment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Re-assessment Modal -->
+    <div class="modal fade" id="reassessmentModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-redo me-2"></i>Re-assess Fitness Assessment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Please provide a reason for re-assessing this fitness assessment. This will invalidate the current assessment and allow creation of a new one.</p>
+                    <form id="reassessmentForm">
+                        <input type="hidden" id="reassess_assessment_id">
+                        <div class="mb-3">
+                            <label class="form-label">Reason for Re-assessment <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="reassess_reason" rows="4" 
+                                placeholder="Enter the reason for re-assessing this fitness assessment..." required></textarea>
+                            <small class="text-muted">Explain why this assessment needs to be re-done.</small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="confirmReassessment()">
+                        <i class="fas fa-redo me-2"></i>Re-assess
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Vaccination Policy Modal -->
+    <div class="modal fade" id="createPolicyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-shield-alt me-2"></i>Create Vaccination Policy</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createPolicyForm">
+                                <input type="hidden" id="editing_policy_id" value="">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Policy Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="policy_name" placeholder="e.g., COVID-19 Vaccination Policy 2026" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Vaccine Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="vaccine_name" placeholder="e.g., COVID-19, Influenza" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Vaccine Category</label>
+                                <select class="form-select" id="vaccine_category">
+                                    <option value="">Select Category</option>
+                                    <option value="COVID">COVID-19</option>
+                                    <option value="Flu">Seasonal Flu</option>
+                                    <option value="Hepatitis">Hepatitis</option>
+                                    <option value="Adult">Adult Vaccines</option>
+                                    <option value="Travel">Travel Vaccines</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">Priority Level</label>
+                                <select class="form-select" id="priority_level">
+                                    <option value="Critical">Critical</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium" selected>Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">Required Doses <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="required_doses" min="1" value="1" required>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label">Mandatory</label>
+                                <select class="form-select" id="is_mandatory">
+                                    <option value="true" selected>Yes</option>
+                                    <option value="false">No (Recommended)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Booster Required</label>
+                                <select class="form-select" id="booster_required" onchange="toggleBoosterFields()">
+                                    <option value="false" selected>No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6" id="booster_frequency_field" style="display:none;">
+                                <label class="form-label">Booster Frequency (months)</label>
+                                <input type="number" class="form-control" id="booster_frequency_months" min="1" placeholder="e.g., 12 for annual">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Effective From <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="effective_from" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Compliance Deadline</label>
+                                <input type="date" class="form-control" id="compliance_deadline">
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">Applies To</label>
+                                <select class="form-select" id="applies_to_all" onchange="toggleDepartmentFields()">
+                                    <option value="true" selected>All Employees</option>
+                                    <option value="false">Specific Departments</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-12" id="specific_departments_field" style="display:none;">
+                                <label class="form-label">Select Departments</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="IT" id="dept_it">
+                                    <label class="form-check-label" for="dept_it">IT</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="HR" id="dept_hr">
+                                    <label class="form-check-label" for="dept_hr">HR</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Operations" id="dept_ops">
+                                    <label class="form-check-label" for="dept_ops">Operations</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Sales" id="dept_sales">
+                                    <label class="form-check-label" for="dept_sales">Sales</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="Finance" id="dept_finance">
+                                    <label class="form-check-label" for="dept_finance">Finance</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">Policy Description</label>
+                                <textarea class="form-control" id="policy_description" rows="3" placeholder="Describe the policy requirements and rationale..."></textarea>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="allow_medical_exemption" checked>
+                                    <label class="form-check-label" for="allow_medical_exemption">
+                                        Allow Medical Exemptions
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="allow_religious_exemption">
+                                    <label class="form-check-label" for="allow_religious_exemption">
+                                        Allow Religious Exemptions
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="createVaccinationPolicy()">
+                        <i class="fas fa-save me-2"></i>Create Policy
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Department Modal -->
+    <div class="modal fade" id="editDepartmentModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-building me-2"></i>Edit Employee Department</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editDepartmentForm">
+                        <input type="hidden" id="edit_employee_id">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Department <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-lg" id="edit_department" required>
+                                <option value="">Select Department</option>
+                                <option value="IT">IT</option>
+                                <option value="HR">HR</option>
+                                <option value="Operations">Operations</option>
+                                <option value="Sales">Sales</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Customer Service">Customer Service</option>
+                                <option value="Legal">Legal</option>
+                                <option value="Research & Development">Research & Development</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="confirmDepartmentUpdate()">
+                        <i class="fas fa-save me-2"></i>Update Department
+                    </button>
+                </div>
+            </div>
+        </div>
+
+                <!-- Edit Employee ID Modal -->
+                <div class="modal fade" id="editEmployeeIdModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title"><i class="fas fa-id-badge me-2"></i>Edit Employee ID</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="editEmployeeIdForm">
+                                    <input type="hidden" id="edit_emp_record_id">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Employee ID <span class="text-danger">*</span></label>
+                                        <input type="text" id="edit_employee_id_input" class="form-control form-control-lg" placeholder="Enter Employee ID" required />
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="confirmEmployeeIDUpdate()">
+                                    <i class="fas fa-save me-2"></i>Update Employee ID
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='mnc_dashboard.js') }}"></script>
+</body>
+</html>

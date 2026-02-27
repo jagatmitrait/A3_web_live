@@ -1,0 +1,87 @@
+<!-- Facility Dashboard Sidebar Template -->
+<!-- Include in main template with: include 'facility_sidebar.html' -->
+
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <a href="#" class="brand-logo">
+            <i class="fas fa-hospital"></i>
+            <div class="brand-info">
+                <span class="brand-name" id="sidebarFacilityName">{{ facility_name if facility_name else 'Health Facility' }}</span>
+                <span class="brand-subtitle">{{ facility_type if facility_type else 'PHC' }}</span>
+            </div>
+        </a>
+    </div>
+    
+    <div class="sidebar-nav-wrapper">
+        <nav class="nav flex-column">
+            <a href="#" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" data-page="dashboard">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="#" class="nav-link {% if active_page == 'workers' %}active{% endif %}" data-page="workers">
+                <i class="fas fa-user-nurse"></i> Health Workers
+            </a>
+            <a href="#" class="nav-link {% if active_page == 'patients' %}active{% endif %}" data-page="patients">
+                <i class="fas fa-users"></i> Patients
+            </a>
+            <a href="#" class="nav-link {% if active_page == 'households' %}active{% endif %}" data-page="households">
+                <i class="fas fa-home"></i> Households
+            </a>
+            
+            <div class="nav-divider"></div>
+            <div class="nav-section-label">Health Programs</div>
+            
+            <a href="#" class="nav-link {% if active_page == 'maternal' %}active{% endif %}" data-page="maternal">
+                <i class="fas fa-baby"></i> Maternal Health
+            </a>
+            <a href="#" class="nav-link {% if active_page == 'analytics' %}active{% endif %}" data-page="analytics">
+                <i class="fas fa-chart-line"></i> Analytics
+            </a>
+            <a href="#" class="nav-link {% if active_page == 'referrals' %}active{% endif %}" data-page="referrals">
+                <i class="fas fa-ambulance"></i> Referrals
+            </a>
+            <a href="#" class="nav-link {% if active_page == 'emergency' %}active{% endif %}" data-page="emergency">
+                <i class="fas fa-kit-medical"></i> Emergency
+            </a>
+            
+            <div class="nav-divider"></div>
+            <div class="nav-section-label">Operations</div>
+            
+            <a href="#" class="nav-link {% if active_page == 'inventory' %}active{% endif %}" data-page="inventory">
+                <i class="fas fa-boxes"></i> Inventory
+            </a>
+            <a href="#" class="nav-link {% if active_page == 'assets' %}active{% endif %}" data-page="assets">
+                <i class="fas fa-toolbox"></i> Assets
+            </a>
+            <a href="#" class="nav-link {% if active_page == 'opd' %}active{% endif %}" data-page="opd">
+                <i class="fas fa-stethoscope"></i> OPD Queue
+            </a>
+            <a href="#" class="nav-link {% if active_page == 'communication' %}active{% endif %}" data-page="communication">
+                <i class="fas fa-comments"></i> Messages
+            </a>
+            <a href="#" class="nav-link {% if active_page == 'reports' %}active{% endif %}" data-page="reports">
+                <i class="fas fa-file-alt"></i> Reports
+            </a>
+            
+            <div class="nav-divider"></div>
+            
+            <a href="#" class="nav-link {% if active_page == 'settings' %}active{% endif %}" data-page="settings">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </nav>
+    </div>
+    
+    <div class="sidebar-footer">
+        <div class="user-profile">
+            <div class="user-avatar">
+                {{ (user.first_name[0] if user and user.first_name else 'F') | upper }}
+            </div>
+            <div class="user-info">
+                <div class="user-name">{{ user.full_name if user and user.full_name else 'Facility Admin' }}</div>
+                <div class="user-role">Facility Administrator</div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-sm btn-outline-danger" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </div>
+    </div>
+</aside>

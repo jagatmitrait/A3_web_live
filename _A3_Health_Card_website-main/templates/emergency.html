@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Dashboard - A3 Health Card</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background:
+                radial-gradient(900px 500px at 15% 0%, rgba(220, 53, 69, 0.10), transparent 60%),
+                radial-gradient(900px 500px at 85% 0%, rgba(37, 99, 235, 0.10), transparent 60%),
+                linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+            color: var(--ed-text);
+        }
+
+        :root {
+            --ed-surface: rgba(255, 255, 255, 0.92);
+            --ed-border: rgba(17, 24, 39, 0.08);
+            --ed-text: #0f172a;
+            --ed-muted: rgba(15, 23, 42, 0.65);
+            --ed-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            --ed-shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.06);
+            --ed-danger: #dc3545;
+            --ed-danger-2: #b71c1c;
+            --ed-primary: #2563eb;
+            --ed-success: #16a34a;
+            --ed-warning: #f59e0b;
+            --ed-info: #0891b2;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding: 14px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #dc3545 0%, #b71c1c 100%);
+            box-shadow: 0 14px 30px rgba(220, 53, 69, 0.18);
+        }
+
+        .header .logo {
+            letter-spacing: -0.01em;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+
+        .header .back-btn {
+            border-color: rgba(255, 255, 255, 0.7);
+            padding: 9px 16px;
+            border-radius: 999px;
+            color: rgba(255, 255, 255, 0.95);
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .header .back-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .main-container {
+            padding: 22px;
+            gap: 18px;
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .left-panel {
+            border: 1px solid var(--ed-border);
+            background: var(--ed-surface);
+            box-shadow: var(--ed-shadow);
+            min-height: unset;
+            border-radius: 18px;
+            padding: 18px;
+            width: 320px;
+            position: sticky;
+            top: 86px;
+        }
+
+        .left-panel h2 {
+            color: var(--ed-text);
+            font-weight: 700;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .search-box input {
+            border: 1px solid var(--ed-border);
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 14px;
+            padding: 11px 12px;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .search-box input:focus {
+            border-color: rgba(37, 99, 235, 0.55);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        .search-box button {
+            background: linear-gradient(135deg, var(--ed-primary), #1d4ed8);
+            border: none;
+            border-radius: 14px;
+            width: 44px;
+            height: 44px;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-box button:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        }
+
+        .patient-photo {
+            background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.9), rgba(148, 163, 184, 0.35));
+            border: 1px solid var(--ed-border);
+            width: 120px;
+            height: 120px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 14px auto 10px;
+            overflow: hidden;
+        }
+
+        .patient-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .patient-photo i {
+            font-size: 42px;
+            color: rgba(15, 23, 42, 0.45);
+        }
+
+        .patient-info {
+            margin-top: 10px;
+        }
+
+        .info-label {
+            color: var(--ed-muted);
+        }
+
+        .info-value {
+            font-weight: 600;
+        }
+
+        .info-row {
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            border-bottom: 1px dashed rgba(15, 23, 42, 0.10);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .emergency-btn {
+            background: linear-gradient(135deg, var(--ed-danger), var(--ed-danger-2));
+            box-shadow: 0 10px 20px rgba(220, 53, 69, 0.18);
+            border: none;
+            width: 100%;
+            border-radius: 14px;
+            padding: 12px 14px;
+            color: #fff;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 14px;
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+
+        .emergency-btn:hover {
+            filter: brightness(1.02);
+            transform: translateY(-1px);
+        }
+
+        .right-panel {
+            gap: 18px;
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            align-items: start;
+        }
+
+        .info-card {
+            border: 1px solid var(--ed-border);
+            box-shadow: var(--ed-shadow-sm);
+            border-radius: 18px;
+            background: var(--ed-surface);
+            overflow: hidden;
+        }
+
+        .info-card h3 {
+            font-weight: 700;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            margin: 0;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            background: rgba(255, 255, 255, 0.55);
+        }
+
+        .info-card h3 i {
+            border-radius: 10px;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        .card-vitals h3 i { background: linear-gradient(135deg, rgba(37,99,235,0.95), rgba(29,78,216,0.95)); }
+        .card-records h3 i { background: linear-gradient(135deg, rgba(8,145,178,0.95), rgba(14,116,144,0.95)); }
+        .card-history h3 i { background: linear-gradient(135deg, rgba(245,158,11,0.95), rgba(217,119,6,0.95)); }
+        .card-implants h3 i { background: linear-gradient(135deg, rgba(220,53,69,0.95), rgba(183,28,28,0.95)); }
+        .card-allergies h3 i { background: linear-gradient(135deg, rgba(22,163,74,0.95), rgba(21,128,61,0.95)); }
+        .card-contact h3 i { background: linear-gradient(135deg, rgba(171,71,188,0.95), rgba(126,34,206,0.95)); }
+
+        .card-vitals { border-top: 4px solid rgba(37, 99, 235, 0.55); }
+        .card-records { border-top: 4px solid rgba(8, 145, 178, 0.55); }
+        .card-history { border-top: 4px solid rgba(245, 158, 11, 0.55); }
+        .card-implants { border-top: 4px solid rgba(220, 53, 69, 0.55); }
+        .card-allergies { border-top: 4px solid rgba(22, 163, 74, 0.55); }
+        .card-contact { border-top: 4px solid rgba(171, 71, 188, 0.55); }
+
+        .data-row {
+            border-bottom: 1px dashed rgba(15, 23, 42, 0.10);
+            padding: 10px 0;
+            margin: 0 16px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: baseline;
+        }
+
+        .info-card .data-row:last-child {
+            border-bottom: none;
+            padding-bottom: 14px;
+        }
+
+        .info-card .data-row:first-of-type {
+            padding-top: 14px;
+        }
+
+        .data-label {
+            color: var(--ed-muted);
+            font-weight: 600;
+        }
+
+        .data-value {
+            font-weight: 600;
+            color: var(--ed-text);
+        }
+
+        .no-data {
+            color: var(--ed-muted);
+            font-style: normal;
+        }
+
+        .info-card .no-data {
+            padding: 14px 16px 18px;
+            margin: 0;
+        }
+
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .empty-state {
+            border: 1px solid var(--ed-border);
+            background: var(--ed-surface);
+            box-shadow: var(--ed-shadow);
+            border-radius: 18px;
+            padding: 52px 22px;
+            text-align: center;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state i {
+            font-size: 44px;
+            color: rgba(15, 23, 42, 0.35);
+            margin-bottom: 10px;
+        }
+
+        .empty-state h3 {
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .empty-state p {
+            color: var(--ed-muted);
+            margin-bottom: 0;
+        }
+
+        .loading i {
+            animation: edSpin 1s linear infinite;
+            font-size: 34px;
+            color: rgba(15, 23, 42, 0.45);
+        }
+
+        @keyframes edSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .alert-banner {
+            grid-column: 1 / -1;
+            border-radius: 16px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 14px 28px rgba(220, 53, 69, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .alert-banner .alert-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .alert-banner .alert-title {
+            font-size: 16px;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.01em;
+        }
+
+        .alert-banner .alert-subtitle {
+            margin: 2px 0 0 0;
+            opacity: 0.92;
+            font-size: 13px;
+        }
+
+        .contact-item {
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            background: rgba(248, 250, 252, 0.75);
+        }
+
+        .contact-item + .contact-item {
+            margin-top: 10px;
+        }
+
+        .contact-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .contact-phone {
+            margin-top: 8px;
+        }
+
+        .contact-phone a {
+            color: var(--ed-danger);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .contact-phone a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 520px) {
+            .vitals-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 1100px) {
+            .right-panel { grid-template-columns: 1fr; }
+            .left-panel { width: 360px; }
+        }
+
+        @media (max-width: 992px) {
+            .main-container { flex-direction: column; }
+            .left-panel { width: 100%; position: static; }
+            .right-panel { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-ambulance"></i>
+            Emergency Dashboard
+        </div>
+        <a href="/" class="back-btn">
+            <i class="fas fa-arrow-left me-2"></i>Back to Home
+        </a>
+    </header>
+    
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Left Panel - Search & Patient Info -->
+        <div class="left-panel">
+            <h2><i class="fas fa-search"></i> Search Patient</h2>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Enter UID">
+                <button onclick="searchPatient()"><i class="fas fa-search"></i></button>
+            </div>
+            
+            <div id="patientCard" style="display: none;">
+                <div class="patient-photo" id="patientPhoto">
+                    <i class="fas fa-user"></i>
+                </div>
+                
+                <div class="patient-info">
+                    <div class="info-row">
+                        <span class="info-label">UID:</span>
+                        <span class="info-value" id="patientUid">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Name:</span>
+                        <span class="info-value" id="patientName">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Age:</span>
+                        <span class="info-value" id="patientAge">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Gender:</span>
+                        <span class="info-value" id="patientGender">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Blood Group:</span>
+                        <span class="info-value" id="patientBlood">-</span>
+                    </div>
+                </div>
+                
+                <button class="emergency-btn" onclick="sendEmergencyAlert()">
+                    <i class="fas fa-phone-volume"></i>
+                    Send Emergency Alert
+                </button>
+            </div>
+        </div>
+        
+        <!-- Right Panel - Health Info Cards -->
+        <div class="right-panel" id="rightPanel">
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState">
+                <i class="fas fa-user-injured"></i>
+                <h3>No Patient Selected</h3>
+                <p>Search by UID to view patient health information</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentPatient = null;
+        
+        // Search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchPatient();
+        });
+        
+        function searchPatient() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('Please enter UID to search');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('rightPanel').innerHTML = `
+                <div class="empty-state">
+                    <div class="loading"><i class="fas fa-spinner"></i></div>
+                    <p>Searching for patient...</p>
+                </div>
+            `;
+            
+            // Fetch patient data from API
+            fetch(`/api/emergency/patient-search?query=${encodeURIComponent(query)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.patient) {
+                        currentPatient = data.patient;
+                        displayPatient(data);
+                    } else {
+                        showNoResults(query);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showError();
+                });
+        }
+        
+        function displayPatient(data) {
+            const p = data.patient;
+            
+            // Update left panel
+            document.getElementById('patientCard').style.display = 'block';
+            document.getElementById('patientUid').textContent = p.uid || '-';
+            document.getElementById('patientName').textContent = p.full_name || '-';
+            document.getElementById('patientAge').textContent = p.age ? `${p.age} years` : '-';
+            document.getElementById('patientGender').textContent = p.gender || '-';
+            document.getElementById('patientBlood').textContent = p.blood_group || '-';
+            
+            // Photo
+            const photoDiv = document.getElementById('patientPhoto');
+            if (p.photo_url) {
+                photoDiv.innerHTML = `<img src="${p.photo_url}" alt="Patient">`;
+            } else {
+                photoDiv.innerHTML = '<i class="fas fa-user"></i>';
+            }
+            
+            // Update right panel with health cards
+            const vitals = data.vitals || {};
+            const allergies = data.allergies || [];
+            const surgeries = data.surgeries || [];
+            const implants = data.implants || [];
+            const medical_records = data.medical_records || [];
+            const contacts = data.emergency_contacts || [];
+            const hiv_std = data.hiv_std_status || {};
+            
+            // Generate HIV/STD warning banner if positive
+            const hivWarning = hiv_std.status === 'positive' ? `
+                <div class="alert-banner hiv-warning" style="background: linear-gradient(135deg, #dc3545, #b71c1c); color: white;">
+                    <div class="alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div>
+                        <p class="alert-title">HIV/STD POSITIVE</p>
+                        <p class="alert-subtitle">Medical personnel should take universal precautions. Last tested: ${hiv_std.last_test || 'N/A'}</p>
+                    </div>
+                </div>
+            ` : '';
+
+            // Generate emergency contacts HTML (all 3)
+            const contactsHtml = contacts.length > 0 ? contacts.map((c, index) => `
+                <div class="contact-item">
+                    <div class="contact-top">
+                        <strong>${c.name || 'N/A'}</strong>
+                        <span class="badge bg-secondary">${c.relation || 'Contact'}</span>
+                    </div>
+                    <div class="contact-phone">
+                        <a href="tel:${c.phone}"><i class="fas fa-phone me-1"></i>${c.phone || 'N/A'}</a>
+                    </div>
+                </div>
+            `).join('') : '<p class="no-data">No emergency contacts</p>';
+            
+            document.getElementById('rightPanel').innerHTML = `
+                ${hivWarning}
+                
+                <!-- Row 1: Vitals -->
+                <div class="info-card card-vitals">
+                    <h3><i class="fas fa-heartbeat"></i> Vitals</h3>
+                    <div class="vitals-grid">
+                        <div class="data-row"><span class="data-label">BP:</span><span class="data-value">${vitals.blood_pressure || 'N/A'}</span></div>
+                        <div class="data-row"><span class="data-label">Heart Rate:</span><span class="data-value">${vitals.heart_rate ? vitals.heart_rate + ' bpm' : 'N/A'}</span></div>
+                        <div class="data-row"><span class="data-label">Temp:</span><span class="data-value">${vitals.temperature ? vitals.temperature + '°F' : 'N/A'}</span></div>
+                        <div class="data-row"><span class="data-label">SpO2:</span><span class="data-value">${vitals.spo2 ? vitals.spo2 + '%' : 'N/A'}</span></div>
+                        <div class="data-row"><span class="data-label">Height:</span><span class="data-value">${vitals.height ? vitals.height + ' cm' : 'N/A'}</span></div>
+                        <div class="data-row"><span class="data-label">Weight:</span><span class="data-value">${vitals.weight ? vitals.weight + ' kg' : 'N/A'}</span></div>
+                        <div class="data-row"><span class="data-label">Blood Group:</span><span class="data-value" style="color: #dc3545; font-weight: bold;">${data.patient.blood_group || 'N/A'}</span></div>
+                        <div class="data-row"><span class="data-label">Blood Sugar:</span><span class="data-value">${vitals.blood_sugar ? vitals.blood_sugar + ' mg/dL' : 'N/A'}</span></div>
+                    </div>
+                </div>
+                
+                <!-- Row 1: Medical Records -->
+                <div class="info-card card-records">
+                    <h3><i class="fas fa-file-medical"></i> Medical Records</h3>
+                    ${medical_records.length > 0 ? medical_records.map(r => `
+                        <div class="data-row">
+                            <span class="data-label">${r.title || r.type || 'Record'}</span>
+                            <span class="data-value">${r.date || '-'}</span>
+                        </div>
+                    `).join('') : '<p class="no-data">No medical records</p>'}
+                </div>
+                
+                <!-- Row 2: Surgical History -->
+                <div class="info-card card-history">
+                    <h3><i class="fas fa-notes-medical"></i> Surgical History</h3>
+                    ${surgeries.length > 0 ? surgeries.map(s => `
+                        <div class="data-row">
+                            <span class="data-label">${s.surgery_name || s.name}</span>
+                            <span class="data-value">${s.surgery_date || s.date || '-'}</span>
+                        </div>
+                    `).join('') : '<p class="no-data">No surgical history</p>'}
+                </div>
+                
+                <!-- Row 2: Implants -->
+                <div class="info-card card-implants">
+                    <h3><i class="fas fa-microchip"></i> Implants</h3>
+                    ${implants.length > 0 ? implants.map(i => `
+                        <div class="data-row">
+                            <span class="data-label">${i.device || i.type}</span>
+                            <span class="data-value">${i.date || '-'}</span>
+                        </div>
+                    `).join('') : '<p class="no-data">No implants recorded</p>'}
+                </div>
+                
+                <!-- Row 3: Allergies -->
+                <div class="info-card card-allergies">
+                    <h3><i class="fas fa-allergies"></i> Allergies & Conditions</h3>
+                    ${allergies.length > 0 ? allergies.map(a => `
+                        <div class="data-row">
+                            <span class="data-label">${a.allergen || a.name}</span>
+                            <span class="data-value badge bg-${a.severity === 'severe' ? 'danger' : 'warning'}">${a.severity || 'moderate'}</span>
+                        </div>
+                    `).join('') : '<p class="no-data">No allergies recorded</p>'}
+                </div>
+                
+                <!-- Row 3: Emergency Contacts (All 3) -->
+                <div class="info-card card-contact">
+                    <h3><i class="fas fa-phone-alt"></i> Emergency Contacts <span class="badge bg-danger ms-2">${contacts.length}</span></h3>
+                    ${contactsHtml}
+                </div>
+            `;
+        }
+        
+        function showNoResults(query) {
+            document.getElementById('patientCard').style.display = 'none';
+            document.getElementById('rightPanel').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-search"></i>
+                    <h3>No Patient Found</h3>
+                    <p>No patient found with UID matching "${query}"</p>
+                </div>
+            `;
+        }
+        
+        function showError() {
+            document.getElementById('rightPanel').innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i>
+                    <h3>Error Loading Data</h3>
+                    <p>Unable to fetch patient information. Please try again.</p>
+                </div>
+            `;
+        }
+        
+        function sendEmergencyAlert() {
+            if (!currentPatient) {
+                alert('No patient selected');
+                return;
+            }
+            
+            if (confirm(`Send emergency alert for ${currentPatient.full_name}?`)) {
+                alert('Emergency alert sent successfully!\nAmbulance and nearest hospital have been notified.');
+            }
+        }
+    </script>
+</body>
+</html>

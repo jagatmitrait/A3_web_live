@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Services | A3 Health Card</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS (Reusing Client Dashboard Theme) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .pharmacy-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+        .pharmacy-card:hover {
+            transform: translateY(-2px);
+        }
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-red);
+        }
+        .nav-pills .nav-link {
+            color: var(--dark-gray);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-danger" href="{{ url_for('client_dashboard') }}">
+                <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+            </a>
+            <span class="navbar-text fw-bold">Pharmacy Services</span>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="row">
+            <!-- Main Action Area -->
+            <div class="col-lg-8">
+                <div class="card pharmacy-card mb-4">
+                    <div class="card-body p-4">
+                        <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="pills-upload-tab" data-bs-toggle="pill" data-bs-target="#pills-upload" type="button" role="tab">
+                                    <i class="fas fa-file-upload me-2"></i>Upload Prescription
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pills-request-tab" data-bs-toggle="pill" data-bs-target="#pills-request" type="button" role="tab">
+                                    <i class="fas fa-pills me-2"></i>Request Medicine
+                                </button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="pills-tabContent">
+                            <!-- Upload Prescription Tab -->
+                            <div class="tab-pane fade show active" id="pills-upload" role="tabpanel">
+                                <form id="uploadPrescriptionForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Select Pharmacy <span class="text-danger">*</span></label>
+                                        <select class="form-select pharmacy-select" name="pharmacyId" required>
+                                            <option value="" selected disabled>Loading pharmacies...</option>
+                                        </select>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Doctor Name</label>
+                                            <input type="text" class="form-control" name="doctorName" placeholder="e.g. Dr. Smith">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Prescription Date</label>
+                                            <input type="date" class="form-control" name="prescriptionDate">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Upload File <span class="text-danger">*</span></label>
+                                        <input type="file" class="form-control" name="file" accept=".pdf,.jpg,.jpeg,.png" required>
+                                        <div class="form-text">Allowed: PDF, JPG, PNG (Max 10MB)</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Notes (Optional)</label>
+                                        <textarea class="form-control" name="notes" rows="2" placeholder="Any specific instructions..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger w-100">Submit Prescription</button>
+                                </form>
+                            </div>
+                            
+                            <!-- Request Medicine Tab -->
+                            <div class="tab-pane fade" id="pills-request" role="tabpanel">
+                                <form id="requestMedicineForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Select Pharmacy <span class="text-danger">*</span></label>
+                                        <select class="form-select pharmacy-select" name="pharmacyId" required>
+                                            <option value="" selected disabled>Loading pharmacies...</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Medicine Details <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" name="medicineDetails" rows="4" placeholder="List the medicines and quantities you need..." required></textarea>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Notes (Optional)</label>
+                                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger w-100">Send Request</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- My Requests Sidebar -->
+            <div class="col-lg-4">
+                <div class="card pharmacy-card h-100">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                        <h5 class="fw-bold mb-0">My Requests</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="requestsList" class="d-flex flex-column gap-3">
+                            <div class="text-center py-4 text-muted">
+                                <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
+                                <span class="ms-2">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPharmacies();
+            loadRequests();
+            
+            // Handle Prescription Upload
+            document.getElementById('uploadPrescriptionForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                
+                fetch('/api/client/pharmacy/upload-prescription', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('Prescription uploaded successfully!');
+                        this.reset();
+                        loadRequests();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(err => console.error(err));
+            });
+            
+            // Handle Medicine Request
+            document.getElementById('requestMedicineForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
+                
+                fetch('/api/client/pharmacy/request-medicine', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        alert('Request sent successfully!');
+                        this.reset();
+                        loadRequests();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(err => console.error(err));
+            });
+        });
+
+        function loadPharmacies() {
+            fetch('/api/client/pharmacies')
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        const selects = document.querySelectorAll('.pharmacy-select');
+                        selects.forEach(select => {
+                            select.innerHTML = '<option value="" selected disabled>Select a Pharmacy</option>';
+                            data.pharmacies.forEach(p => {
+                                select.innerHTML += `<option value="${p.id}">${p.name} (${p.address})</option>`;
+                            });
+                        });
+                    }
+                });
+        }
+
+        function loadRequests() {
+            fetch('/api/client/pharmacy/requests')
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('requestsList');
+                    container.innerHTML = '';
+                    
+                    if(data.requests.length === 0) {
+                        container.innerHTML = '<div class="text-center text-muted py-3">No requests found</div>';
+                        return;
+                    }
+                    
+                    data.requests.forEach(req => {
+                        let badgeClass = 'bg-warning text-dark';
+                        if(req.status === 'accepted' || req.status === 'ready') badgeClass = 'bg-success';
+                        if(req.status === 'rejected') badgeClass = 'bg-secondary';
+                        
+                        const item = `
+                            <div class="border rounded p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge ${badgeClass}">${req.status.toUpperCase()}</span>
+                                    <small class="text-muted">${req.date}</small>
+                                </div>
+                                <h6 class="fw-bold mb-1">${req.pharmacy}</h6>
+                                <p class="small text-muted mb-2">
+                                    ${req.type === 'prescription_upload' ? 'Prescription Upload' : 'Medicine Request'}
+                                </p>
+                                ${req.remarks ? `<div class="alert alert-light p-2 mb-0 small border"><i class="fas fa-comment-alt me-1 text-muted"></i> ${req.remarks}</div>` : ''}
+                            </div>
+                        `;
+                        container.innerHTML += item;
+                    });
+                });
+        }
+    </script>
+</body>
+</html>

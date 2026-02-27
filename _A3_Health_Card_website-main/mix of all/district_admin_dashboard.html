@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>District Admin Dashboard | A3 Health Card</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --primary-red: #c62828;
+            --primary-red-dark: #8e0000;
+            --primary-red-light: #ffcdd2;
+            --primary-red-lighter: #ffebee;
+            --white: #ffffff;
+            --light-gray: #f5f7fa;
+            --border-color: #e8eaed;
+            --dark-text: #1a1a2e;
+            --muted-text: #5f6368;
+            --success: #00897b;
+            --warning: #f4511e;
+            --info: #1976d2;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+        body { background-color: var(--light-gray); font-family: 'Inter', sans-serif; font-size: 14px; }
+        .sidebar { width: var(--sidebar-width); height: 100vh; position: fixed; top: 0; left: 0; background: var(--white); border-right: 1px solid var(--border-color); z-index: 1000; display: flex; flex-direction: column; }
+        .sidebar-header { height: var(--header-height); display: flex; align-items: center; padding: 0 1.5rem; background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%); }
+        .brand-logo { font-size: 1.25rem; font-weight: 700; color: var(--white); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .nav-link { padding: 0.875rem 1.5rem; color: var(--muted-text); font-weight: 500; display: flex; align-items: center; gap: 12px; border-left: 3px solid transparent; text-decoration: none; }
+        .nav-link:hover, .nav-link.active { color: var(--primary-red); background: var(--primary-red-lighter); border-left-color: var(--primary-red); }
+        .nav-link i { width: 20px; text-align: center; }
+        .main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+        .top-header { height: var(--header-height); background: var(--white); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; position: sticky; top: 0; z-index: 900; }
+        .content-body { padding: 1.5rem 2rem; }
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+        .kpi-card { background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%); color: var(--white); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-md); }
+        .kpi-card.success { background: linear-gradient(135deg, #00897b 0%, #00695c 100%); }
+        .kpi-card.warning { background: linear-gradient(135deg, #fb8c00 0%, #ef6c00 100%); }
+        .kpi-card.info { background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%); }
+        .kpi-card.purple { background: linear-gradient(135deg, #7b1fa2 0%, #6a1b9a 100%); }
+        .kpi-value { font-size: 2rem; font-weight: 700; }
+        .kpi-label { font-size: 0.85rem; opacity: 0.9; }
+        .card { border: 1px solid var(--border-color); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+        .card-header { background: var(--white); border-bottom: 1px solid var(--border-color); padding: 1rem 1.25rem; font-weight: 600; }
+        .table th { background: var(--light-gray); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
+        .badge-rank { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+        .badge-rank.gold { background: #ffd700; color: #333; }
+        .badge-rank.silver { background: #c0c0c0; color: #333; }
+        .badge-rank.bronze { background: #cd7f32; color: #fff; }
+        #districtMap { height: 400px; border-radius: var(--radius-md); }
+        .user-info { padding: 1rem; border-top: 1px solid var(--border-color); margin-top: auto; background: #263238; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary-red); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <a href="#" class="brand-logo"><i class="fas fa-hospital"></i> District Admin</a>
+        </div>
+        <div class="nav-menu py-3" style="overflow-y: auto; flex: 1;">
+            <a href="#" class="nav-link active" onclick="showPage('dashboard')"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="#" class="nav-link" onclick="showPage('blocks')"><i class="fas fa-cubes"></i> Block Management</a>
+            <a href="#" class="nav-link" onclick="showPage('blockAdmins')"><i class="fas fa-user-tie"></i> Block Admins</a>
+            <a href="#" class="nav-link" onclick="showPage('facilities')"><i class="fas fa-hospital-alt"></i> Facilities</a>
+            <a href="#" class="nav-link" onclick="showPage('emergencies')"><i class="fas fa-ambulance"></i> Emergencies</a>
+            <a href="#" class="nav-link" onclick="showPage('surveillance')"><i class="fas fa-virus"></i> Disease Surveillance</a>
+            <a href="#" class="nav-link" onclick="showPage('map')"><i class="fas fa-map-marked-alt"></i> Epidemiology Map</a>
+            <a href="#" class="nav-link" onclick="showPage('analytics')"><i class="fas fa-chart-bar"></i> Comparative Analytics</a>
+            <a href="#" class="nav-link" onclick="showPage('reports')"><i class="fas fa-file-alt"></i> Reports</a>
+            <a href="#" class="nav-link" onclick="showPage('resources')"><i class="fas fa-boxes"></i> Resources</a>
+            <a href="#" class="nav-link" onclick="showPage('adminTeam')"><i class="fas fa-users-cog"></i> Admin Team</a>
+            <a href="#" class="nav-link" onclick="showPage('securityCenter')"><i class="fas fa-shield-alt"></i> Security Center</a>
+            <a href="#" class="nav-link" onclick="showPage('settings')"><i class="fas fa-cog"></i> Settings</a>
+        </div>
+        <div class="user-info">
+            <div class="d-flex align-items-center gap-3">
+                <div class="user-avatar">{{ user.full_name[0] if user.full_name else 'D' }}</div>
+                <div class="text-white">
+                    <div class="fw-semibold">{{ user.full_name or 'District Admin' }}</div>
+                    <small class="opacity-75">{{ user.district_name or 'District' }}</small>
+                </div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm w-100 mt-3"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-header">
+            <h4 id="pageTitle"><i class="fas fa-th-large me-2"></i>Dashboard Overview</h4>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted" id="currentDate"></span>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <!-- Dashboard Page -->
+            <section id="dashboardPage" class="page-section active">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3"><div class="kpi-card"><div class="kpi-value" id="kpiBlocks">0</div><div class="kpi-label">Total Blocks</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card success"><div class="kpi-value" id="kpiFacilities">0</div><div class="kpi-label">Health Facilities</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card info"><div class="kpi-value" id="kpiWorkers">0</div><div class="kpi-label">Health Workers</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card purple"><div class="kpi-value" id="kpiPopulation">0</div><div class="kpi-label">Population</div></div></div>
+                </div>
+                <div class="row g-4 mb-4">
+                    <div class="col-md-2"><div class="kpi-card warning"><div class="kpi-value" id="kpiEmergencies">0</div><div class="kpi-label">Active Emergencies</div></div></div>
+                    <div class="col-md-2"><div class="kpi-card" style="background:linear-gradient(135deg,#5c6bc0,#3949ab)"><div class="kpi-value" id="kpiHouseholds">0</div><div class="kpi-label">Households</div></div></div>
+                    <div class="col-md-2"><div class="kpi-card" style="background:linear-gradient(135deg,#ec407a,#c2185b)"><div class="kpi-value" id="kpiHighRisk">0</div><div class="kpi-label">High Risk Cases</div></div></div>
+                    <div class="col-md-2"><div class="kpi-card" style="background:linear-gradient(135deg,#26a69a,#00897b)"><div class="kpi-value" id="kpiBlockAdmins">0</div><div class="kpi-label">Block Admins</div></div></div>
+                    <div class="col-md-2"><div class="kpi-card" style="background:linear-gradient(135deg,#9c27b0,#7b1fa2)"><div class="kpi-value" id="kpiClients">0</div><div class="kpi-label">Registered Clients</div></div></div>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-8">
+                        <div class="card"><div class="card-header"><i class="fas fa-trophy me-2"></i>Block Performance Ranking</div>
+                            <div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
+                                <thead><tr><th>Rank</th><th>Block</th><th>Admin</th><th>Workers</th><th>Households</th><th>Score</th></tr></thead>
+                                <tbody id="blockRankingTable"><tr><td colspan="6" class="text-center py-4">Loading...</td></tr></tbody>
+                            </table></div></div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card h-100"><div class="card-header"><i class="fas fa-chart-pie me-2"></i>Facility Types</div>
+                            <div class="card-body"><canvas id="facilityChart" height="200"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Blocks Page -->
+            <section id="blocksPage" class="page-section">
+                <div class="card"><div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-cubes me-2"></i>All Blocks</span>
+                    <button class="btn btn-primary btn-sm" onclick="showPage('blockAdmins')"><i class="fas fa-plus me-1"></i>Add Block</button>
+                </div><div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
+                    <thead><tr><th>Block ID</th><th>Name</th><th>Admin</th><th>Villages</th><th>Workers</th><th>Facilities</th><th>Actions</th></tr></thead>
+                    <tbody id="blocksTable"><tr><td colspan="7" class="text-center py-4">Loading...</td></tr></tbody>
+                </table></div></div></div>
+            </section>
+
+            <!-- Block Admins Page -->
+            <section id="blockAdminsPage" class="page-section">
+                <div class="card mb-4"><div class="card-header"><i class="fas fa-user-plus me-2"></i>Create New Block Admin</div>
+                    <div class="card-body">
+                        <form id="createBlockAdminForm" onsubmit="createBlockAdmin(event)">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="baName" placeholder="Enter full name" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="baEmail" placeholder="admin@example.com" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Password <span class="text-danger">*</span></label>
+                                    <input type="password" class="form-control" id="baPassword" placeholder="Minimum 8 characters" required minlength="8">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Mobile</label>
+                                    <input type="tel" class="form-control" id="baMobile" placeholder="+91-9876543210">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Block Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="baBlockName" placeholder="Enter block/tehsil name" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Latitude <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.000001" class="form-control" id="baLatitude" placeholder="e.g. 26.9124" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Longitude <span class="text-danger">*</span></label>
+                                    <input type="number" step="0.000001" class="form-control" id="baLongitude" placeholder="e.g. 75.7873" required>
+                                </div>
+                                <div class="col-12 text-end mt-3">
+                                    <button type="reset" class="btn btn-outline-secondary me-2">
+                                        <i class="fas fa-times me-1"></i>Clear
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-user-plus me-1"></i>Create Block Admin
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="card"><div class="card-header"><i class="fas fa-user-tie me-2"></i>Block Admins List</div>
+                    <div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
+                        <thead><tr><th>UID</th><th>Name</th><th>Email</th><th>Block</th><th>Workers</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody id="blockAdminsTable"><tr><td colspan="7" class="text-center py-4">Loading...</td></tr></tbody>
+                    </table></div></div>
+                </div>
+            </section>
+
+            <!-- Facilities Page -->
+            <section id="facilitiesPage" class="page-section">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3"><div class="kpi-card"><div class="kpi-value" id="facilityTotal">0</div><div class="kpi-label">Total Facilities</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card success"><div class="kpi-value" id="facilityPHC">0</div><div class="kpi-label">PHCs</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card info"><div class="kpi-value" id="facilitySub">0</div><div class="kpi-label">Sub-Centers</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card purple"><div class="kpi-value" id="facilityCHC">0</div><div class="kpi-label">CHCs</div></div></div>
+                </div>
+                <div class="card"><div class="card-header"><i class="fas fa-hospital-alt me-2"></i>All Facilities</div>
+                    <div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
+                        <thead><tr><th>Facility ID</th><th>Name</th><th>Type</th><th>Block</th><th>In-Charge</th><th>Beds</th><th>Workers</th></tr></thead>
+                        <tbody id="facilitiesTable"><tr><td colspan="7" class="text-center py-4">Loading...</td></tr></tbody>
+                    </table></div></div>
+                </div>
+            </section>
+
+            <!-- Emergencies Page -->
+            <section id="emergenciesPage" class="page-section">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3"><div class="kpi-card warning"><div class="kpi-value" id="emergActive">0</div><div class="kpi-label">Active</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card" style="background:#d32f2f"><div class="kpi-value" id="emergCritical">0</div><div class="kpi-label">Critical</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card success"><div class="kpi-value" id="emergResolved">0</div><div class="kpi-label">Resolved</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card info"><div class="kpi-value" id="emergTotal">0</div><div class="kpi-label">Total</div></div></div>
+                </div>
+                <div class="card"><div class="card-header"><i class="fas fa-ambulance me-2"></i>All Emergencies</div>
+                    <div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
+                        <thead><tr><th>ID</th><th>Type</th><th>Patient</th><th>Block</th><th>Priority</th><th>Status</th><th>Reported</th></tr></thead>
+                        <tbody id="emergenciesTable"><tr><td colspan="7" class="text-center py-4">Loading...</td></tr></tbody>
+                    </table></div></div>
+                </div>
+            </section>
+
+            <!-- Surveillance Page -->
+            <section id="surveillancePage" class="page-section">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3"><div class="kpi-card info"><div class="kpi-value" id="survTotal">0</div><div class="kpi-label">Total Screenings</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card" style="background:#d32f2f"><div class="kpi-value" id="survHigh">0</div><div class="kpi-label">High Risk</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card warning"><div class="kpi-value" id="survMedium">0</div><div class="kpi-label">Medium Risk</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card success"><div class="kpi-value" id="survLow">0</div><div class="kpi-label">Low Risk</div></div></div>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card h-100"><div class="card-header"><i class="fas fa-virus me-2"></i>Top Symptoms</div>
+                            <div class="card-body"><canvas id="symptomsChart" height="250"></canvas></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100"><div class="card-header"><i class="fas fa-chart-line me-2"></i>Block-wise Trends</div>
+                            <div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
+                                <thead><tr><th>Block</th><th>Screenings</th><th>High Risk</th></tr></thead>
+                                <tbody id="blockTrendsTable"><tr><td colspan="3" class="text-center py-4">Loading...</td></tr></tbody>
+                            </table></div></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Map Page -->
+            <section id="mapPage" class="page-section">
+                <div class="card"><div class="card-header"><i class="fas fa-map-marked-alt me-2"></i>District Epidemiology Map</div>
+                    <div class="card-body"><div id="districtMap"></div></div>
+                </div>
+            </section>
+
+            <!-- Analytics Page -->
+            <section id="analyticsPage" class="page-section">
+                <div class="card mb-4"><div class="card-header"><i class="fas fa-chart-bar me-2"></i>Block Comparison</div>
+                    <div class="card-body"><canvas id="comparisonChart" height="100"></canvas></div>
+                </div>
+                <div class="card"><div class="card-header"><i class="fas fa-balance-scale me-2"></i>District Averages</div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4"><h3 id="avgWorkers">0</h3><p class="text-muted">Avg Workers/Block</p></div>
+                            <div class="col-md-4"><h3 id="avgHouseholds">0</h3><p class="text-muted">Avg Households/Block</p></div>
+                            <div class="col-md-4"><h3 id="avgRisk">0%</h3><p class="text-muted">Overall Risk %</p></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Page -->
+            <section id="reportsPage" class="page-section">
+                <div class="card mb-4"><div class="card-header"><i class="fas fa-plus me-2"></i>Generate New Report</div>
+                    <div class="card-body">
+                        <form onsubmit="generateReport(event)" class="row g-3">
+                            <div class="col-md-4"><label class="form-label">Report Name</label><input type="text" class="form-control" id="reportName" placeholder="Monthly Health Report"></div>
+                            <div class="col-md-4"><label class="form-label">Report Type</label><select class="form-select" id="reportType"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="hmis">HMIS Format</option></select></div>
+                            <div class="col-md-4"><label class="form-label mt-4"></label><button type="submit" class="btn btn-primary w-100"><i class="fas fa-file-export me-2"></i>Generate</button></div>
+                        </form>
+                    </div>
+                </div>
+                <div class="card"><div class="card-header"><i class="fas fa-file-alt me-2"></i>Generated Reports</div>
+                    <div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
+                        <thead><tr><th>Report ID</th><th>Name</th><th>Type</th><th>Generated</th><th>Downloads</th><th>Actions</th></tr></thead>
+                        <tbody id="reportsTable"><tr><td colspan="6" class="text-center py-4">Loading...</td></tr></tbody>
+                    </table></div></div>
+                </div>
+            </section>
+
+            <!-- Resources Page -->
+            <section id="resourcesPage" class="page-section">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4"><div class="kpi-card info"><div class="kpi-value" id="resBudget">₹0</div><div class="kpi-label">Annual Budget</div></div></div>
+                    <div class="col-md-4"><div class="kpi-card success"><div class="kpi-value" id="resUtilized">₹0</div><div class="kpi-label">Utilized</div></div></div>
+                    <div class="col-md-4"><div class="kpi-card purple"><div class="kpi-value" id="resPercent">0%</div><div class="kpi-label">Utilization</div></div></div>
+                </div>
+                <div class="card"><div class="card-header"><i class="fas fa-boxes me-2"></i>Block-wise Resources</div>
+                    <div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
+                        <thead><tr><th>Block</th><th>Facilities</th><th>Workers</th><th>Beds</th></tr></thead>
+                        <tbody id="resourcesTable"><tr><td colspan="4" class="text-center py-4">Loading...</td></tr></tbody>
+                    </table></div></div>
+                </div>
+            </section>
+
+            <!-- Settings Page -->
+            <section id="settingsPage" class="page-section">
+                <div class="card"><div class="card-header"><i class="fas fa-cog me-2"></i>District Settings</div>
+                    <div class="card-body">
+                        <form class="row g-3">
+                            <div class="col-md-6"><label class="form-label">District Name</label><input type="text" class="form-control" value="{{ user.district_name or '' }}" disabled></div>
+                            <div class="col-md-6"><label class="form-label">State</label><input type="text" class="form-control" value="{{ user.state or '' }}" disabled></div>
+                            <div class="col-md-6"><label class="form-label">Latitude</label><input type="number" step="0.0001" class="form-control" id="distLat" value="{{ user.district_latitude or '' }}"></div>
+                            <div class="col-md-6"><label class="form-label">Longitude</label><input type="number" step="0.0001" class="form-control" id="distLng" value="{{ user.district_longitude or '' }}"></div>
+                            <div class="col-12"><button type="button" class="btn btn-primary" onclick="alert('Settings saved!')"><i class="fas fa-save me-2"></i>Save Settings</button></div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Admin Team Page (Phase 15: Multi-Admin) -->
+            <section id="adminTeamPage" class="page-section">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3"><div class="kpi-card"><div class="kpi-value" id="teamTotal">0</div><div class="kpi-label">Total Admins</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card success"><div class="kpi-value" id="teamActive">0</div><div class="kpi-label">Active</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card warning"><div class="kpi-value" id="teamPrimary">0</div><div class="kpi-label">Primary</div></div></div>
+                    <div class="col-md-3"><div class="kpi-card info"><div class="kpi-value" id="teamRoles">0</div><div class="kpi-label">Roles</div></div></div>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-info-circle me-2"></i>Current District</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4"><strong>District ID:</strong> <span id="districtIdDisplay">{{ user.district_id or 'N/A' }}</span></div>
+                            <div class="col-md-4"><strong>District Name:</strong> <span id="districtNameDisplay">{{ user.district_name or 'N/A' }}</span></div>
+                            <div class="col-md-4"><strong>Your Role:</strong> <span class="badge bg-danger">Primary Admin</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-users me-2"></i>District Admins</span>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addDistrictAdminModal"><i class="fas fa-user-plus me-1"></i>Add Admin</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead><tr><th>Admin</th><th>Email</th><th>Role</th><th>Status</th><th>Assigned</th><th>Actions</th></tr></thead>
+                                <tbody id="districtAdminTeamTable"><tr><td colspan="6" class="text-center py-4">Loading...</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Security Center Page -->
+            <section id="securityCenterPage" class="page-section">
+                <div class="row g-4 mb-4">
+                    <div class="col-md-2"><div class="card text-center p-3"><div class="fs-3 fw-bold text-primary" id="secLogins24h">0</div><div class="small text-muted">Logins (24h)</div></div></div>
+                    <div class="col-md-2"><div class="card text-center p-3"><div class="fs-3 fw-bold text-danger" id="secFailed24h">0</div><div class="small text-muted">Failed (24h)</div></div></div>
+                    <div class="col-md-2"><div class="card text-center p-3"><div class="fs-3 fw-bold text-success" id="secActiveSessions">0</div><div class="small text-muted">Active Sessions</div></div></div>
+                    <div class="col-md-2"><div class="card text-center p-3"><div class="fs-3 fw-bold text-warning" id="secBlockedIPs">0</div><div class="small text-muted">Blocked IPs</div></div></div>
+                    <div class="col-md-2"><div class="card text-center p-3"><div class="fs-3 fw-bold text-info" id="secApiCalls1h">0</div><div class="small text-muted">API Calls (1h)</div></div></div>
+                    <div class="col-md-2"><div class="card text-center p-3"><div class="fs-3 fw-bold text-secondary" id="secUniqueDevices">0</div><div class="small text-muted">Devices (7d)</div></div></div>
+                </div>
+                <div class="card mb-4"><div class="card-header d-flex justify-content-between align-items-center"><span><i class="fas fa-sign-in-alt me-2"></i>Login History (7 Days)</span><button class="btn btn-sm btn-outline-primary" onclick="loadSecurityCenter()"><i class="fas fa-sync-alt"></i></button></div>
+                    <div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
+                        <thead><tr><th>Time</th><th>User</th><th>Status</th><th>IP</th><th>Device</th><th>Reason</th></tr></thead>
+                        <tbody id="loginLogsTable"><tr><td colspan="6" class="text-center py-4">Loading...</td></tr></tbody>
+                    </table></div></div>
+                </div>
+                <div class="card mb-4"><div class="card-header"><i class="fas fa-users me-2"></i>Active Sessions</div>
+                    <div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
+                        <thead><tr><th>User</th><th>Role</th><th>Status</th><th>IP</th><th>Device</th><th>Last Activity</th><th>Action</th></tr></thead>
+                        <tbody id="activeSessionsTable"><tr><td colspan="7" class="text-center py-4">Loading...</td></tr></tbody>
+                    </table></div></div>
+                </div>
+                <div class="card"><div class="card-header"><i class="fas fa-exclamation-triangle me-2"></i>Failed Login Attempts</div>
+                    <div class="card-body p-0"><div class="table-responsive"><table class="table mb-0">
+                        <thead><tr><th>Time</th><th>Email</th><th>IP</th><th>Reason</th><th>Status</th><th>Blocked Until</th></tr></thead>
+                        <tbody id="failedAttemptsTable"><tr><td colspan="6" class="text-center py-4">Loading...</td></tr></tbody>
+                    </table></div></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Block Details Modal -->
+    <div class="modal fade" id="blockDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-cubes me-2"></i><span id="modalBlockName">Block Details</span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="blockDetailsContent"><div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Block Admin Modal -->
+    <div class="modal fade" id="editBlockAdminModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Block Admin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editBlockAdminForm">
+                        <input type="hidden" id="editAdminId">
+                        <div class="mb-3"><label class="form-label">Name</label><input type="text" class="form-control" id="editName"></div>
+                        <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" id="editEmail"></div>
+                        <div class="mb-3"><label class="form-label">Mobile</label><input type="text" class="form-control" id="editMobile"></div>
+                        <div class="mb-3"><label class="form-label">Block Name</label><input type="text" class="form-control" id="editBlockName"></div>
+                        <div class="mb-3"><label class="form-label">New Password (leave blank to keep current)</label><input type="password" class="form-control" id="editPassword"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveBlockAdmin()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add District Admin Modal -->
+    <div class="modal fade" id="addDistrictAdminModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add Admin to District</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3"><label class="form-label">User ID *</label><input type="number" class="form-control" id="newDistAdminUserId" placeholder="Enter user ID" required></div>
+                    <div class="mb-3"><label class="form-label">Role *</label>
+                        <select class="form-select" id="newDistAdminRole">
+                            <option value="deputy_admin">Deputy Admin</option>
+                            <option value="data_entry">Data Entry</option>
+                            <option value="viewer">Viewer</option>
+                        </select>
+                    </div>
+                    <div class="mb-3"><label class="form-label">Notes</label><textarea class="form-control" id="newDistAdminNotes" rows="2"></textarea></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addDistrictAdmin()"><i class="fas fa-user-plus me-1"></i>Add Admin</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global state
+        let districtMap = null;
+        let facilityChartInstance = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-IN', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+            loadDashboard();
+        });
+
+        // Page navigation
+        function showPage(page) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById(page + 'Page').classList.add('active');
+            event.target.closest('.nav-link').classList.add('active');
+            
+            const titles = {
+                dashboard: '<i class="fas fa-th-large me-2"></i>Dashboard Overview',
+                blocks: '<i class="fas fa-cubes me-2"></i>Block Management',
+                blockAdmins: '<i class="fas fa-user-tie me-2"></i>Block Admins',
+                facilities: '<i class="fas fa-hospital-alt me-2"></i>Facilities Overview',
+                emergencies: '<i class="fas fa-ambulance me-2"></i>Emergency Center',
+                surveillance: '<i class="fas fa-virus me-2"></i>Disease Surveillance',
+                map: '<i class="fas fa-map-marked-alt me-2"></i>Epidemiology Map',
+                analytics: '<i class="fas fa-chart-bar me-2"></i>Comparative Analytics',
+                reports: '<i class="fas fa-file-alt me-2"></i>Reports Center',
+                resources: '<i class="fas fa-boxes me-2"></i>Resource Allocation',
+                adminTeam: '<i class="fas fa-users-cog me-2"></i>Admin Team',
+                securityCenter: '<i class="fas fa-shield-alt me-2"></i>Security Center',
+                settings: '<i class="fas fa-cog me-2"></i>Settings'
+            };
+            document.getElementById('pageTitle').innerHTML = titles[page] || 'Dashboard';
+            
+            // Load page data
+            if(page === 'dashboard') loadDashboard();
+            else if(page === 'blocks') loadBlocks();
+            else if(page === 'blockAdmins') loadBlockAdmins();
+            else if(page === 'facilities') loadFacilities();
+            else if(page === 'emergencies') loadEmergencies();
+            else if(page === 'surveillance') loadSurveillance();
+            else if(page === 'map') loadMap();
+            else if(page === 'analytics') loadAnalytics();
+            else if(page === 'reports') loadReports();
+            else if(page === 'resources') loadResources();
+            else if(page === 'adminTeam') loadDistrictAdminTeam();
+            else if(page === 'securityCenter') loadSecurityCenter();
+        }
+
+        // Dashboard
+        function loadDashboard() {
+            fetch('/api/district-admin/dashboard-stats')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const s = data.stats;
+                        document.getElementById('kpiBlocks').textContent = s.total_blocks || 0;
+                        document.getElementById('kpiFacilities').textContent = s.total_facilities || 0;
+                        document.getElementById('kpiWorkers').textContent = s.total_health_workers || 0;
+                        document.getElementById('kpiPopulation').textContent = s.total_population || 0;
+                        document.getElementById('kpiEmergencies').textContent = s.active_emergencies || 0;
+                        document.getElementById('kpiHouseholds').textContent = s.total_households || 0;
+                        document.getElementById('kpiHighRisk').textContent = s.high_risk_households || 0;
+                        document.getElementById('kpiBlockAdmins').textContent = s.total_block_admins || 0;
+                        document.getElementById('kpiClients').textContent = s.total_clients || 0;
+                        
+                        // Render ranking table
+                        const bp = data.block_performance || [];
+                        document.getElementById('blockRankingTable').innerHTML = bp.length ? bp.map(b => `
+                            <tr>
+                                <td><span class="badge-rank ${b.rank===1?'gold':b.rank===2?'silver':b.rank===3?'bronze':''}">${b.rank}</span></td>
+                                <td><strong>${b.name}</strong></td>
+                                <td>${b.admin_name}</td>
+                                <td>${b.health_workers}</td>
+                                <td>${b.households}</td>
+                                <td><span class="badge bg-primary">${b.score}</span></td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="6" class="text-center py-4 text-muted">No blocks found</td></tr>';
+                        
+                        // Facility chart
+                        renderFacilityChart(s.phc_count || 0, s.subcenters_count || 0);
+                    }
+                });
+        }
+
+        function renderFacilityChart(phc, sub) {
+            const ctx = document.getElementById('facilityChart').getContext('2d');
+            if(facilityChartInstance) facilityChartInstance.destroy();
+            facilityChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: ['PHC', 'Sub-Centers'], datasets: [{ data: [phc, sub], backgroundColor: ['#c62828', '#1976d2'] }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+        }
+
+        // Blocks
+        function loadBlocks() {
+            fetch('/api/district-admin/blocks')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        document.getElementById('blocksTable').innerHTML = data.blocks.length ? data.blocks.map(b => `
+                            <tr>
+                                <td><code>${b.block_id}</code></td>
+                                <td><strong>${b.name}</strong></td>
+                                <td>${b.admin_name}</td>
+                                <td>${b.total_villages || 0}</td>
+                                <td>${b.health_workers}</td>
+                                <td>${b.facilities}</td>
+                                <td><button class="btn btn-sm btn-outline-primary" onclick="viewBlockDetails('${b.block_id}')"><i class="fas fa-eye"></i> View</button></td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="7" class="text-center py-4 text-muted">No blocks found</td></tr>';
+                    }
+                });
+        }
+
+        // Block Admins
+        function loadBlockAdmins() {
+            fetch('/api/district-admin/block-admins')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        document.getElementById('blockAdminsTable').innerHTML = data.block_admins.length ? data.block_admins.map(a => `
+                            <tr>
+                                <td><code>${a.uid}</code></td>
+                                <td><strong>${escapeHtml(a.name)}</strong></td>
+                                <td>${escapeHtml(a.email)}</td>
+                                <td>${escapeHtml(a.block_name)}</td>
+                                <td>${a.health_workers}</td>
+                                <td><span class="badge bg-${a.is_verified ? 'success' : 'warning'}">${a.is_verified ? 'Verified' : 'Pending'}</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary me-1 btn-edit-admin" data-id="${a.id}" data-name="${escapeHtml(a.name)}" data-email="${escapeHtml(a.email)}" data-mobile="${escapeHtml(a.mobile || '')}" data-blockname="${escapeHtml(a.block_name)}"><i class="fas fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-outline-danger btn-delete-admin" data-id="${a.id}" data-name="${escapeHtml(a.name)}"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="7" class="text-center py-4 text-muted">No block admins found</td></tr>';
+                        
+                        // Attach event listeners
+                        document.querySelectorAll('.btn-edit-admin').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                editBlockAdmin(this.dataset.id, this.dataset.name, this.dataset.email, this.dataset.mobile, this.dataset.blockname);
+                            });
+                        });
+                        document.querySelectorAll('.btn-delete-admin').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                deleteBlockAdmin(this.dataset.id, this.dataset.name);
+                            });
+                        });
+                    }
+                });
+        }
+        
+        // Helper to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        function createBlockAdmin(e) {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('baName').value,
+                email: document.getElementById('baEmail').value,
+                password: document.getElementById('baPassword').value,
+                mobile: document.getElementById('baMobile').value,
+                block_name: document.getElementById('baBlockName').value,
+                latitude: parseFloat(document.getElementById('baLatitude').value) || null,
+                longitude: parseFloat(document.getElementById('baLongitude').value) || null
+            };
+            fetch('/api/district-admin/block-admins', {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+            }).then(r => r.json()).then(res => {
+                if(res.success) {
+                    alert('Block Admin created successfully! UID: ' + res.block_admin.uid);
+                    document.getElementById('createBlockAdminForm').reset();
+                    loadBlockAdmins();
+                } else alert('Error: ' + res.error);
+            });
+        }
+
+
+        // Facilities
+        function loadFacilities() {
+            fetch('/api/district-admin/facilities')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const s = data.summary;
+                        document.getElementById('facilityTotal').textContent = s.total || 0;
+                        document.getElementById('facilityPHC').textContent = s.phc || 0;
+                        document.getElementById('facilitySub').textContent = s.subcenters || 0;
+                        document.getElementById('facilityCHC').textContent = s.chc || 0;
+                        document.getElementById('facilitiesTable').innerHTML = data.facilities.length ? data.facilities.map(f => `
+                            <tr>
+                                <td><code>${f.facility_id}</code></td>
+                                <td><strong>${f.name}</strong></td>
+                                <td><span class="badge bg-secondary">${f.type}</span></td>
+                                <td>${f.block_name}</td>
+                                <td>${f.in_charge || '-'}</td>
+                                <td>${f.beds || 0}</td>
+                                <td>${f.health_workers}</td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="7" class="text-center">No facilities found</td></tr>';
+                    }
+                });
+        }
+
+        // Emergencies
+        function loadEmergencies() {
+            fetch('/api/district-admin/emergencies')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const s = data.summary;
+                        document.getElementById('emergActive').textContent = s.active || 0;
+                        document.getElementById('emergCritical').textContent = s.critical || 0;
+                        document.getElementById('emergResolved').textContent = s.resolved || 0;
+                        document.getElementById('emergTotal').textContent = s.total || 0;
+                        document.getElementById('emergenciesTable').innerHTML = data.emergencies.length ? data.emergencies.map(e => `
+                            <tr>
+                                <td><code>${e.emergency_id}</code></td>
+                                <td>${e.type}</td>
+                                <td>${e.patient_name || '-'}</td>
+                                <td>${e.block_name}</td>
+                                <td><span class="badge bg-${e.priority==='critical'?'danger':e.priority==='high'?'warning':'secondary'}">${e.priority}</span></td>
+                                <td><span class="badge bg-${e.status==='resolved'?'success':e.status==='responding'?'info':'warning'}">${e.status}</span></td>
+                                <td>${e.reported_at ? new Date(e.reported_at).toLocaleString() : '-'}</td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="7" class="text-center">No emergencies</td></tr>';
+                    }
+                });
+        }
+
+        // Surveillance
+        function loadSurveillance() {
+            fetch('/api/district-admin/disease-surveillance')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const s = data.summary;
+                        document.getElementById('survTotal').textContent = s.total_screenings || 0;
+                        document.getElementById('survHigh').textContent = s.high_risk || 0;
+                        document.getElementById('survMedium').textContent = s.medium_risk || 0;
+                        document.getElementById('survLow').textContent = s.low_risk || 0;
+                        
+                        // Symptoms chart
+                        const symptoms = data.top_symptoms || [];
+                        const ctx = document.getElementById('symptomsChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: { labels: symptoms.map(s => s.symptom), datasets: [{ label: 'Count', data: symptoms.map(s => s.count), backgroundColor: '#c62828' }] },
+                            options: { indexAxis: 'y', responsive: true }
+                        });
+                        
+                        // Block trends
+                        document.getElementById('blockTrendsTable').innerHTML = data.block_trends.length ? data.block_trends.map(b => `
+                            <tr><td>${b.name}</td><td>${b.screenings}</td><td><span class="badge bg-danger">${b.high_risk}</span></td></tr>
+                        `).join('') : '<tr><td colspan="3" class="text-center">No data</td></tr>';
+                    }
+                });
+        }
+
+        // Map
+        function loadMap() {
+            fetch('/api/district-admin/epidemiology-map')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        if(!districtMap) {
+                            districtMap = L.map('districtMap').setView([data.center.lat || 0, data.center.lng || 0], data.center.location_set ? 9 : 2);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(districtMap);
+                        } else {
+                            districtMap.setView([data.center.lat || 0, data.center.lng || 0], data.center.location_set ? 9 : 2);
+                        }
+                        data.blocks.forEach(b => {
+                            L.circleMarker([b.lat, b.lng], {radius: 10 + b.households/5, color: b.risk_ratio > 30 ? '#d32f2f' : '#1976d2', fillOpacity: 0.6})
+                                .bindPopup(`<strong>${b.name}</strong><br>HH: ${b.households}<br>High Risk: ${b.high_risk} (${b.risk_ratio}%)`)
+                                .addTo(districtMap);
+                        });
+                    }
+                });
+        }
+
+        // Analytics
+        function loadAnalytics() {
+            fetch('/api/district-admin/comparative-analytics')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const avg = data.district_averages;
+                        document.getElementById('avgWorkers').textContent = avg.avg_workers_per_block || 0;
+                        document.getElementById('avgHouseholds').textContent = avg.avg_hh_per_block || 0;
+                        document.getElementById('avgRisk').textContent = (avg.overall_risk_percentage || 0) + '%';
+                        
+                        const blocks = data.blocks;
+                        const ctx = document.getElementById('comparisonChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: blocks.map(b => b.name),
+                                datasets: [
+                                    { label: 'Health Workers', data: blocks.map(b => b.metrics.health_workers), backgroundColor: '#c62828' },
+                                    { label: 'Households', data: blocks.map(b => b.metrics.households), backgroundColor: '#1976d2' }
+                                ]
+                            },
+                            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+                        });
+                    }
+                });
+        }
+
+        // Reports
+        function loadReports() {
+            fetch('/api/district-admin/reports')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        document.getElementById('reportsTable').innerHTML = data.reports.length ? data.reports.map(r => `
+                            <tr>
+                                <td><code>${r.report_id}</code></td>
+                                <td>${r.name}</td>
+                                <td><span class="badge bg-secondary">${r.type}</span></td>
+                                <td>${r.generated_at ? new Date(r.generated_at).toLocaleString() : '-'}</td>
+                                <td>${r.download_count || 0}</td>
+                                <td><button class="btn btn-sm btn-outline-primary"><i class="fas fa-download"></i></button></td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="6" class="text-center">No reports yet</td></tr>';
+                    }
+                });
+        }
+
+        function generateReport(e) {
+            e.preventDefault();
+            fetch('/api/district-admin/reports', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name: document.getElementById('reportName').value, type: document.getElementById('reportType').value })
+            }).then(r => r.json()).then(res => {
+                if(res.success) { alert('Report generated!'); loadReports(); }
+                else alert('Error: ' + res.error);
+            });
+        }
+
+        // Resources
+        function loadResources() {
+            fetch('/api/district-admin/resource-stats')
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        const b = data.budget;
+                        document.getElementById('resBudget').textContent = '₹' + (b.annual_budget || 0).toLocaleString();
+                        document.getElementById('resUtilized').textContent = '₹' + (b.budget_utilized || 0).toLocaleString();
+                        document.getElementById('resPercent').textContent = (b.utilization_percentage || 0) + '%';
+                        document.getElementById('resourcesTable').innerHTML = data.block_resources.length ? data.block_resources.map(r => `
+                            <tr><td><strong>${r.name}</strong></td><td>${r.facilities}</td><td>${r.health_workers}</td><td>${r.beds}</td></tr>
+                        `).join('') : '<tr><td colspan="4" class="text-center">No data</td></tr>';
+                    }
+                });
+        }
+
+        // View Block Details (Drill-down)
+        function viewBlockDetails(blockId) {
+            document.getElementById('blockDetailsContent').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
+            new bootstrap.Modal(document.getElementById('blockDetailsModal')).show();
+            
+            fetch(`/api/district-admin/block-details/${blockId}`)
+                .then(r => r.json())
+                .then(data => {
+                    if(data.success) {
+                        document.getElementById('modalBlockName').textContent = data.block.name;
+                        document.getElementById('blockDetailsContent').innerHTML = `
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-4"><div class="card bg-primary text-white"><div class="card-body text-center"><h3>${data.stats.total_workers}</h3><small>Health Workers</small></div></div></div>
+                                <div class="col-md-4"><div class="card bg-success text-white"><div class="card-body text-center"><h3>${data.stats.total_facilities}</h3><small>Facilities</small></div></div></div>
+                                <div class="col-md-4"><div class="card bg-info text-white"><div class="card-body text-center"><h3>${data.stats.total_households}</h3><small>Households</small></div></div></div>
+                            </div>
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-user-tie me-2"></i>Block Admin</h6>
+                                    <p class="mb-1"><strong>${data.admin.name || 'Not assigned'}</strong></p>
+                                    <p class="text-muted mb-0">${data.admin.email || ''} ${data.admin.mobile ? '• ' + data.admin.mobile : ''}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-chart-pie me-2"></i>Risk Breakdown</h6>
+                                    <span class="badge bg-danger me-2">High: ${data.risk_breakdown.high}</span>
+                                    <span class="badge bg-warning me-2">Medium: ${data.risk_breakdown.medium}</span>
+                                    <span class="badge bg-success">Low: ${data.risk_breakdown.low}</span>
+                                </div>
+                            </div>
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-users me-2"></i>Recent Workers</h6>
+                                    <ul class="list-group list-group-flush">
+                                        ${data.recent_workers.length ? data.recent_workers.map(w => `<li class="list-group-item d-flex justify-content-between"><span>${w.name}</span><span class="badge bg-secondary">${w.type || 'Worker'}</span></li>`).join('') : '<li class="list-group-item text-muted">No workers yet</li>'}
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6><i class="fas fa-hospital me-2"></i>Facilities</h6>
+                                    <ul class="list-group list-group-flush">
+                                        ${data.recent_facilities.length ? data.recent_facilities.map(f => `<li class="list-group-item d-flex justify-content-between"><span>${f.name}</span><span class="badge bg-secondary">${f.type || 'Facility'}</span></li>`).join('') : '<li class="list-group-item text-muted">No facilities yet</li>'}
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('blockDetailsContent').innerHTML = '<div class="alert alert-danger">Error loading details</div>';
+                    }
+                });
+        }
+
+        // Edit Block Admin
+        function editBlockAdmin(id, name, email, mobile, blockName) {
+            document.getElementById('editAdminId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editMobile').value = mobile;
+            document.getElementById('editBlockName').value = blockName;
+            document.getElementById('editPassword').value = '';
+            new bootstrap.Modal(document.getElementById('editBlockAdminModal')).show();
+        }
+
+        function saveBlockAdmin() {
+            const id = document.getElementById('editAdminId').value;
+            const data = {
+                name: document.getElementById('editName').value,
+                email: document.getElementById('editEmail').value,
+                mobile: document.getElementById('editMobile').value,
+                block_name: document.getElementById('editBlockName').value
+            };
+            const password = document.getElementById('editPassword').value;
+            if(password) data.password = password;
+            
+            fetch(`/api/district-admin/block-admins/${id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(res => {
+                if(res.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('editBlockAdminModal')).hide();
+                    alert('Block Admin updated successfully!');
+                    loadBlockAdmins();
+                } else {
+                    alert('Error: ' + res.error);
+                }
+            });
+        }
+
+        // Delete Block Admin
+        function deleteBlockAdmin(id, name) {
+            if(!confirm(`Are you sure you want to delete Block Admin "${name}"?\n\nThis will also delete the associated block if it has no workers or facilities.`)) return;
+            
+            fetch(`/api/district-admin/block-admins/${id}`, {
+                method: 'DELETE'
+            }).then(r => r.json()).then(res => {
+                if(res.success) {
+                    alert(res.message);
+                    loadBlockAdmins();
+                    loadBlocks();
+                } else {
+                    alert('Error: ' + res.error);
+                }
+            });
+        }
+
+        // ==================== PHASE 12: INVENTORY & ASSETS ====================
+        async function loadInventorySummary() {
+            try {
+                const res = await fetch('/api/admin/inventory-summary');
+                const data = await res.json();
+                if (data.success) {
+                    console.log('District Inventory Summary:', data);
+                    // Data available for dashboard integration
+                }
+            } catch (e) { console.error('Inventory error:', e); }
+        }
+        
+        // Load inventory on page load
+        loadInventorySummary();
+
+        // ==================== ADMIN TEAM MANAGEMENT (Phase 15) ====================
+        async function loadDistrictAdminTeam() {
+            const districtId = document.getElementById('districtIdDisplay')?.textContent || '';
+            document.getElementById('districtAdminTeamTable').innerHTML = '<tr><td colspan="6" class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+            
+            try {
+                const response = await fetch(`/api/admin/entity-admins/district/${encodeURIComponent(districtId)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('teamTotal').textContent = data.count || 0;
+                    document.getElementById('teamActive').textContent = data.count || 0;
+                    document.getElementById('teamPrimary').textContent = data.admins?.filter(a => a.is_primary).length || 0;
+                    
+                    const rolesRes = await fetch('/api/admin/roles');
+                    const rolesData = await rolesRes.json();
+                    document.getElementById('teamRoles').textContent = rolesData.roles?.length || 0;
+                    
+                    if (data.admins?.length) {
+                        document.getElementById('districtAdminTeamTable').innerHTML = data.admins.map(a => `
+                            <tr>
+                                <td><strong>${a.name || 'Unknown'}</strong></td>
+                                <td>${a.email || 'N/A'}</td>
+                                <td>${a.is_primary ? '<span class="badge bg-danger">Primary</span>' : `<span class="badge bg-secondary">${a.role_name || 'Admin'}</span>`}</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                                <td>${a.assigned_at || 'N/A'}</td>
+                                <td>${!a.is_primary ? `<button class="btn btn-sm btn-outline-danger" onclick="removeDistrictAdmin(${a.id})"><i class="fas fa-trash"></i></button>` : '<span class="badge bg-light text-muted">Protected</span>'}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        document.getElementById('districtAdminTeamTable').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No admins assigned. Click "Add Admin" to start.</td></tr>';
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading admin team:', e);
+                document.getElementById('districtAdminTeamTable').innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Error loading team</td></tr>';
+            }
+        }
+        
+        async function addDistrictAdmin() {
+            const userId = document.getElementById('newDistAdminUserId')?.value;
+            const role = document.getElementById('newDistAdminRole')?.value;
+            const notes = document.getElementById('newDistAdminNotes')?.value;
+            const districtId = document.getElementById('districtIdDisplay')?.textContent || '';
+            const districtName = document.getElementById('districtNameDisplay')?.textContent || '';
+            
+            if (!userId) { alert('Please enter a user ID'); return; }
+            
+            try {
+                const res = await fetch('/api/admin/assignments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: parseInt(userId), entity_type: 'district', entity_id: districtId, entity_name: districtName, role_name: role, notes: notes, is_primary: false })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Admin added successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('addDistrictAdminModal'))?.hide();
+                    loadDistrictAdminTeam();
+                } else alert('Error: ' + (data.error || 'Unknown'));
+            } catch (e) { console.error(e); alert('Error adding admin'); }
+        }
+        
+        async function removeDistrictAdmin(assignmentId) {
+            if (!confirm('Remove this admin?')) return;
+            try {
+                const res = await fetch(`/api/admin/assignments/${assignmentId}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) { alert('Removed'); loadDistrictAdminTeam(); }
+                else alert('Error: ' + data.error);
+            } catch (e) { alert('Error'); }
+        }
+        
+        // Security Center
+        async function loadSecurityCenter() {
+            try {
+                const [summaryRes, logsRes, sessionsRes, failedRes] = await Promise.all([
+                    fetch('/api/admin/security/summary'),
+                    fetch('/api/admin/security/login-logs?days=7&per_page=20'),
+                    fetch('/api/admin/security/sessions?status=active&per_page=15'),
+                    fetch('/api/admin/security/failed-attempts?days=7&per_page=15')
+                ]);
+                
+                const summary = await summaryRes.json();
+                if (summary.success) {
+                    const s = summary.summary;
+                    document.getElementById('secLogins24h').textContent = s.logins_24h || 0;
+                    document.getElementById('secFailed24h').textContent = s.failed_24h || 0;
+                    document.getElementById('secActiveSessions').textContent = s.active_sessions || 0;
+                    document.getElementById('secBlockedIPs').textContent = s.blocked_ips || 0;
+                    document.getElementById('secApiCalls1h').textContent = s.api_calls_1h || 0;
+                    document.getElementById('secUniqueDevices').textContent = s.unique_devices_7d || 0;
+                }
+                
+                const logs = await logsRes.json();
+                document.getElementById('loginLogsTable').innerHTML = logs.success && logs.logs.length ? logs.logs.map(l => `
+                    <tr>
+                        <td class="small">${l.created_at ? new Date(l.created_at).toLocaleString() : '-'}</td>
+                        <td>${l.user_name || l.email || '-'}</td>
+                        <td><span class="badge ${l.status === 'success' ? 'bg-success' : 'bg-danger'}">${l.status}</span></td>
+                        <td><small>${l.ip_address || '-'}</small></td>
+                        <td>${l.browser || '-'}</td>
+                        <td>${l.failure_reason || '-'}</td>
+                    </tr>
+                `).join('') : '<tr><td colspan="6" class="text-center text-muted py-4">No login logs found</td></tr>';
+                
+                const sessions = await sessionsRes.json();
+                document.getElementById('activeSessionsTable').innerHTML = sessions.success && sessions.sessions.length ? sessions.sessions.map(s => `
+                    <tr>
+                        <td>${s.user_name || 'Unknown'}</td>
+                        <td><span class="badge bg-secondary">${s.user_type || '-'}</span></td>
+                        <td><span class="badge bg-success">${s.status}</span></td>
+                        <td><small>${s.ip_address || '-'}</small></td>
+                        <td>${s.browser || '-'}</td>
+                        <td class="small">${s.last_activity ? new Date(s.last_activity).toLocaleString() : '-'}</td>
+                        <td><button class="btn btn-sm btn-outline-danger" onclick="terminateSession('${s.session_id}')"><i class="fas fa-times"></i></button></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="7" class="text-center text-muted py-4">No active sessions found</td></tr>';
+                
+                const failed = await failedRes.json();
+                document.getElementById('failedAttemptsTable').innerHTML = failed.success && failed.attempts.length ? failed.attempts.map(a => `
+                    <tr class="${a.is_blocked ? 'table-danger' : ''}">
+                        <td class="small">${a.created_at ? new Date(a.created_at).toLocaleString() : '-'}</td>
+                        <td>${a.email || '-'}</td>
+                        <td><small>${a.ip_address || '-'}</small></td>
+                        <td>${a.failure_reason || '-'}</td>
+                        <td>${a.is_blocked ? '<span class="badge bg-danger">Blocked</span>' : '<span class="badge bg-warning">Warning</span>'}</td>
+                        <td class="small">${a.blocked_until ? new Date(a.blocked_until).toLocaleString() : '-'}</td>
+                    </tr>
+                `).join('') : '<tr><td colspan="6" class="text-center text-muted py-4">No failed attempts found</td></tr>';
+            } catch (e) { console.error('Error loading security center:', e); }
+        }
+        
+        async function terminateSession(sessionId) {
+            if (!confirm('Terminate this session?')) return;
+            try {
+                const res = await fetch(`/api/admin/security/sessions/${sessionId}/terminate`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                const data = await res.json();
+                if (data.success) { alert('Session terminated'); loadSecurityCenter(); }
+                else alert('Error: ' + (data.error || 'Unknown'));
+            } catch (e) { console.error(e); alert('Error terminating session'); }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if mode == 'edit' %}Edit Allergy{% else %}Add Allergy{% endif %} | A3 Health Card{% endblock %}
+
+{% block content %}
+<div class="form-card">
+  <h2 class="form-title">{% if mode == 'edit' %}Edit Allergy{% else %}Add New Allergy{% endif %}</h2>
+  <form method="post" enctype="multipart/form-data" action="{{ url_for('allergy_add') if mode == 'add' else url_for('allergy_edit', allergy_id=allergy.id) }}">
+    <div class="form-grid two-column">
+      <div class="form-group">
+        <label for="category">Category <span class="text-danger">*</span></label>
+        <select id="category" name="category" class="form-control" data-category-select required>
+          <option value="">Select category</option>
+          {% for c in categories %}
+          <option value="{{ c }}" {% if allergy and allergy.category == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="allergenInput">Allergen name <span class="text-danger">*</span></label>
+        <input id="allergenInput" name="allergen" list="knownAllergens" class="form-control" required
+               value="{{ allergy.allergen if allergy else '' }}" placeholder="e.g., Peanuts, Penicillin" />
+        <datalist id="knownAllergens"></datalist>
+        <small class="form-text">Start typing to see known allergens, or pick from quick chips below.</small>
+      </div>
+      <div class="form-group full-width">
+        <label>Quick suggestions</label>
+        <div class="allergen-suggestion-list" data-suggestion-list aria-label="Quick allergen suggestions"></div>
+      </div>
+      <div class="form-group full-width">
+        <label>Reactions <span class="text-danger">*</span></label>
+        <div class="checkbox-grid">
+          {% set reaction_options = ['Rashes','Swelling','Breathing difficulty','Sneezing','Vomiting','Itching','Anaphylaxis','Other'] %}
+          {% for r in reaction_options %}
+          <label class="checkbox-pill">
+            <input type="checkbox" name="reactions" value="{{ r }}" {% if selected_reactions and (r in selected_reactions) %}checked{% endif %} />
+            <span>{{ r }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <div class="form-group" id="otherReactionGroup">
+          <label for="reaction_other_text">If Other, describe</label>
+          <input type="text" id="reaction_other_text" name="reaction_other_text" class="form-control"
+                 value="{{ allergy.other_reaction if allergy and allergy.other_reaction else '' }}" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Severity <span class="text-danger">*</span></label>
+        <div class="radio-row">
+          {% for s in severities %}
+          <label class="radio-pill">
+            <input type="radio" name="severity" value="{{ s }}" {% if allergy and allergy.severity == s %}checked{% endif %}
+                   {% if not allergy and loop.first %}{% endif %} />
+            <span>{{ s }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="first_reaction_date">Date of first reaction</label>
+        <input type="date" id="first_reaction_date" name="first_reaction_date" class="form-control"
+               value="{{ allergy.first_reaction_date.strftime('%Y-%m-%d') if allergy and allergy.first_reaction_date else '' }}" />
+      </div>
+      <div class="form-group">
+        <label>Active</label>
+        <div class="toggle-row">
+          <label class="radio-pill">
+            <input type="radio" name="active" value="yes" {% if not allergy or allergy.active %}checked{% endif %} />
+            <span>Yes (Active)</span>
+          </label>
+          <label class="radio-pill">
+            <input type="radio" name="active" value="no" {% if allergy and not allergy.active %}checked{% endif %} />
+            <span>No (Archived)</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group full-width">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="3" class="form-control"
+                  placeholder="Add any clinical details, triggers, emergency plan, etc.">{{ allergy.notes if allergy and allergy.notes else '' }}</textarea>
+      </div>
+      <div class="form-group full-width">
+        <label for="documents">Attach documents (max 3 files, 5 MB each, PDF/JPG/PNG)</label>
+        <input type="file" id="documents" name="documents" class="form-control" accept=".pdf,.jpg,.jpeg,.png" multiple />
+        <small class="form-text">You can upload lab reports, prescription photos or discharge summaries related to this allergy.</small>
+        <div id="filePreview" class="file-preview-grid"></div>
+        {% if existing_docs %}
+        <div class="existing-documents">
+          <p><strong>Existing documents</strong></p>
+          <ul class="document-list">
+            {% for doc in existing_docs %}
+            <li>
+              <i class="fas fa-file-alt"></i>
+              <span>{{ doc.original_name }}</span>
+              <small>({{ (doc.size / 1024)|round(1) }} KB)</small>
+              <label class="checkbox-pill" style="margin-left:8px;">
+                <input type="checkbox" name="remove_documents" value="{{ doc.stored_name }}" />
+                <span>Remove</span>
+              </label>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">
+        {% if mode == 'edit' %}<i class="fas fa-save"></i> Save Changes{% else %}<i class="fas fa-plus"></i> Add Allergy{% endif %}
+      </button>
+      <a href="{{ url_for('allergy_dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

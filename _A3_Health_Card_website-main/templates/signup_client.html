@@ -1,0 +1,1374 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Client Signup | A3 Health Card</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+
+  <!-- Theme CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}" />
+  <!-- Custom CSS -->
+  <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet" />
+  
+  <style>
+    /* Signup Form Custom Styles */
+    .signup-card {
+      border-radius: 16px;
+      border: 1px solid #e0e0e0;
+    }
+    .signup-card .card-body {
+      padding: 2.5rem;
+    }
+    fieldset {
+      background: #fafafa;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #eee;
+    }
+    fieldset legend {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #c62828;
+      margin-bottom: 1rem;
+      padding: 0 0.5rem;
+      background: #fafafa;
+      width: auto;
+    }
+    .form-label {
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #333;
+      margin-bottom: 0.3rem;
+    }
+    .form-control, .form-select {
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.95rem;
+      border: 1px solid #ddd;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #c62828;
+      box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.1);
+    }
+    .form-text {
+      font-size: 0.8rem;
+      color: #888;
+    }
+    .emergency-box {
+      background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
+      border: 1px solid #ffcdd2;
+      border-radius: 10px;
+      padding: 1rem;
+      position: relative;
+    }
+    .emergency-box-header {
+      background: linear-gradient(135deg, #c62828 0%, #e53935 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 4px rgba(198, 40, 40, 0.2);
+    }
+    .emergency-box h6 {
+      color: #c62828;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+    .btn-submit {
+      background: linear-gradient(135deg, #c62828 0%, #e53935 100%);
+      border: none;
+      padding: 0.8rem 2rem;
+      font-weight: 600;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #b71c1c 0%, #c62828 100%);
+      transform: translateY(-1px);
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <nav class="navbar navbar-expand-lg" role="navigation" aria-label="Main Navigation">
+    <div class="container">
+      <h2><a class="navbar-brand fw-bold" href="{{ url_for('index') }}">A3 Health Card</a></h2>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center align-items-start gap-lg-2 gap-1 mt-2 mt-lg-0">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#home">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#about">About Us</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#a3">A3 Concept</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#blog">Blog</a></li>
+          <li class="nav-item">
+            <a class="btn emergency-btn" href="{{ url_for('index') }}#emergency-login" role="button">Emergency Login</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Signup Section -->
+  <section class="py-5">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+          <div class="card signup-card shadow">
+            <div class="card-body">
+              <h2 class="card-title text-center mb-2 fw-bold">Create a Client Account</h2>
+              <p class="text-muted text-center mb-4">Provide your basic information to get started with your A3 Health Card.</p>
+              
+              {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                  {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show" role="alert">
+                      {{ message }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                  {% endfor %}
+                {% endif %}
+              {% endwith %}
+              
+              <form method="POST" action="{{ url_for('signup', user_type='client') }}" enctype="multipart/form-data">
+                <!-- SECTION 1: Basic Information -->
+                <fieldset>
+                  <legend class="h5 fw-semibold mb-3">Basic Information</legend>
+
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <label for="firstName" class="form-label">First Name <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="firstName" name="firstName" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="middleName" class="form-label">Middle Name</label>
+                      <input type="text" class="form-control" id="middleName" name="middleName">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="lastName" class="form-label">Last Name <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="lastName" name="lastName" required>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="aliasNames" class="form-label">Alias/Previous Names</label>
+                    <input type="text" class="form-control" id="aliasNames" name="aliasNames" placeholder="Comma-separated if multiple">
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-3 mb-3">
+                      <label for="dob" class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                      <input type="date" class="form-control" id="dob" name="dob" required onchange="calculateAge()">
+                    </div>
+                    <div class="col-md-2 mb-3">
+                      <label for="age" class="form-label">Age</label>
+                      <input type="text" class="form-control" id="age" name="age" readonly placeholder="Auto">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                      <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                      <select class="form-select" id="gender" name="gender" required>
+                        <option value="" disabled selected>Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="sexAtBirth" class="form-label">Sex at Birth</label>
+                      <select class="form-select" id="sexAtBirth" name="sexAtBirth">
+                        <option value="" disabled selected>Select</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Third">Third</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="maritalStatus" class="form-label">Marital Status</label>
+                      <select class="form-select" id="maritalStatus" name="maritalStatus">
+                        <option value="" disabled selected>Select</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Divorced">Divorced</option>
+                        <option value="Widowed">Widowed</option>
+                        <option value="Separated">Separated</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="placeOfBirth" class="form-label">Place of Birth</label>
+                      <input type="text" class="form-control" id="placeOfBirth" name="placeOfBirth" placeholder="City, State, Country">
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <label for="nationality" class="form-label">Nationality <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="nationality" name="nationality" placeholder="e.g., Indian" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="citizenshipStatus" class="form-label">Citizenship Status</label>
+                      <select class="form-select" id="citizenshipStatus" name="citizenshipStatus">
+                        <option value="Citizen" selected>Citizen</option>
+                        <option value="Permanent Resident">Permanent Resident</option>
+                        <option value="Visa Holder">Visa Holder</option>
+                        <option value="Work Permit">Work Permit</option>
+                        <option value="Refugee">Refugee</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="languagePreference" class="form-label">Preferred Language</label>
+                      <select class="form-select" id="languagePreference" name="languagePreference">
+                        <option value="" selected>Select Language</option>
+                        <option value="English">English</option>
+                        <option value="Hindi">Hindi</option>
+                        <option value="Bengali">Bengali</option>
+                        <option value="Telugu">Telugu</option>
+                        <option value="Marathi">Marathi</option>
+                        <option value="Tamil">Tamil</option>
+                        <option value="Urdu">Urdu</option>
+                        <option value="Gujarati">Gujarati</option>
+                        <option value="Kannada">Kannada</option>
+                        <option value="Malayalam">Malayalam</option>
+                        <option value="Odia">Odia</option>
+                        <option value="Punjabi">Punjabi</option>
+                        <option value="Assamese">Assamese</option>
+                        <option value="Maithili">Maithili</option>
+                        <option value="Sanskrit">Sanskrit</option>
+                        <option value="Sindhi">Sindhi</option>
+                        <option value="Nepali">Nepali</option>
+                        <option value="Konkani">Konkani</option>
+                        <option value="Manipuri">Manipuri</option>
+                        <option value="Bodo">Bodo</option>
+                        <option value="Spanish">Spanish</option>
+                        <option value="French">French</option>
+                        <option value="German">German</option>
+                        <option value="Italian">Italian</option>
+                        <option value="Portuguese">Portuguese</option>
+                        <option value="Russian">Russian</option>
+                        <option value="Japanese">Japanese</option>
+                        <option value="Korean">Korean</option>
+                        <option value="Chinese (Mandarin)">Chinese (Mandarin)</option>
+                        <option value="Chinese (Cantonese)">Chinese (Cantonese)</option>
+                        <option value="Arabic">Arabic</option>
+                        <option value="Persian">Persian</option>
+                        <option value="Turkish">Turkish</option>
+                        <option value="Vietnamese">Vietnamese</option>
+                        <option value="Thai">Thai</option>
+                        <option value="Indonesian">Indonesian</option>
+                        <option value="Malay">Malay</option>
+                        <option value="Dutch">Dutch</option>
+                        <option value="Polish">Polish</option>
+                        <option value="Swedish">Swedish</option>
+                        <option value="Greek">Greek</option>
+                        <option value="Hebrew">Hebrew</option>
+                        <option value="Swahili">Swahili</option>
+                        <option value="Filipino">Filipino</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="literacyStatus" class="form-label">Literacy Status</label>
+                      <select class="form-select" id="literacyStatus" name="literacyStatus">
+                        <option value="Literate" selected>Literate</option>
+                        <option value="Basic">Basic (can read/write name)</option>
+                        <option value="Illiterate">Illiterate</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="educationLevel" class="form-label">Level of Education</label>
+                      <select class="form-select" id="educationLevel" name="educationLevel">
+                        <option value="" selected>Select Education Level</option>
+                        <option value="No Formal Education">No Formal Education</option>
+                        <option value="Primary (5th)">Primary (5th Grade)</option>
+                        <option value="Middle (8th)">Middle School (8th Grade)</option>
+                        <option value="Secondary (10th)">Secondary (10th Grade)</option>
+                        <option value="Higher Secondary (12th)">Higher Secondary (12th Grade)</option>
+                        <option value="Diploma">Diploma/Certificate</option>
+                        <option value="Graduation">Graduation (Bachelor's)</option>
+                        <option value="Post Graduation">Post Graduation (Master's)</option>
+                        <option value="Doctorate">Doctorate (Ph.D.)</option>
+                        <option value="Professional">Professional Degree (MD/LLB/CA etc.)</option>
+                      </select>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <!-- SECTION 2: Contact Information -->
+                <fieldset class="mt-4">
+                  <legend class="h5 fw-semibold mb-3">Contact Information</legend>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                      <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="mobile" class="form-label">Mobile Number <span class="text-danger">*</span></label>
+                      <div class="input-group">
+                        <select class="form-select" id="countryCode" name="countryCode" style="max-width: 130px;">
+                          <option value="+91" selected>+91 (IN)</option>
+                          <option value="+1">+1 (US/CA)</option>
+                          <option value="+44">+44 (UK)</option>
+                          <option value="+61">+61 (AU)</option>
+                          <option value="+49">+49 (DE)</option>
+                          <option value="+33">+33 (FR)</option>
+                          <option value="+39">+39 (IT)</option>
+                          <option value="+34">+34 (ES)</option>
+                          <option value="+81">+81 (JP)</option>
+                          <option value="+82">+82 (KR)</option>
+                          <option value="+86">+86 (CN)</option>
+                          <option value="+852">+852 (HK)</option>
+                          <option value="+65">+65 (SG)</option>
+                          <option value="+60">+60 (MY)</option>
+                          <option value="+62">+62 (ID)</option>
+                          <option value="+66">+66 (TH)</option>
+                          <option value="+84">+84 (VN)</option>
+                          <option value="+63">+63 (PH)</option>
+                          <option value="+971">+971 (UAE)</option>
+                          <option value="+966">+966 (SA)</option>
+                          <option value="+974">+974 (QA)</option>
+                          <option value="+973">+973 (BH)</option>
+                          <option value="+968">+968 (OM)</option>
+                          <option value="+965">+965 (KW)</option>
+                          <option value="+92">+92 (PK)</option>
+                          <option value="+880">+880 (BD)</option>
+                          <option value="+94">+94 (LK)</option>
+                          <option value="+977">+977 (NP)</option>
+                          <option value="+95">+95 (MM)</option>
+                          <option value="+27">+27 (ZA)</option>
+                          <option value="+234">+234 (NG)</option>
+                          <option value="+254">+254 (KE)</option>
+                          <option value="+20">+20 (EG)</option>
+                          <option value="+212">+212 (MA)</option>
+                          <option value="+55">+55 (BR)</option>
+                          <option value="+52">+52 (MX)</option>
+                          <option value="+54">+54 (AR)</option>
+                          <option value="+56">+56 (CL)</option>
+                          <option value="+57">+57 (CO)</option>
+                          <option value="+51">+51 (PE)</option>
+                          <option value="+7">+7 (RU)</option>
+                          <option value="+90">+90 (TR)</option>
+                          <option value="+48">+48 (PL)</option>
+                          <option value="+31">+31 (NL)</option>
+                          <option value="+32">+32 (BE)</option>
+                          <option value="+41">+41 (CH)</option>
+                          <option value="+43">+43 (AT)</option>
+                          <option value="+46">+46 (SE)</option>
+                          <option value="+47">+47 (NO)</option>
+                          <option value="+45">+45 (DK)</option>
+                          <option value="+358">+358 (FI)</option>
+                          <option value="+353">+353 (IE)</option>
+                          <option value="+351">+351 (PT)</option>
+                          <option value="+30">+30 (GR)</option>
+                          <option value="+972">+972 (IL)</option>
+                          <option value="+64">+64 (NZ)</option>
+                        </select>
+                        <input type="tel" class="form-control" id="mobile" name="mobile" pattern="[0-9]{10}" placeholder="Phone number" required>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="alternateMobile" class="form-label">Alternate Mobile Number</label>
+                    <div class="input-group">
+                      <select class="form-select" id="altCountryCode" name="altCountryCode" style="max-width: 130px;">
+                        <option value="+91" selected>+91 (IN)</option>
+                        <option value="+1">+1 (US/CA)</option>
+                        <option value="+44">+44 (UK)</option>
+                        <option value="+61">+61 (AU)</option>
+                        <option value="+49">+49 (DE)</option>
+                        <option value="+33">+33 (FR)</option>
+                        <option value="+971">+971 (UAE)</option>
+                        <option value="+65">+65 (SG)</option>
+                        <option value="+86">+86 (CN)</option>
+                        <option value="+81">+81 (JP)</option>
+                      </select>
+                      <input type="tel" class="form-control" id="alternateMobile" name="alternateMobile" pattern="[0-9]{10}" placeholder="Phone number">
+                    </div>
+                  </div>
+
+                  <!-- Emergency Contacts Section -->
+                  <div class="mb-3">
+                    <h6 class="text-danger mb-3"><i class="fas fa-phone-alt me-2"></i>Emergency Contacts</h6>
+                    
+                    <!-- Contact No. 1 -->
+                    <div class="emergency-box mb-3">
+                      <div class="emergency-box-header">Contact No. 1</div>
+                      <div class="row">
+                        <div class="col-md-4 mb-2">
+                          <label for="emergencyContactName1" class="form-label">Name <span class="text-danger">*</span></label>
+                          <input type="text" class="form-control" id="emergencyContactName1" name="emergencyContactName1" placeholder="Full name" required>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                          <label for="emergencyContactPhone1" class="form-label">Phone <span class="text-danger">*</span></label>
+                          <input type="tel" class="form-control" id="emergencyContactPhone1" name="emergencyContactPhone1" pattern="[0-9]{10}" placeholder="10-digit number" required>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                          <label for="emergencyContactRelation1" class="form-label">Relationship <span class="text-danger">*</span></label>
+                          <select class="form-select" id="emergencyContactRelation1" name="emergencyContactRelation1" required>
+                            <option value="" disabled selected>Select</option>
+                            <option value="Spouse">Spouse</option>
+                            <option value="Parent">Parent</option>
+                            <option value="Child">Child</option>
+                            <option value="Sibling">Sibling</option>
+                            <option value="Friend">Friend</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Contact No. 2 -->
+                    <div class="emergency-box mb-3">
+                      <div class="emergency-box-header">Contact No. 2</div>
+                      <div class="row">
+                        <div class="col-md-4 mb-2">
+                          <label for="emergencyContactName2" class="form-label">Name</label>
+                          <input type="text" class="form-control" id="emergencyContactName2" name="emergencyContactName2" placeholder="Full name">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                          <label for="emergencyContactPhone2" class="form-label">Phone</label>
+                          <input type="tel" class="form-control" id="emergencyContactPhone2" name="emergencyContactPhone2" pattern="[0-9]{10}" placeholder="10-digit number">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                          <label for="emergencyContactRelation2" class="form-label">Relationship</label>
+                          <select class="form-select" id="emergencyContactRelation2" name="emergencyContactRelation2">
+                            <option value="" disabled selected>Select</option>
+                            <option value="Spouse">Spouse</option>
+                            <option value="Parent">Parent</option>
+                            <option value="Child">Child</option>
+                            <option value="Sibling">Sibling</option>
+                            <option value="Friend">Friend</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Contact No. 3 -->
+                    <div class="emergency-box mb-3">
+                      <div class="emergency-box-header">Contact No. 3</div>
+                      <div class="row">
+                        <div class="col-md-4 mb-2">
+                          <label for="emergencyContactName3" class="form-label">Name</label>
+                          <input type="text" class="form-control" id="emergencyContactName3" name="emergencyContactName3" placeholder="Full name">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                          <label for="emergencyContactPhone3" class="form-label">Phone</label>
+                          <input type="tel" class="form-control" id="emergencyContactPhone3" name="emergencyContactPhone3" pattern="[0-9]{10}" placeholder="10-digit number">
+                        </div>
+                        <div class="col-md-4 mb-2">
+                          <label for="emergencyContactRelation3" class="form-label">Relationship</label>
+                          <select class="form-select" id="emergencyContactRelation3" name="emergencyContactRelation3">
+                            <option value="" disabled selected>Select</option>
+                            <option value="Spouse">Spouse</option>
+                            <option value="Parent">Parent</option>
+                            <option value="Child">Child</option>
+                            <option value="Sibling">Sibling</option>
+                            <option value="Friend">Friend</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <!-- SECTION 3: Address Details -->
+                <fieldset class="mt-4">
+                  <legend class="h5 fw-semibold mb-3">Address Details</legend>
+
+                  <!-- Pincode & Country FIRST for auto-fill -->
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <label for="postalCode" class="form-label">PIN/ZIP Code <span class="text-danger">*</span></label>
+                      <div class="input-group">
+                        <input type="text" class="form-control" id="postalCode" name="postalCode" required placeholder="Enter pincode" onblur="fetchAddressByPincode()" oninput="handlePincodeInput(this)">
+                        <button type="button" class="btn btn-outline-danger" id="pincodeSearchBtn" onclick="fetchAddressByPincode()" title="Lookup address">
+                          <i class="fas fa-search"></i>
+                        </button>
+                      </div>
+                      <div id="pincodeStatus" class="form-text" style="display: none;"></div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="country" class="form-label">Country <span class="text-danger">*</span></label>
+                      <select class="form-select" id="country" name="country" required>
+                        <option value="" disabled selected>Select country</option>
+                        <option value="India">India</option>
+                        <option value="United States">United States</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Australia">Australia</option>
+                        <option value="Germany">Germany</option>
+                        <option value="UAE">UAE</option>
+                        <option value="Singapore">Singapore</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="region" class="form-label">Region/Continent</label>
+                      <select class="form-select" id="region" name="region">
+                        <option value="Asia" selected>Asia</option>
+                        <option value="Europe">Europe</option>
+                        <option value="North America">North America</option>
+                        <option value="South America">South America</option>
+                        <option value="Africa">Africa</option>
+                        <option value="Oceania">Oceania</option>
+                        <option value="Antarctica">Antarctica</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="addressLine" class="form-label">Address Line <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="addressLine" name="addressLine" placeholder="House No., Street, Locality" required>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="village" class="form-label">Village</label>
+                      <input type="text" class="form-control" id="village" name="village">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="block" class="form-label">Block/Tehsil/County</label>
+                      <input type="text" class="form-control" id="block" name="block">
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-4 mb-3">
+                      <label for="district" class="form-label">District</label>
+                      <input type="text" class="form-control" id="district" name="district">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="city" class="form-label">City <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="city" name="city" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                      <label for="state" class="form-label">State/Province <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control" id="state" name="state" required>
+                    </div>
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="migrationStatus" class="form-label">Migration Status</label>
+                      <select class="form-select" id="migrationStatus" name="migrationStatus">
+                        <option value="Permanent" selected>Permanent Resident</option>
+                        <option value="Migrant">Migrant</option>
+                        <option value="Seasonal">Seasonal Migrant</option>
+                        <option value="Refugee">Refugee</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Homeless/Shelter Status</label>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="homelessStatus" name="homelessStatus" value="true">
+                        <label class="form-check-label" for="homelessStatus">Currently homeless or in shelter</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Location from Address - RED THEME -->
+                  <div class="location-box p-3 mb-3 rounded" style="background: linear-gradient(135deg, #ffebee 0%, #fff 100%); border: 1px solid #ffcdd2;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <h6 class="mb-0" style="color: #c62828;"><i class="fas fa-map-marker-alt text-danger"></i> Location Coordinates</h6>
+                      <small class="text-muted">for geo-mapping</small>
+                    </div>
+                    <div class="row g-2">
+                      <div class="col-5">
+                        <label for="latitude" class="form-label small mb-1">Latitude</label>
+                        <input type="text" class="form-control" id="latitude" name="latitude" readonly placeholder="Auto-calculated">
+                      </div>
+                      <div class="col-5">
+                        <label for="longitude" class="form-label small mb-1">Longitude</label>
+                        <input type="text" class="form-control" id="longitude" name="longitude" readonly placeholder="from address">
+                      </div>
+                      <div class="col-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger w-100" id="getFromAddressBtn" onclick="getLocationFromAddress()" title="Get coordinates from address">
+                          <i class="fas fa-search-location"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div id="locationStatus" class="small mt-2" style="display: none;"></div>
+                  </div>
+                </fieldset>
+
+                <!-- SECTION 4: Identity & Documents -->
+                <fieldset class="mt-4">
+                  <legend class="h5 fw-semibold mb-3">Identity & Documents</legend>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="nationalHealthId" class="form-label">National ID</label>
+                      <input type="text" class="form-control" id="nationalHealthId" name="nationalHealthId" placeholder="Please enter your number">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="aadhaarDisplay" class="form-label">Govt. ID <span class="text-danger">*</span></label>
+                      <div class="input-group">
+                        <input type="text" class="form-control" id="aadhaarDisplay" placeholder="Enter ID number" required oninput="handleGovtIdInput(this)" onfocus="showFullGovtId()" onblur="maskGovtId()">
+                        <input type="hidden" id="aadhaar" name="aadhaar">
+                        <button type="button" class="btn btn-outline-secondary" id="toggleGovtId" onclick="toggleGovtIdView()">
+                          <i class="fas fa-eye" id="govtIdIcon"></i>
+                        </button>
+                      </div>
+                      <div class="form-text text-muted"><i class="fas fa-shield-alt me-1"></i>Only last 4 digits will be visible</div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="passportNumber" class="form-label">Passport Number</label>
+                    <input type="text" class="form-control" id="passportNumber" name="passportNumber" placeholder="Please enter your passport number">
+                  </div>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="photograph" class="form-label">Upload Profile Picture <span class="text-danger">*</span></label>
+                      <input type="file" class="form-control" id="photograph" name="photograph" accept=".jpg,.jpeg,.png" required>
+                      <div class="form-text">JPG, PNG. Max 2MB.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="idProof" class="form-label">Upload ID Proof <span class="text-danger">*</span></label>
+                      <input type="file" class="form-control" id="idProof" name="idProof" accept=".pdf,.jpg,.jpeg,.png" required>
+                      <div class="form-text">PDF, JPG, PNG.</div>
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="signature" class="form-label">Signature (Optional)</label>
+                    <input type="file" class="form-control" id="signature" name="signature" accept=".jpg,.jpeg,.png">
+                    <div class="form-text">Upload an image of your signature.</div>
+                  </div>
+                </fieldset>
+
+                <!-- SECTION 5: Password -->
+                <fieldset class="mt-4">
+                  <legend class="h5 fw-semibold mb-3">Create Password</legend>
+
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label for="createPassword" class="form-label">Password <span class="text-danger">*</span></label>
+                      <div class="input-group">
+                        <input type="password" class="form-control" id="createPassword" name="createPassword" minlength="8" required oninput="validatePasswordMatch()">
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">Show</button>
+                      </div>
+                      <div class="form-text">Minimum 8 characters.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                      <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" minlength="8" required oninput="validatePasswordMatch()">
+                      <div id="passwordMatchStatus" class="form-text" style="display: none;"></div>
+                    </div>
+                  </div>
+                </fieldset>
+
+                <button type="submit" class="btn btn-submit w-100 mt-4 text-white">Create Account</button>
+              </form>
+              <div class="text-center mt-3">
+                <span class="text-muted">Already have an account?</span>
+                <a href="{{ url_for('login', user_type='client') }}" class="text-decoration-none fw-semibold">Log in</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container text-center">
+      <div class="mb-2">© 2025 A3 Health Card. All rights reserved.</div>
+      <div class="footer-links">
+        <a href="#terms">Terms &amp; Privacy</a>
+        <span class="sep">•</span>
+        <a href="#help">Help</a>
+        <span class="sep">•</span>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS (with Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script>
+    // Calculate age from DOB
+    function calculateAge() {
+      const dobInput = document.getElementById('dob');
+      const ageInput = document.getElementById('age');
+      
+      if (!dobInput.value) {
+        ageInput.value = '';
+        return;
+      }
+      
+      const dob = new Date(dobInput.value);
+      const today = new Date();
+      
+      let age = today.getFullYear() - dob.getFullYear();
+      const monthDiff = today.getMonth() - dob.getMonth();
+      
+      // Adjust age if birthday hasn't occurred yet this year
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+      
+      ageInput.value = age >= 0 ? age + ' yrs' : '';
+    }
+
+    // Get user's GPS location
+    function getMyLocation() {
+      const btn = document.getElementById('getLocationBtn');
+      const latInput = document.getElementById('latitude');
+      const lngInput = document.getElementById('longitude');
+      const statusDiv = document.getElementById('locationStatus');
+      
+      // Show loading state
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Detecting...';
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'small mt-2 text-info';
+      statusDiv.innerHTML = '<i class="fas fa-circle-notch fa-spin me-1"></i> Requesting location access...';
+      
+      if (!navigator.geolocation) {
+        showLocationError('Geolocation is not supported by your browser.');
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(
+        // Success callback
+        function(position) {
+          latInput.value = position.coords.latitude.toFixed(6);
+          lngInput.value = position.coords.longitude.toFixed(6);
+          
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Location Captured';
+          btn.classList.remove('btn-primary');
+          btn.classList.add('btn-success');
+          
+          statusDiv.className = 'small mt-2 text-success';
+          statusDiv.innerHTML = '<i class="fas fa-check-circle me-1"></i> Location captured successfully! Accuracy: ~' + 
+            Math.round(position.coords.accuracy) + ' meters';
+        },
+        // Error callback
+        function(error) {
+          let message = '';
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              message = 'Location access denied. Please enable location permissions or enter your address manually.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              message = 'Location unavailable. Your address details will be used as backup.';
+              break;
+            case error.TIMEOUT:
+              message = 'Location request timed out. Please try again or enter address manually.';
+              break;
+            default:
+              message = 'Unable to get location. Your address will be used as backup.';
+          }
+          showLocationError(message);
+        },
+        // Options
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    }
+    
+    function showLocationError(message) {
+      const btn = document.getElementById('getLocationBtn');
+      const statusDiv = document.getElementById('locationStatus');
+      
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-crosshairs me-1"></i> GPS';
+      
+      statusDiv.className = 'small mt-2 text-warning';
+      statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> ' + message;
+    }
+    
+    // Get coordinates from address using OpenStreetMap Nominatim
+    function getLocationFromAddress() {
+      const btn = document.getElementById('getFromAddressBtn');
+      const latInput = document.getElementById('latitude');
+      const lngInput = document.getElementById('longitude');
+      const statusDiv = document.getElementById('locationStatus');
+      
+      // Collect address parts
+      const village = document.getElementById('village')?.value || '';
+      const block = document.getElementById('block')?.value || '';
+      const district = document.getElementById('district')?.value || '';
+      const city = document.getElementById('city')?.value || '';
+      const state = document.getElementById('state')?.value || '';
+      const postalCode = document.getElementById('postalCode')?.value || '';
+      const country = document.getElementById('country')?.value || 'India';
+      
+      // Build address query
+      const addressParts = [village, block, district, city, state, postalCode, country].filter(p => p.trim());
+      
+      if (addressParts.length < 2) {
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'small mt-2 text-warning';
+        statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Please fill in address fields first (at least city and state).';
+        return;
+      }
+      
+      const addressQuery = addressParts.join(', ');
+      
+      // Show loading
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Searching...';
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'small mt-2 text-info';
+      statusDiv.innerHTML = '<i class="fas fa-search me-1"></i> Looking up: ' + addressQuery;
+      
+      // Call OpenStreetMap Nominatim API
+      const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(addressQuery);
+      
+      fetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'A3HealthCard/1.0'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search-location me-1"></i> From Address';
+        
+        if (data && data.length > 0) {
+          const result = data[0];
+          latInput.value = parseFloat(result.lat).toFixed(6);
+          lngInput.value = parseFloat(result.lon).toFixed(6);
+          
+          statusDiv.className = 'small mt-2 text-success';
+          statusDiv.innerHTML = '<i class="fas fa-check-circle me-1"></i> Location found: ' + (result.display_name || addressQuery).substring(0, 60) + '...';
+        } else {
+          statusDiv.className = 'small mt-2 text-warning';
+          statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> Location not found. Try adding more address details.';
+        }
+      })
+      .catch(error => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search-location me-1"></i> From Address';
+        statusDiv.className = 'small mt-2 text-danger';
+        statusDiv.innerHTML = '<i class="fas fa-times-circle me-1"></i> Error looking up address. Please try again.';
+        console.error('Geocoding error:', error);
+      });
+    }
+
+    // ============================================
+    // PINCODE-BASED ADDRESS AUTO-FILL
+    // ============================================
+    
+    // Handle pincode input - auto-fetch when 5-6 digits entered
+    function handlePincodeInput(input) {
+      const value = input.value.replace(/\D/g, ''); // Remove non-digits
+      if (value.length === 6 || value.length === 5) {
+        // For 6-digit (India) or 5-digit (US, etc.) pincodes
+        fetchAddressByPincode();
+      }
+    }
+
+    // Main function to fetch address by pincode
+    function fetchAddressByPincode() {
+      const pincodeInput = document.getElementById('postalCode');
+      const statusDiv = document.getElementById('pincodeStatus');
+      const searchBtn = document.getElementById('pincodeSearchBtn');
+      
+      const pincode = pincodeInput.value.trim();
+      
+      // Validate pincode
+      if (!pincode || pincode.length < 5) {
+        return; // Too short, don't fetch
+      }
+      
+      // Show loading state
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'form-text text-info';
+      statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Looking up address...';
+      searchBtn.disabled = true;
+      searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      
+      // Check if it's an Indian pincode (6 digits, starts with 1-9)
+      if (/^[1-9][0-9]{5}$/.test(pincode)) {
+        // Use India Post API for Indian pincodes
+        fetchFromIndiaPostAPI(pincode)
+          .then(result => {
+            if (result.success) {
+              fillAddressFields(result.data);
+              showPincodeSuccess(result.message);
+            } else {
+              // Fallback to Zippopotam
+              return fetchFromZippopotam(pincode, 'in');
+            }
+          })
+          .then(result => {
+            if (result && result.success) {
+              fillAddressFields(result.data);
+              showPincodeSuccess(result.message);
+            } else if (result) {
+              showPincodeError(result.message || 'Could not find address for this pincode.');
+            }
+          })
+          .catch(error => {
+            console.error('Pincode lookup error:', error);
+            showPincodeError('Error fetching address. Please enter manually.');
+          })
+          .finally(() => {
+            searchBtn.disabled = false;
+            searchBtn.innerHTML = '<i class="fas fa-search"></i>';
+          });
+      } else {
+        // For 5-digit or other formats, try multiple countries
+        // Priority: US (most common 5-digit), then UK, Canada, Germany, Australia
+        const countriesToTry = ['us', 'gb', 'ca', 'de', 'au'];
+        
+        tryMultipleCountries(pincode, countriesToTry, 0)
+          .then(result => {
+            if (result.success) {
+              fillAddressFields(result.data);
+              showPincodeSuccess(result.message);
+            } else {
+              showPincodeError('Could not find address. Please select country manually.');
+            }
+          })
+          .catch(error => {
+            console.error('Pincode lookup error:', error);
+            showPincodeError('Error fetching address. Please enter manually.');
+          })
+          .finally(() => {
+            searchBtn.disabled = false;
+            searchBtn.innerHTML = '<i class="fas fa-search"></i>';
+          });
+      }
+    }
+
+    // Try multiple countries until one succeeds
+    async function tryMultipleCountries(pincode, countries, index) {
+      if (index >= countries.length) {
+        return { success: false, message: 'Postal code not found in any country.' };
+      }
+      
+      const result = await fetchFromZippopotam(pincode, countries[index]);
+      
+      if (result.success) {
+        return result;
+      } else {
+        // Try next country
+        return tryMultipleCountries(pincode, countries, index + 1);
+      }
+    }
+
+    // Fetch from India Post API
+    async function fetchFromIndiaPostAPI(pincode) {
+      try {
+        const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+        const data = await response.json();
+        
+        if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice.length > 0) {
+          const po = data[0].PostOffice[0];
+          return {
+            success: true,
+            message: `Found: ${po.Name}, ${po.District}`,
+            data: {
+              district: po.District || '',
+              city: po.Division || po.District || '',
+              state: po.State || '',
+              country: 'India',
+              block: po.Block || '',
+              region: 'Asia'
+            }
+          };
+        } else {
+          return { success: false, message: 'Pincode not found in India Post database.' };
+        }
+      } catch (error) {
+        console.error('India Post API error:', error);
+        return { success: false, message: 'Error connecting to India Post API.' };
+      }
+    }
+
+    // Fetch from Zippopotam.us API
+    async function fetchFromZippopotam(pincode, countryCode) {
+      try {
+        const response = await fetch(`https://api.zippopotam.us/${countryCode}/${pincode}`);
+        
+        if (!response.ok) {
+          return { success: false, message: 'Postal code not found.' };
+        }
+        
+        const data = await response.json();
+        
+        if (data && data.places && data.places.length > 0) {
+          const place = data.places[0];
+          return {
+            success: true,
+            message: `Found: ${place['place name']}, ${place.state}`,
+            data: {
+              city: place['place name'] || '',
+              state: place.state || place['state abbreviation'] || '',
+              country: data.country || '',
+              district: '',
+              block: '',
+              region: getRegionFromCountry(data.country)
+            }
+          };
+        } else {
+          return { success: false, message: 'Postal code not found.' };
+        }
+      } catch (error) {
+        console.error('Zippopotam API error:', error);
+        return { success: false, message: 'Error connecting to postal code service.' };
+      }
+    }
+
+    // Fill address fields with retrieved data
+    function fillAddressFields(data) {
+      if (data.district) {
+        document.getElementById('district').value = data.district;
+      }
+      if (data.city) {
+        document.getElementById('city').value = data.city;
+      }
+      if (data.state) {
+        document.getElementById('state').value = data.state;
+      }
+      if (data.country) {
+        const countrySelect = document.getElementById('country');
+        // Map API country names to dropdown values
+        const countryMapping = {
+          'india': 'India',
+          'united states': 'United States',
+          'united states of america': 'United States',
+          'usa': 'United States',
+          'us': 'United States',
+          'united kingdom': 'United Kingdom',
+          'uk': 'United Kingdom',
+          'great britain': 'United Kingdom',
+          'canada': 'Canada',
+          'australia': 'Australia',
+          'germany': 'Germany',
+          'deutschland': 'Germany',
+          'uae': 'UAE',
+          'united arab emirates': 'UAE',
+          'singapore': 'Singapore'
+        };
+        
+        const countryLower = data.country.toLowerCase().trim();
+        const mappedCountry = countryMapping[countryLower];
+        
+        if (mappedCountry) {
+          countrySelect.value = mappedCountry;
+        } else {
+          // Try to find a matching option
+          const option = Array.from(countrySelect.options).find(opt => 
+            opt.value.toLowerCase() === countryLower ||
+            opt.text.toLowerCase() === countryLower ||
+            opt.value.toLowerCase().includes(countryLower) ||
+            countryLower.includes(opt.value.toLowerCase())
+          );
+          if (option) {
+            countrySelect.value = option.value;
+          } else {
+            countrySelect.value = 'Other';
+          }
+        }
+      }
+      if (data.block) {
+        document.getElementById('block').value = data.block;
+      }
+      if (data.region) {
+        document.getElementById('region').value = data.region;
+      }
+    }
+
+    // Show success message
+    function showPincodeSuccess(message) {
+      const statusDiv = document.getElementById('pincodeStatus');
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'form-text text-success';
+      statusDiv.innerHTML = '<i class="fas fa-check-circle me-1"></i> ' + message;
+      // Hide after 5 seconds
+      setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
+    }
+
+    // Show error message
+    function showPincodeError(message) {
+      const statusDiv = document.getElementById('pincodeStatus');
+      statusDiv.style.display = 'block';
+      statusDiv.className = 'form-text text-warning';
+      statusDiv.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i> ' + message;
+    }
+
+    // Get country code for Zippopotam API
+    function getCountryCode(countryName) {
+      const countryCodes = {
+        'india': 'in',
+        'united states': 'us',
+        'united kingdom': 'gb',
+        'canada': 'ca',
+        'australia': 'au',
+        'germany': 'de',
+        'uae': 'ae',
+        'singapore': 'sg',
+        'france': 'fr',
+        'italy': 'it',
+        'spain': 'es',
+        'brazil': 'br',
+        'mexico': 'mx',
+        'japan': 'jp',
+        'south korea': 'kr',
+        'china': 'cn'
+      };
+      return countryCodes[(countryName || '').toLowerCase()] || 'us';
+    }
+
+    // Get region/continent from country name
+    function getRegionFromCountry(country) {
+      const countryLower = (country || '').toLowerCase();
+      const asiaCountries = ['india', 'singapore', 'japan', 'china', 'south korea', 'thailand', 'malaysia', 'indonesia', 'philippines', 'vietnam', 'uae', 'saudi arabia', 'israel'];
+      const europeCountries = ['united kingdom', 'germany', 'france', 'italy', 'spain', 'netherlands', 'belgium', 'switzerland', 'austria', 'poland', 'sweden', 'norway', 'denmark', 'finland', 'ireland', 'portugal', 'greece'];
+      const northAmericaCountries = ['united states', 'canada', 'mexico'];
+      const southAmericaCountries = ['brazil', 'argentina', 'chile', 'colombia', 'peru', 'venezuela'];
+      const oceaniaCountries = ['australia', 'new zealand', 'fiji'];
+      const africaCountries = ['south africa', 'nigeria', 'egypt', 'kenya', 'morocco', 'ghana'];
+      
+      if (asiaCountries.some(c => countryLower.includes(c))) return 'Asia';
+      if (europeCountries.some(c => countryLower.includes(c))) return 'Europe';
+      if (northAmericaCountries.some(c => countryLower.includes(c))) return 'North America';
+      if (southAmericaCountries.some(c => countryLower.includes(c))) return 'South America';
+      if (oceaniaCountries.some(c => countryLower.includes(c))) return 'Oceania';
+      if (africaCountries.some(c => countryLower.includes(c))) return 'Africa';
+      return 'Asia'; // Default
+    }
+
+    // ============================================
+    // GOVT ID MASKING - SHOW ONLY LAST 4 DIGITS
+    // ============================================
+    
+    // Store actual Govt ID value and state
+    let govtIdActualValue = '';
+    let govtIdIsVisible = true; // Start visible while typing
+    
+    // Handle input - always store the actual value
+    function handleGovtIdInput(input) {
+      // Remove any bullet characters that might have been pasted/typed
+      const cleanValue = input.value.replace(/•/g, '');
+      govtIdActualValue = cleanValue;
+      document.getElementById('aadhaar').value = govtIdActualValue;
+      input.value = cleanValue; // Keep showing clean value while typing
+      govtIdIsVisible = true;
+      updateEyeIcon();
+    }
+    
+    // Show full Govt ID
+    function showFullGovtId() {
+      const displayInput = document.getElementById('aadhaarDisplay');
+      displayInput.value = govtIdActualValue;
+      govtIdIsVisible = true;
+      updateEyeIcon();
+    }
+    
+    // Mask Govt ID (show only last 4 digits)
+    function maskGovtId() {
+      const displayInput = document.getElementById('aadhaarDisplay');
+      const value = govtIdActualValue;
+      
+      if (value.length >= 4) {
+        const maskedPart = '•'.repeat(value.length - 4);
+        const visiblePart = value.slice(-4);
+        displayInput.value = maskedPart + visiblePart;
+      }
+      // If less than 4 chars, keep showing full value
+      govtIdIsVisible = false;
+      updateEyeIcon();
+    }
+    
+    // Update eye icon based on visibility state
+    function updateEyeIcon() {
+      const icon = document.getElementById('govtIdIcon');
+      if (govtIdIsVisible) {
+        icon.className = 'fas fa-eye-slash';
+      } else {
+        icon.className = 'fas fa-eye';
+      }
+    }
+    
+    // Toggle Govt ID visibility (eye button click)
+    function toggleGovtIdView() {
+      if (govtIdIsVisible) {
+        maskGovtId();
+      } else {
+        showFullGovtId();
+      }
+    }
+
+    // ============================================
+    // PASSWORD VALIDATION WITH VISUAL FEEDBACK
+    // ============================================
+    
+    // Real-time password match validation
+    function validatePasswordMatch() {
+      const password = document.getElementById('createPassword');
+      const confirmPassword = document.getElementById('confirmPassword');
+      const statusDiv = document.getElementById('passwordMatchStatus');
+      
+      if (!password || !confirmPassword) return true;
+      
+      const passwordVal = password.value;
+      const confirmVal = confirmPassword.value;
+      
+      // Only validate if confirm password has value
+      if (confirmVal.length === 0) {
+        confirmPassword.classList.remove('is-valid', 'is-invalid');
+        statusDiv.style.display = 'none';
+        return true;
+      }
+      
+      if (passwordVal === confirmVal) {
+        // Passwords match - green
+        confirmPassword.classList.remove('is-invalid');
+        confirmPassword.classList.add('is-valid');
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'form-text text-success';
+        statusDiv.innerHTML = '<i class="fas fa-check-circle me-1"></i> Passwords match!';
+        return true;
+      } else {
+        // Passwords don't match - red
+        confirmPassword.classList.remove('is-valid');
+        confirmPassword.classList.add('is-invalid');
+        statusDiv.style.display = 'block';
+        statusDiv.className = 'form-text text-danger';
+        statusDiv.innerHTML = '<i class="fas fa-times-circle me-1"></i> Passwords do not match!';
+        return false;
+      }
+    }
+
+    // Password toggle functionality
+    (function () {
+      const passwordField = document.querySelector('#createPassword');
+      const toggleButton = document.querySelector('#togglePassword');
+
+      if (!passwordField || !toggleButton) return;
+
+      toggleButton.addEventListener('click', () => {
+        const isHidden = passwordField.type === 'password';
+        passwordField.type = isHidden ? 'text' : 'password';
+        toggleButton.textContent = isHidden ? 'Hide' : 'Show';
+        toggleButton.setAttribute('aria-pressed', String(isHidden));
+      });
+    })();
+
+    // ============================================
+    // FORM VALIDATION - PREVENT CLEARING ON ERROR
+    // ============================================
+    
+    (function() {
+      const signupForm = document.querySelector('form[action*="signup"]');
+      if (!signupForm) return;
+      
+      signupForm.addEventListener('submit', function(e) {
+        const password = document.getElementById('createPassword');
+        const confirmPassword = document.getElementById('confirmPassword');
+        
+        // Validate password match
+        if (password && confirmPassword && password.value !== confirmPassword.value) {
+          e.preventDefault();
+          
+          // Show error message
+          showFormError('Passwords do not match! Please make sure both passwords are the same.');
+          
+          // Focus on confirm password field
+          confirmPassword.focus();
+          confirmPassword.classList.add('is-invalid');
+          
+          return false;
+        }
+        
+        // Validate password length
+        if (password && password.value.length < 8) {
+          e.preventDefault();
+          showFormError('Password must be at least 8 characters long.');
+          password.focus();
+          password.classList.add('is-invalid');
+          return false;
+        }
+        
+        // All validations passed
+        return true;
+      });
+      
+      // Show form error without page reload
+      function showFormError(message) {
+        // Check if error alert already exists
+        let existingAlert = document.querySelector('.form-validation-error');
+        if (existingAlert) {
+          existingAlert.remove();
+        }
+        
+        // Create error alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show form-validation-error';
+        alertDiv.setAttribute('role', 'alert');
+        alertDiv.innerHTML = `
+          <i class="fas fa-exclamation-triangle me-2"></i>${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Insert before form
+        signupForm.parentNode.insertBefore(alertDiv, signupForm);
+        
+        // Scroll to alert
+        alertDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+          if (alertDiv.parentNode) {
+            alertDiv.classList.remove('show');
+            setTimeout(() => alertDiv.remove(), 300);
+          }
+        }, 5000);
+      }
+    })();
+
+    // Auto-scroll to flash messages
+    (function () {
+      const alerts = document.querySelectorAll('.alert');
+      if (alerts.length > 0) {
+        alerts[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Add a subtle animation
+        alerts[0].style.animation = 'pulse 0.5s ease-in-out';
+      }
+    })();
+  </script>
+  <style>
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+  </style>
+</body>
+</html>
+

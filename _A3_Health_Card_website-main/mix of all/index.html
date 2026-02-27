@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>A3 Health Card</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+
+  <!-- Theme CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='theme.css') }}" />
+  <!-- Custom CSS -->
+  <link href="{{ url_for('static', filename='styles.css') }}" rel="stylesheet" />
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <nav class="navbar navbar-expand-lg" role="navigation" aria-label="Main Navigation">
+    <div class="container">
+      <h2><a class="navbar-brand fw-bold" href="#home">A3 Health Card</a></h2>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center align-items-start gap-lg-2 gap-1 mt-2 mt-lg-0">
+          <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="#about">About Us</a></li>
+          <li class="nav-item"><a class="nav-link" href="#about-card">About This Card</a></li>
+          <li class="nav-item"><a class="nav-link" href="#blog">Blog</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="loginDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Login
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="loginDropdown">
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='client') }}">Client</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='hospital_doctor') }}">Hospital/Doctor</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='blood_bank') }}">Blood Bank</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='blood_donor_recipient') }}">Blood Donor/Recipient</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='organ_donor_recipient') }}">Organ Donor/Recipient</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='pharmacy') }}">Pharmacy</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='mnc') }}">MNC</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='insurance_company') }}">Insurance Company</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='medical_colleges') }}">Medical Colleges</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='health_worker') }}">Health Worker</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('facility_login') }}">Health Facility</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='block_admin') }}">Block Admin</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='district_admin') }}">District Admin</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='state_admin') }}">State Admin</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='national_admin') }}">National Admin</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='regional_admin') }}">Regional Admin</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='continent_admin') }}">Continent Admin</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('login', user_type='global_admin') }}">Global Admin</a></li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a class="btn emergency-btn" href="{{ url_for('emergency_dashboard') }}" role="button">Emergency</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section (Carousel with background slides and dynamic captions) -->
+  <section id="home" class="hero-carousel">
+    <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="6000">
+      <div class="carousel-indicators">
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+      </div>
+      <div class="carousel-inner">
+        <!-- Slide 1 -->
+        <div class="carousel-item active">
+          <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1504439468489-c8920d796a29?q=80&w=1974&auto=format&fit=crop');"></div>
+          <div class="container text-center hero-caption">
+            <div>
+              <h1 class="hero-title mb-3">Your Health is always in the first place</h1>
+              <p class="lead mb-4" style="color: white;"!important>Separated they live in Bookmarksgrove right at the coast of the Semantics, a large language ocean.</p>
+              <a href="#a3" class="btn btn-get-started">Get Started</a>
+            </div>
+          </div>
+        </div>
+        <!-- Slide 2 -->
+        <div class="carousel-item">
+          <div class="hero-slide" style="background-image:url('https://media.istockphoto.com/id/827603670/photo/love-family-concept.jpg?s=612x612&w=0&k=20&c=vING54-8ziNj2Rar98sgoKaKxQQOEWr4CRi5C7nkZYA=');"></div>
+          <div class="container text-center hero-caption">
+            <div>
+              <h1 class="hero-title mb-3">Guaranteed safe &amp; potent Medicine</h1>
+              <p class="lead mb-4"  style="color: white;"!important>Trusted care with technology and compassion working together.</p>
+              <a href="#a3" class="btn btn-get-started">Get Started</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev" aria-label="Previous slide">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next" aria-label="Next slide">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      </button> -->
+    </div>
+  </section>
+
+  <!-- Three Cards Section (A3 Concept) -->
+  <section id="a3" class="py-5 bg-light">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-12 col-md-4">
+          <div class="a3-card h-100">
+            <img style="border-radius: 8px;" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhiiKxdcjh6E0IUTYOSpEUCID1Ehnf_7ymGA&s" alt="Dr. Alice Rao" />
+
+            <h3 class="mb-2">Accessible</h3>
+            <p class="mb-0">Connecting every patient to healthcare anytime, anywhere</p>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="a3-card h-100">
+            <img style="border-radius: 8px;" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhiiKxdcjh6E0IUTYOSpEUCID1Ehnf_7ymGA&s" alt="Dr. Alice Rao" />
+            <h3 class="mb-2">Affordable</h3>
+            <p class="mb-0">Making quality healthcare cost-effective for all</p>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="a3-card h-100">
+            <img style="border-radius: 8px;" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhiiKxdcjh6E0IUTYOSpEUCID1Ehnf_7ymGA&s" alt="Dr. Alice Rao" />
+            <h3 class="mb-2">Accountable</h3>
+            <p class="mb-0">Ensuring transparency and trust in every medical record</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Meet Our Team Section -->
+  <section id="team" class="py-5">
+    <div class="container">
+      <h2 class="text-center fw-bold mb-4">Meet Our Team</h2>
+
+      <!-- Horizontal scrolling track; auto-scrolls right-to-left -->
+      <div class="team-wrapper" aria-label="Team members carousel (auto-scrolls right to left)">
+        <div class="team-track">
+          <div class="team-member text-center">
+            <img class="team-photo" src="https://i.pinimg.com/736x/2c/47/d5/2c47d5dd5b532f83bb55c4cd6f5bd1ef.jpg" alt="Dr. Alice Rao" />
+            <div class="caption mt-2">
+              <div class="fw-semibold">Dr. Alice Rao</div>
+              <div class="text-muted small">Cardiologist</div>
+            </div>
+          </div>
+          <div class="team-member text-center">
+            <img class="team-photo" src="https://i.pinimg.com/736x/2c/47/d5/2c47d5dd5b532f83bb55c4cd6f5bd1ef.jpg" alt="Dr. Ben Carter" />
+            <div class="caption mt-2">
+              <div class="fw-semibold">Dr. Ben Carter</div>
+              <div class="text-muted small">Neurologist</div>
+            </div>
+          </div>
+          <div class="team-member text-center">
+            <img class="team-photo" src="https://i.pinimg.com/736x/2c/47/d5/2c47d5dd5b532f83bb55c4cd6f5bd1ef.jpg" alt="Nina Patel" />
+            <div class="caption mt-2">
+              <div class="fw-semibold">Nina Patel</div>
+              <div class="text-muted small">Data Scientist</div>
+            </div>
+          </div>
+          <div class="team-member text-center">
+            <img class="team-photo" src="https://i.pinimg.com/736x/2c/47/d5/2c47d5dd5b532f83bb55c4cd6f5bd1ef.jpg" alt="Arun Mehta" />
+            <div class="caption mt-2">
+              <div class="fw-semibold">Arun Mehta</div>
+              <div class="text-muted small">Product Lead</div>
+            </div>
+          </div>
+          <div class="team-member text-center">
+            <img class="team-photo" src="https://i.pinimg.com/736x/2c/47/d5/2c47d5dd5b532f83bb55c4cd6f5bd1ef.jpg" alt="Dr. Sophie Lin" />
+            <div class="caption mt-2">
+              <div class="fw-semibold">Dr. Sophie Lin</div>
+              <div class="text-muted small">Pediatrics</div>
+            </div>
+          </div>
+          <div class="team-member text-center">
+            <img class="team-photo" src="https://i.pinimg.com/736x/2c/47/d5/2c47d5dd5b532f83bb55c4cd6f5bd1ef.jpg" alt="Rahul Shah" />
+            <div class="caption mt-2">
+              <div class="fw-semibold">Rahul Shah</div>
+              <div class="text-muted small">Engineering</div>
+            </div>
+          </div>
+          <div class="team-member text-center">
+            <img class="team-photo" src="https://i.pinimg.com/736x/2c/47/d5/2c47d5dd5b532f83bb55c4cd6f5bd1ef.jpg" alt="Dr. Maria Gomez" />
+            <div class="caption mt-2">
+              <div class="fw-semibold">Dr. Maria Gomez</div>
+              <div class="text-muted small">Oncology</div>
+            </div>
+          </div>
+          <div class="team-member text-center">
+            <img class="team-photo" src="https://i.pinimg.com/736x/2c/47/d5/2c47d5dd5b532f83bb55c4cd6f5bd1ef.jpg" alt="Wei Chen" />
+            <div class="caption mt-2">
+              <div class="fw-semibold">Wei Chen</div>
+              <div class="text-muted small">Design</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Placeholder sections for anchors (optional) -->
+  <section id="about" class="py-5 d-none"><div class="container"></div></section>
+  <section id="about-card" class="py-5 d-none"><div class="container"></div></section>
+  <section id="blog" class="py-5 d-none"><div class="container"></div></section>
+  <section id="login" class="py-5 d-none"><div class="container"></div></section>
+  <section id="emergency-login" class="py-5 d-none"><div class="container"></div></section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container text-center">
+      <div class="mb-2">© 2025 A3 Health Card. All rights reserved.</div>
+      <div class="footer-links">
+        <a href="#terms">Terms &amp; Privacy</a>
+        <span class="sep">•</span>
+        <a href="#help">Help</a>
+        <span class="sep">•</span>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap JS (with Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+  <!-- Initialize Hero Carousel with Auto-rotation -->
+  <script>
+    (function () {
+      const heroCarousel = document.querySelector('#heroCarousel');
+      if (heroCarousel) {
+        const carousel = new bootstrap.Carousel(heroCarousel, {
+          interval: 5000, // 5 seconds between slides
+          ride: 'carousel', // Enable auto-rotation
+          wrap: true, // Loop back to first slide after last
+
+        });
+      }
+    })();
+  </script>
+
+  <!-- Right-to-left continuous marquee for team section -->
+  <script>
+    (function () {
+      const wrapper = document.querySelector('.team-wrapper');
+      const track = document.querySelector('.team-track');
+      if (!wrapper || !track) return;
+
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Duplicate content to enable seamless looping
+      if (!reduceMotion && !track.dataset.duplicated) {
+        track.innerHTML += track.innerHTML;
+        track.dataset.duplicated = 'true';
+        track.classList.add('marquee');
+      }
+
+      // Pause/resume on hover
+      wrapper.addEventListener('mouseenter', () => {
+        track.style.animationPlayState = 'paused';
+      });
+      wrapper.addEventListener('mouseleave', () => {
+        track.style.animationPlayState = 'running';
+      });
+    })();
+  </script>
+</body>
+</html>
+

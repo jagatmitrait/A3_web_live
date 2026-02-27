@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}Vaccination Dashboard | A3 Health Card{% endblock %}
+
+{% block content %}
+<div class="vaccination-dashboard">
+  <div class="page-header">
+    <h2><i class="fas fa-syringe"></i> Vaccination Dashboard</h2>
+    <a href="{{ url_for('vaccination_add') }}" class="btn btn-primary js-add-vaccination"><i class="fas fa-plus"></i> Add New Vaccination</a>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background: linear-gradient(135deg,#E63946 0%,#d32f2f 100%); color:#fff;">
+        <i class="fas fa-syringe"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Total Vaccines Taken</p>
+        <h3 class="stat-value">{{ stats.total }}</h3>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#4CAF50; color:#fff;">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Upcoming Vaccines</p>
+        <h3 class="stat-value">{{ stats.upcoming }}</h3>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#FF9800; color:#fff;">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Overdue Vaccines</p>
+        <h3 class="stat-value">{{ stats.overdue }}</h3>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fff; border:1px solid #eee; color:#d32f2f;">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Last Updated</p>
+        <h3 class="stat-value">{{ stats.last_updated.strftime('%Y-%m-%d') if stats.last_updated else 'N/A' }}</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters + search -->
+  <div class="filters-row">
+    <div class="search-group">
+      <label for="vaccinationSearchInput">Search by vaccine name</label>
+      <input type="search" id="vaccinationSearchInput" class="form-control" placeholder="e.g., COVID-19, MMR, Flu" />
+    </div>
+    <div class="filter-group">
+      <label>Status</label>
+      <select id="vaccinationStatusFilter" class="form-control">
+        <option value="all">All</option>
+        <option value="Completed">Completed</option>
+        <option value="Scheduled">Scheduled</option>
+        <option value="Missed">Missed</option>
+        <option value="Upcoming">Upcoming</option>
+        <option value="Overdue">Overdue</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Category</label>
+      <select id="vaccinationCategoryFilter" class="form-control">
+        <option value="">All</option>
+        <option value="COVID">COVID</option>
+        <option value="Childhood">Childhood</option>
+        <option value="Adult">Adult</option>
+        <option value="Travel">Travel</option>
+        <option value="Flu">Flu</option>
+        <option value="Booster">Booster</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>Year</label>
+      <select id="vaccinationYearFilter" class="form-control">
+        <option value="">All</option>
+      </select>
+    </div>
+    <div class="filter-actions">
+      <button class="btn btn-secondary" id="vaccinationResetFilters">Reset</button>
+    </div>
+  </div>
+
+  <div class="vaccination-layout">
+    <div class="vaccination-list">
+      <p id="vaccinationSummary" class="muted">Showing {{ vaccinations|length }} of {{ stats.total }} records</p>
+      <div id="vaccinationCardContainer">
+        <div id="vaccinationEmptyState" class="card empty-state" {% if vaccinations %}style="display:none"{% endif %}>
+          <i class="fas fa-syringe"></i>
+          <h3>No vaccination records yet</h3>
+          <p>Add your vaccination history to keep a complete record of your immunizations.</p>
+          <a class="btn btn-primary js-add-vaccination" href="{{ url_for('vaccination_add') }}">Add New Vaccination</a>
+        </div>
+        {% for v in vaccinations %}
+        <article class="card vaccination-card">
+          <div class="vaccination-card-head">
+            <div>
+              <div class="kicker">{{ v.category }}</div>
+              <h3>{{ v.vaccine_name }}</h3>
+              <p class="muted">
+                {{ v.dose_number }} • {{ v.vaccination_date.strftime('%Y-%m-%d') if v.vaccination_date else 'N/A' }}
+                {% if v.next_due_date %}
+                • Next due: {{ v.next_due_date.strftime('%Y-%m-%d') }}
+                {% endif %}
+              </p>
+            </div>
+            <span class="status-pill {{ v.status.lower() }}" style="background:{{ {'completed':'#4CAF50','scheduled':'#2196F3','missed':'#FF9800','upcoming':'#9C27B0','overdue':'#E63946'}.get(v.status.lower(),'#666') }}">{{ v.status }}</span>
+          </div>
+          {% if v.manufacturer or v.hospital_clinic_name %}
+          <p class="muted small">
+            {% if v.manufacturer %}<strong>Manufacturer:</strong> {{ v.manufacturer }}{% endif %}
+            {% if v.hospital_clinic_name %}{% if v.manufacturer %} • {% endif %}<strong>Clinic:</strong> {{ v.hospital_clinic_name }}{% endif %}
+          </p>
+          {% endif %}
+          <div class="vaccination-card-actions">
+            <a href="{{ url_for('vaccination_view', vaccination_id=v.id) }}" class="btn btn-outline">View</a>
+            <a href="{{ url_for('vaccination_edit', vaccination_id=v.id) }}" class="btn btn-outline">Edit</a>
+            <form method="post" action="{{ url_for('vaccination_delete', vaccination_id=v.id) }}" style="display:inline-block" onsubmit="return confirm('Delete this vaccination record permanently?');">
+              <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+            {% if v.certificate %}
+            <a href="{{ url_for('vaccination_certificate', vaccination_id=v.id, stored_name=json.loads(v.certificate).stored_name if v.certificate else '') }}" class="btn btn-outline"><i class="fas fa-download"></i> Certificate</a>
+            {% endif %}
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+    <aside class="vaccination-sidepanel">
+      <div class="card">
+        <h3>Status distribution</h3>
+        <ul id="vaccinationStatusDistribution" class="mini-list"></ul>
+      </div>
+      <div class="card">
+        <h3>Category mix</h3>
+        <ul id="vaccinationCategoryMix" class="mini-list"></ul>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" defer></script>
+<script src="{{ url_for('static', filename='vaccination.js') }}"></script>
+{% endblock %}
+
